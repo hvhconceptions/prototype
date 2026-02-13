@@ -1,0 +1,736 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HVH Pac-Lab</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
+    />
+    
+    <style>
+      :root {
+        --bg: #030303;
+        --fg: #00ff99;
+        --muted: rgba(255, 255, 255, 0.6);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at top, rgba(0, 255, 153, 0.15), transparent 60%), var(--bg);
+        color: var(--fg);
+        font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, ui-monospace, monospace;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: clamp(12px, 4vw, 32px);
+      }
+
+      main {
+        width: min(96vmin, 760px);
+        display: grid;
+        gap: 12px;
+      }
+
+      .cookie-banner {
+        position: fixed;
+        bottom: clamp(16px, 4vw, 26px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(680px, calc(100% - clamp(24px, 6vw, 48px)));
+        padding: clamp(18px, 4vw, 24px);
+        background: rgba(0, 12, 9, 0.96);
+        border: 1px solid rgba(0, 255, 153, 0.35);
+        box-shadow: 0 18px 40px rgba(0, 255, 153, 0.25);
+        color: rgba(248, 255, 248, 0.9);
+        display: none;
+        z-index: 4000;
+        border-radius: 18px;
+        text-align: center;
+        letter-spacing: 1px;
+      }
+
+      .cookie-banner.show {
+        display: grid;
+        gap: clamp(12px, 3vw, 18px);
+      }
+
+      .cookie-banner p {
+        margin: 0;
+        font-size: clamp(13px, 2.8vw, 15px);
+      }
+
+      .cookie-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .cookie-actions button {
+        padding: 10px 20px;
+        border: 1px solid rgba(0, 255, 153, 0.4);
+        background: rgba(0, 255, 153, 0.14);
+        color: var(--fg);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .cookie-actions button:hover,
+      .cookie-actions button:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(0, 255, 153, 0.25);
+        outline: none;
+      }
+      #lab-canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 2px solid rgba(0, 255, 153, 0.4);
+        border-radius: 12px;
+        background: #010101;
+        box-shadow: 0 25px 70px rgba(0, 255, 153, 0.2);
+      }
+
+      #status {
+        display: none;
+      }
+
+      .game-over {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.86);
+        z-index: 1200;
+        padding: clamp(20px, 5vw, 40px);
+      }
+
+      .game-over.show {
+        display: flex;
+      }
+
+      .game-over-card {
+        width: min(520px, 100%);
+        border: 2px solid rgba(0, 255, 153, 0.5);
+        background: rgba(2, 18, 12, 0.95);
+        padding: clamp(20px, 5vw, 32px);
+        text-align: center;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+      }
+
+      .game-over-title {
+        margin: 0 0 14px;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        font-size: clamp(22px, 4vw, 32px);
+        color: var(--fg);
+        text-shadow: 0 0 16px rgba(0, 255, 153, 0.6);
+      }
+
+      .game-over-actions {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+
+      .game-over-actions a,
+      .game-over-actions button {
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 255, 153, 0.45);
+        background: rgba(0, 255, 153, 0.16);
+        color: var(--fg);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .game-over-actions a:hover,
+      .game-over-actions a:focus-visible,
+      .game-over-actions button:hover,
+      .game-over-actions button:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 30px rgba(0, 255, 153, 0.28);
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <canvas id="lab-canvas" width="600" height="660" aria-label="retro pacman board"></canvas>
+      <p id="status"></p>
+    </main>
+    <div id="game-over" class="game-over" aria-hidden="true">
+      <div class="game-over-card" role="dialog" aria-modal="true">
+        <p class="game-over-title">game over daddy</p>
+        <div class="game-over-actions">
+          <a href="inside.html">yes</a>
+          <button type="button" id="game-replay">replay</button>
+        </div>
+      </div>
+    </div>
+    <div id=\"cookie-banner\" class=\"cookie-banner\" aria-live=\"polite\" role=\"dialog\" aria-modal=\"true\" aria-hidden=\"true\">
+      <p>We use cookies for analytics and to keep the neon smooth. Accept to allow Google Analytics tracking.</p>
+      <div class=\"cookie-actions\">
+        <button type=\"button\" data-cookie-action=\"accept\">accept</button>
+        <button type=\"button\" data-cookie-action=\"reject\">no thanks</button>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("lab-canvas");
+      const ctx = canvas.getContext("2d");
+      const scoreEl = document.getElementById("score");
+      const pelletEl = document.getElementById("pellets");
+      const statusEl = document.getElementById("status");
+      const LEVEL = [
+        "####################",
+        "#........##........#",
+        "#.####.#.##.#.####.#",
+        "#o#  #.#    #.#  #o#",
+        "#.####.######.####.#",
+        "#..................#",
+        "###.###.####.###.###",
+        "###.#        #.### #",
+        "#....#.##  ##.#....#",
+        "####.#.# ####.#.####",
+        "####.#.# ####.#.####",
+        "#....#.#      #....#",
+        "#.###### ######.####",
+        "#..................#",
+        "####################",
+      ];
+
+      const LEVEL_WIDTH = LEVEL[0].length;
+      const LEVEL_HEIGHT = LEVEL.length;
+
+      const TILE = Math.floor(Math.min(canvas.width / LEVEL[0].length, canvas.height / LEVEL.length));
+      canvas.width = LEVEL[0].length * TILE;
+      canvas.height = LEVEL.length * TILE;
+
+      const DIRS = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 },
+      ];
+
+      const cloneDir = (dir) => ({ x: dir.x, y: dir.y });
+      const createGhost = ({ name, behavior, color, scatterTarget, x, y, dir }) => ({
+        name,
+        behavior,
+        scatterTarget,
+        x,
+        y,
+        dir: cloneDir(dir),
+        color,
+        spawnX: x,
+        spawnY: y,
+        spawnDir: cloneDir(dir),
+        isRespawning: false,
+        respawnTimer: 0,
+      });
+
+      const wrap = (value, max) => {
+        if (value < 0) return max - 1;
+        if (value >= max) return 0;
+        return value;
+      };
+      const manhattan = (ax, ay, bx, by) => Math.abs(ax - bx) + Math.abs(ay - by);
+
+      const isWall = (x, y) => LEVEL[wrap(y, LEVEL.length)][wrap(x, LEVEL[0].length)] === "#";
+      const pelletKey = (x, y) => `${x},${y}`;
+
+      const pellets = new Set();
+      LEVEL.forEach((row, y) => {
+        row.split("").forEach((cell, x) => {
+          if (cell === "." || cell === "o") {
+            pellets.add(pelletKey(x, y));
+          }
+        });
+      });
+
+      const state = {
+        running: true,
+        score: 0,
+        pellets: pellets.size,
+      };
+
+      const pacman = {
+        x: 9,
+        y: 13,
+        dir: { x: -1, y: 0 },
+        next: { x: -1, y: 0 },
+      };
+
+      const tileAhead = (steps) => ({
+        x: wrap(pacman.x + pacman.dir.x * steps, LEVEL_WIDTH),
+        y: wrap(pacman.y + pacman.dir.y * steps, LEVEL_HEIGHT),
+      });
+
+      const ghosts = [
+        createGhost({
+          name: "blinky",
+          behavior: "blinky",
+          color: "#ff4d5a",
+          x: 9,
+          y: 7,
+          dir: DIRS[0],
+          scatterTarget: { x: LEVEL_WIDTH - 2, y: 1 },
+        }),
+        createGhost({
+          name: "pinky",
+          behavior: "pinky",
+          color: "#ff7edb",
+          x: 9,
+          y: 6,
+          dir: DIRS[2],
+          scatterTarget: { x: 1, y: 1 },
+        }),
+        createGhost({
+          name: "inky",
+          behavior: "inky",
+          color: "#50e3ff",
+          x: 10,
+          y: 7,
+          dir: DIRS[1],
+          scatterTarget: { x: LEVEL_WIDTH - 2, y: LEVEL_HEIGHT - 2 },
+        }),
+        createGhost({
+          name: "clyde",
+          behavior: "clyde",
+          color: "#ffb852",
+          x: 8,
+          y: 7,
+          dir: DIRS[1],
+          scatterTarget: { x: 1, y: LEVEL_HEIGHT - 2 },
+        }),
+      ];
+
+      const GHOST_RESPAWN_STEPS = 14;
+      const GHOST_BOUNTY = 200;
+      const MODE_SEQUENCE = [
+        { mode: "scatter", duration: 7000 },
+        { mode: "chase", duration: 20000 },
+        { mode: "scatter", duration: 7000 },
+        { mode: "chase", duration: 20000 },
+        { mode: "scatter", duration: 5000 },
+        { mode: "chase", duration: Infinity },
+      ];
+      let ghostModeIndex = 0;
+      let ghostMode = MODE_SEQUENCE[0].mode;
+      let modeTimer = MODE_SEQUENCE[0].duration;
+
+      let lastPacStep = 0;
+      let lastGhostStep = 0;
+      let previousFrame = 0;
+      let animationClock = 0;
+      let chompBoost = 0;
+      const PAC_INTERVAL = 160;
+      const GHOST_INTERVAL = 230;
+
+      const getBlinky = () => ghosts.find((ghost) => ghost.behavior === "blinky") ?? ghosts[0];
+
+      function getGhostTarget(ghost) {
+        if (ghostMode === "scatter") {
+          return ghost.scatterTarget;
+        }
+
+        switch (ghost.behavior) {
+          case "blinky":
+            return { x: pacman.x, y: pacman.y };
+          case "pinky": {
+            const ahead = tileAhead(4);
+            if (pacman.dir.y === -1 && pacman.dir.x === 0) {
+              ahead.x = wrap(ahead.x - 1, LEVEL_WIDTH);
+              ahead.y = wrap(ahead.y - 1, LEVEL_HEIGHT);
+            }
+            return ahead;
+          }
+          case "inky": {
+            const blinky = getBlinky();
+            const ahead = tileAhead(2);
+            const targetX = ahead.x + (ahead.x - blinky.x);
+            const targetY = ahead.y + (ahead.y - blinky.y);
+            return {
+              x: wrap(targetX, LEVEL_WIDTH),
+              y: wrap(targetY, LEVEL_HEIGHT),
+            };
+          }
+          case "clyde": {
+            const distance = manhattan(ghost.x, ghost.y, pacman.x, pacman.y);
+            if (distance > 5) {
+              return { x: pacman.x, y: pacman.y };
+            }
+            return ghost.scatterTarget;
+          }
+          default:
+            return ghost.scatterTarget;
+        }
+      }
+
+      function updateGhostMode(delta) {
+        const current = MODE_SEQUENCE[ghostModeIndex];
+        if (!Number.isFinite(current.duration)) return;
+        modeTimer -= delta;
+        if (modeTimer <= 0) {
+          ghostModeIndex = Math.min(ghostModeIndex + 1, MODE_SEQUENCE.length - 1);
+          ghostMode = MODE_SEQUENCE[ghostModeIndex].mode;
+          modeTimer = MODE_SEQUENCE[ghostModeIndex].duration;
+        }
+      }
+
+      function updateHUD() {
+        scoreEl.textContent = String(state.score).padStart(4, "0");
+        pelletEl.textContent = String(state.pellets).padStart(3, "0");
+      }
+
+      function canMove(x, y, dir) {
+        return !isWall(wrap(x + dir.x, LEVEL[0].length), wrap(y + dir.y, LEVEL.length));
+      }
+
+      function movePacman() {
+        if (canMove(pacman.x, pacman.y, pacman.next)) {
+          pacman.dir = pacman.next;
+        }
+        if (!canMove(pacman.x, pacman.y, pacman.dir)) return;
+
+        pacman.x = wrap(pacman.x + pacman.dir.x, LEVEL[0].length);
+        pacman.y = wrap(pacman.y + pacman.dir.y, LEVEL.length);
+
+        const key = pelletKey(pacman.x, pacman.y);
+        if (pellets.has(key)) {
+          pellets.delete(key);
+          state.score += 10;
+          state.pellets = pellets.size;
+          chompBoost = 1;
+          updateHUD();
+          if (state.pellets === 0) {
+            statusEl.textContent = "lab cracked. enjoy the spoils.";
+            setTimeout(() => window.location.href = "inside.html", 1500);
+            state.running = false;
+            return;
+          }
+        }
+        checkCollision();
+      }
+
+      function chooseDirection(ghost) {
+        const options = DIRS.filter((dir) => {
+          if (!canMove(ghost.x, ghost.y, dir)) return false;
+          if (ghost.dir && dir.x === -ghost.dir.x && dir.y === -ghost.dir.y) return false;
+          return true;
+        });
+        if (!options.length) return ghost.dir;
+
+        const target = getGhostTarget(ghost);
+        let bestDistance = Infinity;
+        const bestOptions = [];
+        options.forEach((dir) => {
+          const nx = wrap(ghost.x + dir.x, LEVEL_WIDTH);
+          const ny = wrap(ghost.y + dir.y, LEVEL_HEIGHT);
+          const distance = manhattan(nx, ny, target.x, target.y);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestOptions.length = 0;
+            bestOptions.push(dir);
+          } else if (distance === bestDistance) {
+            bestOptions.push(dir);
+          }
+        });
+        return bestOptions[Math.floor(Math.random() * bestOptions.length)];
+      }
+
+      function moveGhosts() {
+        ghosts.forEach((ghost) => {
+          if (ghost.isRespawning) {
+            if (ghost.respawnTimer > 0) {
+              ghost.respawnTimer -= 1;
+            }
+            if (ghost.respawnTimer <= 0) {
+              reviveGhost(ghost);
+            }
+            return;
+          }
+          const dir = chooseDirection(ghost);
+          if (dir) {
+            ghost.dir = dir;
+            ghost.x = wrap(ghost.x + dir.x, LEVEL[0].length);
+            ghost.y = wrap(ghost.y + dir.y, LEVEL.length);
+          }
+        });
+        checkCollision();
+      }
+
+      function reviveGhost(ghost) {
+        ghost.isRespawning = false;
+        ghost.respawnTimer = 0;
+        ghost.x = ghost.spawnX;
+        ghost.y = ghost.spawnY;
+        ghost.dir = cloneDir(ghost.spawnDir);
+      }
+
+      function consumeGhost(ghost) {
+        state.score += GHOST_BOUNTY;
+        updateHUD();
+        statusEl.textContent = "ghost link intercepted.";
+        chompBoost = 1.2;
+        ghost.isRespawning = true;
+        ghost.respawnTimer = GHOST_RESPAWN_STEPS;
+        ghost.x = pacman.x;
+        ghost.y = pacman.y;
+      }
+
+      function checkCollision() {
+        ghosts.forEach((ghost) => {
+          if (ghost.isRespawning) return;
+          if (ghost.x === pacman.x && ghost.y === pacman.y) {
+            consumeGhost(ghost);
+          }
+        });
+      }
+
+      function drawMaze() {
+        LEVEL.forEach((row, y) => {
+          row.split("").forEach((cell, x) => {
+            const px = x * TILE;
+            const py = y * TILE;
+            if (cell === "#") {
+              ctx.fillStyle = "#022a1c";
+              ctx.fillRect(px, py, TILE, TILE);
+            } else if (pellets.has(pelletKey(x, y))) {
+              ctx.fillStyle = "#b8ffdf";
+              ctx.beginPath();
+              ctx.arc(px + TILE / 2, py + TILE / 2, TILE * 0.12, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+        });
+      }
+
+      function drawPacman() {
+        const cx = pacman.x * TILE + TILE / 2;
+        const cy = pacman.y * TILE + TILE / 2;
+        const angle = Math.atan2(pacman.dir.y, pacman.dir.x) || 0;
+        const wave = 0.25 + 0.15 * (0.5 - 0.5 * Math.cos(animationClock * 0.012));
+        const spread = Math.min(Math.PI / 3.2, wave + chompBoost * 0.15);
+        const radius = TILE * 0.48;
+
+        ctx.fillStyle = "#ffeb00";
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, angle + spread, angle - spread, false);
+        ctx.lineTo(cx, cy);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawGhost(ghost) {
+        if (ghost.isRespawning) return;
+        const cx = ghost.x * TILE + TILE / 2;
+        const cy = ghost.y * TILE + TILE / 2;
+        const radius = TILE * 0.4;
+        const bottom = cy + radius;
+        ctx.fillStyle = ghost.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, Math.PI, 0, false);
+        ctx.lineTo(cx + radius, bottom);
+        const bumps = 4;
+        for (let i = bumps; i >= 0; i -= 1) {
+          const startX = cx - radius + (i * (radius * 2)) / bumps;
+          const midX = startX - (radius * 2) / (bumps * 2);
+          ctx.quadraticCurveTo(midX, bottom + TILE * 0.12 * ((i + 1) % 2), startX - (radius * 2) / bumps, bottom);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        // eyes
+        const eyeOffsetX = TILE * 0.12;
+        const eyeOffsetY = TILE * 0.08;
+        const eyeRadius = TILE * 0.12;
+        ctx.fillStyle = "#fff";
+        [ -eyeOffsetX, eyeOffsetX ].forEach((offset) => {
+          ctx.beginPath();
+          ctx.arc(cx + offset, cy - eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#0035ff";
+          ctx.beginPath();
+          ctx.arc(cx + offset * 1.05, cy - eyeOffsetY + eyeRadius * 0.2, eyeRadius * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawMaze();
+        drawPacman();
+        ghosts.forEach(drawGhost);
+      }
+
+      function loop(timestamp) {
+        if (!previousFrame) {
+          previousFrame = timestamp;
+        }
+        const delta = timestamp - previousFrame;
+        previousFrame = timestamp;
+        animationClock += delta;
+        chompBoost = Math.max(0, chompBoost - delta * 0.0025);
+
+        if (state.running) {
+          updateGhostMode(delta);
+          if (!lastPacStep) {
+            lastPacStep = timestamp;
+            lastGhostStep = timestamp;
+          }
+          if (timestamp - lastPacStep > PAC_INTERVAL) {
+            movePacman();
+            lastPacStep = timestamp;
+          }
+          if (timestamp - lastGhostStep > GHOST_INTERVAL) {
+            moveGhosts();
+            lastGhostStep = timestamp;
+          }
+        }
+
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      function setDirection(dir) {
+        pacman.next = dir;
+      }
+
+      document.addEventListener("keydown", (event) => {
+        const key = event.key.toLowerCase();
+        if (key === "arrowup" || key === "w") setDirection(DIRS[3]);
+        if (key === "arrowdown" || key === "s") setDirection(DIRS[2]);
+        if (key === "arrowleft" || key === "a") setDirection(DIRS[1]);
+        if (key === "arrowright" || key === "d") setDirection(DIRS[0]);
+      });
+
+      let touchStart = null;
+      const handlePointerStart = (x, y) => {
+        touchStart = { x, y };
+      };
+
+      const handlePointerEnd = (x, y) => {
+        if (!touchStart) return;
+        const dx = x - touchStart.x;
+        const dy = y - touchStart.y;
+        touchStart = null;
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          setDirection(dx > 0 ? DIRS[0] : DIRS[1]);
+        } else {
+          setDirection(dy > 0 ? DIRS[2] : DIRS[3]);
+        }
+      };
+
+      canvas.addEventListener("touchstart", (event) => {
+        const t = event.touches[0];
+        handlePointerStart(t.clientX, t.clientY);
+      });
+      canvas.addEventListener("touchend", (event) => {
+        const t = event.changedTouches[0];
+        handlePointerEnd(t.clientX, t.clientY);
+      });
+      canvas.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "touch") return;
+        handlePointerStart(event.clientX, event.clientY);
+      });
+      canvas.addEventListener("pointerup", (event) => {
+        if (event.pointerType === "touch") return;
+        handlePointerEnd(event.clientX, event.clientY);
+      });
+
+      updateHUD();
+      draw();
+      requestAnimationFrame(loop);
+    </script>
+      <script>
+      (function () {
+        const COOKIE_KEY = "hvh_cookie_choice_v2";
+        const banner = document.getElementById("cookie-banner");
+        const acceptBtn = banner?.querySelector('[data-cookie-action="accept"]');
+        const rejectBtn = banner?.querySelector('[data-cookie-action="reject"]');
+        const TRACKING_ID = "G-D5ZVVS819V";
+
+        function loadGoogleAnalytics() {
+          if (window._hvhGaLoaded) return;
+          window._hvhGaLoaded = true;
+          window.dataLayer = window.dataLayer || [];
+          window.gtag =
+            window.gtag ||
+            function gtag() {
+              window.dataLayer.push(arguments);
+            };
+          const script = document.createElement("script");
+          script.async = true;
+          script.src = `https://www.googletagmanager.com/gtag/js?id=${TRACKING_ID}`;
+          document.head.appendChild(script);
+          window.gtag("js", new Date());
+          window.gtag("config", TRACKING_ID);
+        }
+
+        function hideBanner() {
+          if (!banner) return;
+          banner.classList.remove("show");
+          banner.setAttribute("aria-hidden", "true");
+        }
+
+        const stored = (() => {
+          try {
+            return window.localStorage.getItem(COOKIE_KEY);
+          } catch (error) {
+            return null;
+          }
+        })();
+
+        if (stored === "accepted") {
+          loadGoogleAnalytics();
+        } else if (banner) {
+          banner.classList.add("show");
+          banner.setAttribute("aria-hidden", "false");
+        }
+
+        acceptBtn?.addEventListener("click", () => {
+          try {
+            window.localStorage.setItem(COOKIE_KEY, "accepted");
+          } catch (error) {}
+          loadGoogleAnalytics();
+          hideBanner();
+        });
+
+        rejectBtn?.addEventListener("click", () => {
+          try {
+            window.localStorage.setItem(COOKIE_KEY, "rejected");
+          } catch (error) {}
+          hideBanner();
+        });
+      })();
+    </script>
+  </body>
+</html>
+
+
+
+
+

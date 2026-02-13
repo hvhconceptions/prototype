@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Spoil Me  heidivanhorny</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
+    />
+    <script>(function(){
+      function has(){ return document.cookie.indexOf('hvh_access=granted')!==-1; }
+      function grant(){ var maxAge=60*60*24*365,secure=location.protocol==='https:'?'; Secure':''; var apex=location.hostname.split('.').slice(-2).join('.'); document.cookie='hvh_access=granted; Max-Age='+maxAge+'; Path=/; SameSite=Lax'+secure; document.cookie='hvh_access=granted; Domain=.'+apex+'; Max-Age='+maxAge+'; Path=/; SameSite=Lax'+secure; try{localStorage.setItem('hvh_access','1');}catch(e){} }
+      if(!has()){ if(localStorage.getItem('hvh_access')==='1'){ grant(); } else { window.location.replace('index.html'); } }
+    })();</script>
+    <style>
+      :root{ --bg:#000; --fg:#00ff99; --muted:#7fffd4 }
+      body.pink-mode{
+        --bg:#0a0608; --fg:#fff1f7; --muted:rgba(255,95,174,.65);
+        background:
+          radial-gradient(circle at 18% 12%, rgba(255,186,220,.22), transparent 36%),
+          radial-gradient(circle at 78% 16%, rgba(255,140,200,.2), transparent 40%),
+          radial-gradient(circle at 56% 82%, rgba(160,0,70,.28), transparent 46%),
+          linear-gradient(160deg, #060006 0%, #1a0510 46%, #0b0106 100%);
+        color:var(--fg);
+      }
+      body.christmas-mode{
+        --bg:#0b1822; --fg:#eaf6ff; --muted:rgba(191,233,255,.75);
+        background:
+          radial-gradient(circle at 20% 12%, rgba(191,233,255,.22), transparent 40%),
+          radial-gradient(circle at 80% 16%, rgba(255,255,255,.16), transparent 42%),
+          radial-gradient(circle at 52% 84%, rgba(120,190,230,.2), transparent 48%),
+          #0b1822;
+        color:var(--fg);
+      }
+      html,body{ height:100% }
+      html.embed-mode, body.embed-mode{ height:auto; min-height:0; }
+      body{
+        margin:0; background:var(--bg); color:var(--fg);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        display:grid; place-items:center; padding:24px;
+      }
+      body.embed-mode{ display:block; padding:16px 18px 20px; }
+      body.embed-mode .wrap{ margin:0 auto; }
+      .wrap{ width:100%; max-width:860px; text-align:center }
+      h1{ font-weight:700; letter-spacing:1px; margin:0 0 18px }
+      p{ opacity:.9; margin:6px 0 18px }
+      .grid{ display:grid; gap:14px; grid-template-columns: 1fr; align-items:stretch; margin-bottom:22px }
+      /* credit-card look */
+      .card{ position:relative; aspect-ratio:1.75; border-radius:12px; overflow:hidden; border:1px solid rgba(0,255,153,.25); background: radial-gradient(120% 120% at 0% 0%, rgba(0,255,153,.16), rgba(0,255,153,.05) 60%, rgba(0,255,153,.03) 100%); box-shadow:0 8px 22px rgba(0,255,153,.08); padding:12px; padding-bottom:44px; display:flex; flex-direction:column; justify-content:flex-end }
+      body.pink-mode .card{ border-color:rgba(255,95,174,.35); background:linear-gradient(140deg, rgba(255,95,174,.2), rgba(20,8,14,.92)); box-shadow:0 12px 30px rgba(255,80,160,.2) }
+      body.christmas-mode .card{ border-color:rgba(191,233,255,.35); background:linear-gradient(140deg, rgba(191,233,255,.18), rgba(8,18,26,.92)); box-shadow:0 12px 30px rgba(180,230,255,.2) }
+      .card::before{ content:""; position:absolute; top:12px; left:12px; width:30px; height:22px; border-radius:4px; background:linear-gradient(135deg,#00ff99,#0b5); opacity:.8; box-shadow:0 0 10px rgba(0,255,153,.25) }
+      body.pink-mode .card::before{ background:linear-gradient(135deg,#ff8ac5,#ff4fa8); box-shadow:0 0 12px rgba(255,95,174,.35) }
+      body.christmas-mode .card::before{ background:linear-gradient(135deg,#d6f4ff,#9ad8f5); box-shadow:0 0 12px rgba(191,233,255,.35) }
+      .cc-brand{ position:absolute; top:12px; right:12px; letter-spacing:1px; font-weight:700; opacity:.95; font-size:12px }
+      .cc-number{ font-size:12px; letter-spacing:2px; opacity:.92; margin-bottom:12px }
+      .cc-name{ font-size:11px; opacity:.85 }
+      .cc-btn{ position:absolute; right:12px; bottom:12px; color:var(--fg); text-decoration:none; border:1px solid rgba(0,255,153,.35); padding:6px 10px; border-radius:8px; background:rgba(0,255,153,.06); font-size:12px }
+      body.pink-mode .cc-btn{ border-color:rgba(255,95,174,.5); background:rgba(255,95,174,.18); color:#fff1f7 }
+      body.christmas-mode .cc-btn{ border-color:rgba(191,233,255,.5); background:rgba(191,233,255,.16); color:#eaf6ff }
+      .card:hover{ box-shadow:0 0 0 1px rgba(0,255,153,.35), 0 12px 30px rgba(0,255,153,.12) }
+      body.pink-mode .card:hover{ box-shadow:0 0 0 1px rgba(255,95,174,.45), 0 14px 34px rgba(255,80,160,.22) }
+      body.christmas-mode .card:hover{ box-shadow:0 0 0 1px rgba(191,233,255,.45), 0 14px 34px rgba(180,230,255,.22) }
+      .tag{ opacity:.9; letter-spacing:.5px }
+      .sub{ margin-top:18px; margin-bottom:24px }
+      a.back{ color:var(--muted); text-decoration:underline }
+      @media (min-width:720px){ .grid{ grid-template-columns: repeat(2, minmax(240px, 1fr)) } }
+      @media (min-width:1024px){ .grid{ grid-template-columns: repeat(2, minmax(240px, 1fr)) } }
+
+      /* floating phone button (click to expand call/text) */
+      .contact-fab{position:fixed;right:16px;bottom:16px;z-index:9999;display:none}
+      .fab-btn{width:56px;height:56px;border-radius:50%;border:1px solid rgba(0,255,153,.35);background:rgba(0,255,153,.08);display:grid;place-items:center;cursor:pointer}
+      .fab-btn img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+      .fab-fallback{width:28px;height:28px;color:var(--fg)}
+      .fab-menu{position:absolute;right:64px;bottom:8px;display:none;gap:8px}
+      .fab-menu a{color:#fff;border:1px solid #b51036;background:#ff2d55;padding:8px 10px;border-radius:8px;text-decoration:none}
+      .contact-fab.open .fab-menu{display:flex}
+      .consent-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:10060}
+      .consent-box{max-width:520px;margin:16px;background:#00150f;color:var(--fg);border:1px solid rgba(0,255,153,.35);border-radius:12px;padding:18px;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+      .consent-actions{display:flex;gap:10px;justify-content:center;margin-top:10px}
+      .consent-actions button{cursor:pointer;color:var(--fg);background:rgba(0,255,153,.08);border:1px solid rgba(0,255,153,.35);padding:8px 12px;border-radius:8px;font-weight:700}
+      .consent-actions button.no{background:#ff2d55;border-color:#b51036}
+      .sig{ position:fixed; left:8px; bottom:6px; font-size:13px; color:var(--muted); opacity:.9; user-select:none; pointer-events:none }
+      /* social icons footer */
+      .social{ position:fixed; right:80px; bottom:6px; display:flex; gap:20px; z-index:9000 }
+      .social a{ display:inline-grid; place-items:center; width:32px; height:32px; border-radius:50%; text-decoration:none; box-shadow:0 0 14px rgba(0,0,0,.15) }
+      .social svg{ width:18px; height:18px }
+      .social a.ig{ background: radial-gradient(120% 120% at 30% 110%, #feda75, #fa7e1e 45%, #d62976 60%, #962fbf 75%, #4f5bd5 100%); }
+      .social a.ig svg{ fill:#fff }
+      .social a.sc{ background:#FFFC00; }
+      .social a.sc svg{ fill:#000 }
+      .social a.of{ background:#00AEEF; }
+      .social a.of svg{ fill:#fff }
+    </style>
+  </head>
+  <body>
+    <main class="wrap" role="main">
+      <h1>SPOIL ME LIKE A LIL' BRAT</h1>
+      <p class="tag">Choose a gift card below. Opens in a new tab.</p>
+
+      <section class="grid" aria-label="gift card links">
+        <div class="card">
+          <div class="cc-brand">AMAZON</div>
+          <div class="cc-number">   0000</div>
+          <div class="cc-name">Amazon Gift Card</div>
+          <a class="cc-btn" href="https://www.amazon.com/gift-cards/b?node=2238192011" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+        <div class="card">
+          <div class="cc-brand">SEPHORA</div>
+          <div class="cc-number">   1111</div>
+          <div class="cc-name">Sephora Gift Card</div>
+          <a class="cc-btn" href="https://www.sephora.com/beauty/gift-cards" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+        <div class="card">
+          <div class="cc-brand">UBER</div>
+          <div class="cc-number">   2222</div>
+          <div class="cc-name">Uber Gift Card</div>
+          <a class="cc-btn" href="https://www.uber.com/gift-cards/" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+        <div class="card">
+          <div class="cc-brand">STARBUCKS</div>
+          <div class="cc-number">   3333</div>
+          <div class="cc-name">Starbucks Gift Card</div>
+          <a class="cc-btn" href="https://www.starbucks.com/gift" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+        <div class="card">
+          <div class="cc-brand">HONEY BIRDETTE</div>
+          <div class="cc-number">   4444</div>
+          <div class="cc-name">Honey Birdette</div>
+          <a class="cc-btn" href="https://www.honeybirdette.com/" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+        <div class="card">
+          <div class="cc-brand">VISA</div>
+          <div class="cc-number">   5555</div>
+          <div class="cc-name">Visa Gift Card</div>
+          <a class="cc-btn" href="https://www.vanillaprepaid.com/" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+      </section>
+
+    </main>
+
+    <script>
+      (function(){
+        function applyTheme(theme){
+          document.body.classList.remove("pink-mode","christmas-mode");
+          if(theme==="pink"){ document.body.classList.add("pink-mode"); }
+          else if(theme==="christmas"){ document.body.classList.add("christmas-mode"); }
+        }
+        function normalizeTheme(theme){
+          return theme==="green" ? "default" : theme;
+        }
+        function readStoredTheme(){
+          try{ return localStorage.getItem("hvh_theme_key"); }catch(e){ return null; }
+        }
+        function getSeasonalTheme(){
+          var now = new Date();
+          var month = now.getMonth();
+          var day = now.getDate();
+          if(month===11 || (month===0 && day<=2)){ return "christmas"; }
+          if(month===1 && day<=16){ return "pink"; }
+          return "default";
+        }
+
+        var storedTheme = normalizeTheme(readStoredTheme());
+        if(storedTheme==="pink" || storedTheme==="christmas" || storedTheme==="default"){
+          applyTheme(storedTheme);
+        } else {
+          applyTheme(getSeasonalTheme());
+        }
+
+        window.addEventListener("message", function(event){
+          if(event.origin!==window.location.origin){ return; }
+          var payload = event.data;
+          if(!payload || payload.type!=="hvh:theme"){ return; }
+          applyTheme(normalizeTheme(payload.theme));
+          window.dispatchEvent(new Event("resize"));
+        });
+      })();
+      (function(){
+        if (window.parent === window) return;
+        document.documentElement.classList.add("embed-mode");
+        document.body.classList.add("embed-mode");
+        const wrap = document.querySelector(".wrap");
+        const sendHeight = () => {
+          const wrapHeight = wrap ? wrap.getBoundingClientRect().height : 0;
+          const height = Math.max(200, Math.ceil(wrapHeight + 32));
+          window.parent.postMessage(
+            { type: "hvh:height", id: "spoil-me", height },
+            window.location.origin
+          );
+        };
+        if (document.readyState === "complete") {
+          sendHeight();
+        } else {
+          window.addEventListener("load", sendHeight);
+        }
+        window.addEventListener("resize", sendHeight);
+        if ("ResizeObserver" in window) {
+          const observer = new ResizeObserver(() => sendHeight());
+          observer.observe(document.body);
+        }
+        window.setTimeout(sendHeight, 400);
+      })();
+    </script>
+  </body></html>
+
+

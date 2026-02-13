@@ -1,0 +1,30 @@
+{
+  "tour_city": "Montreal",
+  "tour_timezone": "America/Toronto",
+  "buffer_minutes": 30,
+  "availability_mode": "open",
+  "blocked": [
+    {
+      "date": "2026-01-26",
+      "start": "00:00",
+      "end": "20:00",
+      "reason": "Rome block",
+      "kind": "manual"
+    },
+    {
+      "date": "2026-01-28",
+      "start": "22:00",
+      "end": "23:59",
+      "reason": "Rome block",
+      "kind": "manual"
+    },
+    {
+      "date": "2026-01-29",
+      "start": "00:00",
+      "end": "02:00",
+      "reason": "Rome block",
+      "kind": "manual"
+    }
+  ],
+  "updated_at": "2026-02-01T00:00:00Z"
+}

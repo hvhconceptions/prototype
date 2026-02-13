@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "702943140914",
+    "project_id": "prototypebooking",
+    "storage_bucket": "prototypebooking.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:702943140914:android:10244a0978f06951c1f02b",
+        "android_client_info": {
+          "package_name": "com.heidi.bookingadmin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKJpLG0DbKSNeuCcraC5ub79HJylrJwbM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

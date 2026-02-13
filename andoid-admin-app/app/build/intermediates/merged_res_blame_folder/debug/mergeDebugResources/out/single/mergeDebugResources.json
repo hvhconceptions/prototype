@@ -1,0 +1,54 @@
+[
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\karin\\.gradle\\daemon\\9.0-milestone-1\\com.heidi.bookingadmin.app-debug-51:\\layout_item_client.xml.flat",
+        "source": "C:\\Users\\karin\\.gradle\\daemon\\9.0-milestone-1\\com.heidi.bookingadmin.app-main-53:\\layout\\item_client.xml"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\karin\\.gradle\\daemon\\9.0-milestone-1\\com.heidi.bookingadmin.app-debug-51:\\layout_activity_clients.xml.flat",
+        "source": "C:\\Users\\karin\\.gradle\\daemon\\9.0-milestone-1\\com.heidi.bookingadmin.app-main-53:\\layout\\activity_clients.xml"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.heidi.bookingadmin.app-debug-51:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.heidi.bookingadmin.app-main-53:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\karin\\.gradle\\daemon\\9.0-milestone-1\\com.heidi.bookingadmin.app-debug-51:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\karin\\.gradle\\daemon\\9.0-milestone-1\\com.heidi.bookingadmin.app-main-53:\\layout\\activity_main.xml"
+    }
+]

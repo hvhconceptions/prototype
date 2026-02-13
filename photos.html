@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eye Candy | Heidi Van Horny</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
+    />
+    <style>
+      :root {
+        --bg: #040506;
+        --fg: #f4fff7;
+        --accent: #00ff99;
+        --accent-rgb: 0, 255, 153;
+        --accent-soft: rgba(0, 255, 153, 0.2);
+        --secondary-soft: rgba(120, 255, 220, 0.18);
+        --card: rgba(3, 14, 10, 0.9);
+        --line: rgba(0, 255, 153, 0.34);
+        --text-muted: rgba(244, 255, 247, 0.78);
+      }
+
+      body.pink-mode {
+        --bg: #0a0608;
+        --fg: #fff1f7;
+        --accent: #ff5fae;
+        --accent-rgb: 255, 95, 174;
+        --accent-soft: rgba(255, 95, 174, 0.2);
+        --secondary-soft: rgba(255, 186, 220, 0.2);
+        --card: rgba(18, 6, 12, 0.9);
+        --line: rgba(255, 95, 174, 0.34);
+        --text-muted: rgba(255, 240, 250, 0.8);
+      }
+
+      body.christmas-mode {
+        --bg: #0b1822;
+        --fg: #eaf6ff;
+        --accent: #bfe9ff;
+        --accent-rgb: 191, 233, 255;
+        --accent-soft: rgba(191, 233, 255, 0.2);
+        --secondary-soft: rgba(232, 246, 255, 0.2);
+        --card: rgba(8, 18, 26, 0.9);
+        --line: rgba(191, 233, 255, 0.34);
+        --text-muted: rgba(234, 246, 255, 0.82);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, ui-monospace, monospace;
+        background: radial-gradient(circle at 20% 20%, var(--accent-soft), transparent 50%), var(--bg);
+        color: var(--fg);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding: clamp(20px, 4vw, 48px);
+      }
+
+      header {
+        max-width: 900px;
+        width: 100%;
+        margin: 0 auto;
+        text-align: center;
+        display: grid;
+        gap: 10px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        font-size: 12px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 5vw, 52px);
+        text-transform: uppercase;
+        letter-spacing: 4px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-muted);
+        letter-spacing: 1.4px;
+      }
+
+      main {
+        width: min(980px, 100%);
+        margin: 0 auto;
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+      }
+
+      .carousel {
+        position: relative;
+        width: 100%;
+        background: var(--card);
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        overflow: hidden;
+        min-height: clamp(320px, 70vh, 680px);
+        touch-action: pan-y;
+      }
+
+      .carousel-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.35s ease;
+      }
+
+      .carousel-slide {
+        min-width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(12px, 3vw, 24px);
+      }
+
+      .carousel-slide img {
+        max-width: 100%;
+        max-height: min(70vh, 70dvh);
+        object-fit: contain;
+        border-radius: 18px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      .nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 1px solid var(--line);
+        background: rgba(6, 8, 10, 0.7);
+        color: var(--fg);
+        padding: 10px 16px;
+        border-radius: 999px;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 12px;
+        z-index: 5;
+        pointer-events: auto;
+        box-shadow: 0 10px 24px rgba(var(--accent-rgb), 0.28);
+      }
+
+      .nav-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .nav-prev {
+        left: 16px;
+      }
+
+      .nav-next {
+        right: 16px;
+      }
+
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        padding-bottom: 6px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .dot.active {
+        background: var(--accent);
+        box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.7);
+      }
+
+      .carousel::before {
+        content: "";
+        position: absolute;
+        inset: -40% 20% auto;
+        height: 240px;
+        background: radial-gradient(circle, rgba(var(--accent-rgb), 0.25), transparent 70%);
+        opacity: 0.8;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .carousel::after {
+        content: "";
+        position: absolute;
+        inset: auto -20% -40% 30%;
+        height: 240px;
+        background: radial-gradient(circle, var(--secondary-soft), transparent 70%);
+        opacity: 0.6;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .carousel-track,
+      .carousel-slide {
+        position: relative;
+        z-index: 1;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        color: var(--fg);
+        text-decoration: none;
+        padding: 10px 18px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: clamp(16px, 5vw, 28px);
+        }
+
+        main {
+          width: 100%;
+        }
+
+        .carousel {
+          min-height: clamp(260px, 60vh, 520px);
+        }
+
+        .carousel-slide img {
+          max-height: min(55vh, 55dvh);
+        }
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 16px;
+        }
+
+        h1 {
+          letter-spacing: 3px;
+        }
+
+        .nav-btn {
+          padding: 8px 12px;
+          font-size: 11px;
+        }
+
+        .carousel {
+          min-height: clamp(220px, 55vh, 420px);
+        }
+
+        .carousel-slide img {
+          max-height: min(50vh, 50dvh);
+        }
+
+        .dots {
+          gap: 8px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header {
+          gap: 8px;
+        }
+
+        .tag {
+          font-size: 10px;
+          letter-spacing: 2px;
+        }
+
+        h1 {
+          font-size: clamp(24px, 7vw, 34px);
+        }
+
+        p {
+          letter-spacing: 1px;
+          font-size: 13px;
+        }
+
+        .carousel {
+          min-height: clamp(220px, 58vh, 420px);
+        }
+
+        .carousel-slide {
+          padding: 10px;
+        }
+
+        .nav-btn {
+          top: auto;
+          bottom: 14px;
+          transform: none;
+        }
+
+        .nav-prev {
+          left: 12px;
+        }
+
+        .nav-next {
+          right: 12px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        body {
+          padding: 12px;
+        }
+
+        .carousel {
+          min-height: clamp(200px, 54vh, 380px);
+        }
+      }
+
+      .link-row {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="tag">Heidi Van Horny</span>
+      <h1>Eye candy</h1>
+      <p>all photos are 110% no editing no filters.</p>
+      <div class="link-row">
+        <a class="back-link" href="index.html">checkpoint</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="carousel" id="carousel">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <button class="nav-btn nav-prev" id="prevBtn" type="button">prev</button>
+        <button class="nav-btn nav-next" id="nextBtn" type="button">next</button>
+      </div>
+      <div class="dots" id="carouselDots" aria-label="Gallery navigation"></div>
+    </main>
+
+    <script>
+      const photos = [
+        { src: "/photos/heidi1.jpg", alt: "Heidi photo 1" },
+        { src: "/photos/heidi2.jpg", alt: "Heidi photo 2" },
+        { src: "/photos/heidi3.jpg", alt: "Heidi photo 3" },
+        { src: "/photos/heidi4.jpg", alt: "Heidi photo 4" },
+        { src: "/photos/heidi5.jpg", alt: "Heidi photo 5" },
+        { src: "/photos/heidi6.jpg", alt: "Heidi photo 6" },
+        { src: "/photos/heidi7.jpg", alt: "Heidi photo 7" },
+        { src: "/photos/heidi8.jpg", alt: "Heidi photo 8" },
+        { src: "/photos/heidi9.jpg", alt: "Heidi photo 9" },
+        { src: "/photos/heidi12.png", alt: "Heidi photo 12" },
+        { src: "/photos/heidi13.JPG", alt: "Heidi photo 13" },
+        { src: "/photos/heidi14.jpg", alt: "Heidi photo 14" },
+      ];
+
+      const track = document.getElementById("carouselTrack");
+      const dots = document.getElementById("carouselDots");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const carousel = document.getElementById("carousel");
+
+      const applyTheme = (theme) => {
+        document.body.classList.remove("pink-mode", "christmas-mode");
+        if (theme === "pink") {
+          document.body.classList.add("pink-mode");
+        } else if (theme === "christmas") {
+          document.body.classList.add("christmas-mode");
+        }
+      };
+
+      const getThemeFromCalendar = () => {
+        const now = new Date();
+        const month = now.getMonth();
+        const day = now.getDate();
+        if (month === 11 || (month === 0 && day <= 2)) return "christmas";
+        if (month === 1 && day <= 16) return "pink";
+        return "default";
+      };
+
+      const normalizeTheme = (theme) => (theme === "green" ? "default" : theme);
+
+      const readStoredTheme = () => {
+        try {
+          return window.localStorage.getItem("hvh_theme_key");
+        } catch (_error) {
+          return null;
+        }
+      };
+
+      const storedTheme = normalizeTheme(readStoredTheme());
+      if (storedTheme === "pink" || storedTheme === "christmas" || storedTheme === "default") {
+        applyTheme(storedTheme);
+      } else {
+        applyTheme(getThemeFromCalendar());
+      }
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin) return;
+        const payload = event.data;
+        if (!payload || payload.type !== "hvh:theme") return;
+        applyTheme(normalizeTheme(payload.theme));
+      });
+
+      let index = 0;
+      let dragStartX = 0;
+      let dragDelta = 0;
+      let isDragging = false;
+
+      const render = () => {
+        track.innerHTML = "";
+        dots.innerHTML = "";
+        photos.forEach((photo, i) => {
+          const slide = document.createElement("div");
+          slide.className = "carousel-slide";
+          const img = document.createElement("img");
+          img.src = photo.src;
+          img.alt = photo.alt;
+          img.loading = i === 0 ? "eager" : "lazy";
+          slide.appendChild(img);
+          track.appendChild(slide);
+
+          const dot = document.createElement("button");
+          dot.type = "button";
+          dot.className = "dot";
+          dot.setAttribute("aria-label", `Go to slide ${i + 1}`);
+          dot.addEventListener("click", () => {
+            index = i;
+            update();
+          });
+          dots.appendChild(dot);
+        });
+      };
+
+      const clampIndex = () => {
+        if (index < 0) index = 0;
+        if (index > photos.length - 1) index = photos.length - 1;
+      };
+
+      const update = () => {
+        clampIndex();
+        track.style.transition = "transform 0.35s ease";
+        track.style.transform = `translateX(${-index * 100}%)`;
+        Array.from(dots.children).forEach((dot, i) => {
+          dot.classList.toggle("active", i === index);
+        });
+        const disableNav = photos.length <= 1;
+        prevBtn.disabled = disableNav || index === 0;
+        nextBtn.disabled = disableNav || index === photos.length - 1;
+      };
+
+      const goPrev = () => {
+        index -= 1;
+        update();
+      };
+
+      const goNext = () => {
+        index += 1;
+        update();
+      };
+
+      prevBtn.addEventListener("click", goPrev);
+      nextBtn.addEventListener("click", goNext);
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") goPrev();
+        if (event.key === "ArrowRight") goNext();
+      });
+
+      const handlePointerDown = (event) => {
+        if (photos.length <= 1) return;
+        isDragging = true;
+        dragStartX = event.clientX;
+        dragDelta = 0;
+        track.style.transition = "none";
+        carousel.setPointerCapture(event.pointerId);
+      };
+
+      const handlePointerMove = (event) => {
+        if (!isDragging) return;
+        dragDelta = event.clientX - dragStartX;
+        const width = carousel.clientWidth || 1;
+        track.style.transform = `translateX(${-(index * width) + dragDelta}px)`;
+      };
+
+      const handlePointerUp = (event) => {
+        if (!isDragging) return;
+        isDragging = false;
+        carousel.releasePointerCapture(event.pointerId);
+        const width = carousel.clientWidth || 1;
+        const threshold = width * 0.2;
+        if (dragDelta < -threshold) {
+          index += 1;
+        } else if (dragDelta > threshold) {
+          index -= 1;
+        }
+        update();
+      };
+
+      carousel.addEventListener("pointerdown", handlePointerDown);
+      carousel.addEventListener("pointermove", handlePointerMove);
+      carousel.addEventListener("pointerup", handlePointerUp);
+      carousel.addEventListener("pointercancel", handlePointerUp);
+
+      render();
+      update();
+    </script>
+  </body>
+</html>

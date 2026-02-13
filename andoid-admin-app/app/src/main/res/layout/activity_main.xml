@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+  <WebView
+    android:id="@+id/adminWebView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+
+  <TextView
+    android:id="@+id/offlineMessage"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:text="No connection. Pull to refresh or try again."
+    android:visibility="gone" />
+
+  <com.google.android.material.button.MaterialButton
+    android:id="@+id/openClients"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="top|end"
+    android:layout_margin="16dp"
+    android:text="Clients"
+    android:textAllCaps="true"
+    android:letterSpacing="0.2"
+    android:backgroundTint="#ff006e"
+    android:textColor="#ffffff" />
+</FrameLayout>

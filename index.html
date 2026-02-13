@@ -1,0 +1,1595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Heidi Van Horny</title>
+    <script>
+      (function () {
+        const ACCESS_KEY = "hvh_age_gate_verified";
+        const ACCESS_COOKIE = "hvh_age_gate_verified";
+        let hasAccess = false;
+        try {
+          hasAccess = window.localStorage.getItem(ACCESS_KEY) === "true";
+        } catch (_error) {}
+        if (!hasAccess) {
+          const match = document.cookie.match(new RegExp(`(?:^|; )${ACCESS_COOKIE}=([^;]*)`));
+          hasAccess = match ? decodeURIComponent(match[1]) === "true" : false;
+        }
+        if (hasAccess) {
+          document.documentElement.style.visibility = "hidden";
+          window.location.replace("inside.html");
+        }
+      })();
+    </script>
+
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
+    />
+
+    <style>
+      :root {
+        --bg: #000;
+        --fg: #00ff99;
+        --accent: #00ff99;
+        --accent-rgb: 0, 255, 153;
+        --muted: #7fffd4;
+      }
+
+      body.pink-mode {
+        --bg: #0a0608;
+        --fg: #fff1f7;
+        --accent: #ff5fae;
+        --accent-rgb: 255, 95, 174;
+        --muted: rgba(255, 95, 174, 0.35);
+        --card: rgba(255, 95, 174, 0.14);
+        --card-border: rgba(255, 95, 174, 0.34);
+        background:
+          radial-gradient(circle at 18% 12%, rgba(255, 186, 220, 0.22), transparent 36%),
+          radial-gradient(circle at 78% 16%, rgba(255, 140, 200, 0.2), transparent 40%),
+          radial-gradient(circle at 56% 82%, rgba(160, 0, 70, 0.28), transparent 46%),
+          linear-gradient(160deg, #060006 0%, #1a0510 46%, #0b0106 100%);
+        color: var(--fg);
+      }
+
+      body.pink-mode::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          radial-gradient(circle at 16% 18%, rgba(255, 225, 238, 0.12) 0 12%, transparent 14%),
+          radial-gradient(circle at 78% 12%, rgba(255, 220, 235, 0.1) 0 10%, transparent 12%),
+          radial-gradient(circle at 30% 70%, rgba(255, 195, 225, 0.1) 0 12%, transparent 14%),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'><path d='M70 108C70 108 24 76 24 48C24 32 38 20 54 20C64 20 70 28 70 28C70 28 76 20 86 20C102 20 116 32 116 48C116 76 70 108 70 108Z' fill='%23ffd1e6' opacity='0.18'/></svg>");
+        background-size: 240px 240px, 220px 220px, 260px 260px, 200px 200px;
+        background-position: 0 0, 60px 90px, 120px 40px, 0 0;
+        mix-blend-mode: screen;
+        opacity: 0.25;
+        z-index: 0;
+      }
+
+
+
+      .theme-switchers {
+        position: fixed;
+        top: clamp(14px, 4vw, 28px);
+        right: clamp(14px, 4vw, 28px);
+        display: grid;
+        gap: 10px;
+        padding: 8px;
+        border: 1px solid rgba(var(--accent-rgb), 0.28);
+        background: rgba(0, 12, 9, 0.8);
+        box-shadow: 0 16px 30px rgba(var(--accent-rgb), 0.22);
+        z-index: 120;
+        display: none;
+      }
+
+      .theme-button {
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(var(--accent-rgb), 0.35);
+        background: rgba(0, 12, 9, 0.92);
+        color: var(--fg);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      }
+
+      .theme-button:hover,
+      .theme-button:focus-visible {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 24px rgba(var(--accent-rgb), 0.22);
+        outline: none;
+        background: rgba(var(--accent-rgb), 0.08);
+      }
+
+      .theme-button svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      .theme-button[data-theme-switch="pink"] {
+        border-color: rgba(255, 59, 189, 0.6);
+        background: linear-gradient(135deg, #ffb3e1, #ffe6f8);
+      }
+
+      .theme-button[data-theme-switch="pink"] svg {
+        fill: #c70c7a;
+      }
+
+      .theme-button[data-theme-switch="christmas"] {
+        border-color: rgba(180, 220, 255, 0.65);
+        background: linear-gradient(135deg, #ffffff, #e3f2ff);
+      }
+
+      .theme-button[data-theme-switch="christmas"] svg {
+        fill: #7fb9ff;
+      }
+
+      .theme-button[data-theme-switch="default"] {
+        border-color: rgba(0, 255, 153, 0.7);
+        background: linear-gradient(135deg, #06251a, #0d4030);
+      }
+
+      .theme-button[data-theme-switch="default"] svg {
+        fill: #00ff99;
+      }
+
+      body.pink-mode main {
+        background: rgba(36, 8, 20, 0.9);
+        border-color: rgba(var(--accent-rgb), 0.4);
+        box-shadow: 0 32px 60px rgba(var(--accent-rgb), 0.26);
+      }
+
+      body.pink-mode .subscription-card,
+      body.pink-mode .yes-message,
+      body.pink-mode .cookie-banner {
+        background: rgba(255, 214, 234, 0.18);
+        color: var(--fg);
+        text-shadow: 0 1px 12px rgba(120, 0, 60, 0.6);
+      }
+
+      body.pink-mode .cookie-banner {
+        box-shadow: 0 18px 40px rgba(var(--accent-rgb), 0.22);
+        border-color: rgba(var(--accent-rgb), 0.35);
+      }
+
+      body.pink-mode .subscription-title,
+      body.pink-mode .cookie-banner p {
+        color: var(--fg);
+        text-shadow: 0 1px 12px rgba(120, 0, 60, 0.65);
+      }
+
+      body.pink-mode .choice {
+        color: var(--fg);
+        border-bottom-color: rgba(var(--accent-rgb), 0.7);
+        text-shadow: 0 1px 12px rgba(120, 0, 60, 0.65);
+      }
+
+      body.pink-mode .age-language {
+        border-color: rgba(var(--accent-rgb), 0.4);
+        background: rgba(36, 8, 20, 0.9);
+        box-shadow: 0 16px 30px rgba(var(--accent-rgb), 0.24);
+      }
+
+      body.pink-mode .age-language .language-button {
+        border-color: rgba(var(--accent-rgb), 0.5);
+        background: rgba(255, 95, 174, 0.18);
+        color: #fff1f7;
+        box-shadow: 0 10px 18px rgba(255, 80, 160, 0.2);
+      }
+
+      body.pink-mode .age-language .language-button[aria-pressed="true"] {
+        border-color: rgba(var(--accent-rgb), 0.7);
+        background: rgba(255, 95, 174, 0.32);
+        box-shadow: 0 12px 22px rgba(255, 80, 160, 0.3);
+      }
+
+      body.pink-mode .age-marquee {
+        background: linear-gradient(
+          90deg,
+          rgba(var(--accent-rgb), 0.18),
+          rgba(var(--accent-rgb), 0.32),
+          rgba(var(--accent-rgb), 0.18)
+        );
+      }
+
+      body.pink-mode .age-marquee-track {
+        color: #ff8ccb;
+        filter: drop-shadow(0 0 18px rgba(255, 95, 174, 0.7));
+      }
+
+      body.christmas-mode {
+        --bg: #0b1520;
+        --fg: #eef9ff;
+        --accent: #c7f2ff;
+        --accent-rgb: 199, 242, 255;
+        --muted: #c7f2ff;
+        background: radial-gradient(circle at 20% 10%, rgba(199, 242, 255, 0.28), transparent 38%),
+          radial-gradient(circle at 80% 6%, rgba(255, 210, 210, 0.12), transparent 45%), #0a141c;
+        color: var(--fg);
+      }
+
+      body.christmas-mode main {
+        background: rgba(18, 36, 48, 0.92);
+        border-color: rgba(var(--accent-rgb), 0.28);
+        box-shadow: 0 32px 60px rgba(var(--accent-rgb), 0.16);
+      }
+
+      body.christmas-mode .subscription-card,
+      body.christmas-mode .yes-message,
+      body.christmas-mode .cookie-banner {
+        background: rgba(12, 28, 38, 0.9);
+        color: var(--fg);
+      }
+
+      body.christmas-mode .cookie-banner {
+        box-shadow: 0 18px 40px rgba(var(--accent-rgb), 0.22);
+        border-color: rgba(var(--accent-rgb), 0.35);
+      }
+
+      .age-language {
+        position: fixed;
+        top: clamp(14px, 4vw, 28px);
+        left: clamp(14px, 4vw, 28px);
+        display: inline-flex;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid rgba(var(--accent-rgb), 0.28);
+        background: rgba(0, 12, 9, 0.85);
+        box-shadow: 0 16px 30px rgba(var(--accent-rgb), 0.18);
+        z-index: 130;
+      }
+
+      .age-language .language-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border: 1px solid rgba(var(--accent-rgb), 0.3);
+        background: rgba(0, 12, 9, 0.92);
+        color: var(--fg);
+        cursor: pointer;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-size: 12px;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      }
+
+      .age-language .language-button[aria-pressed="true"] {
+        border-color: rgba(var(--accent-rgb), 0.6);
+        box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.2);
+        background: rgba(var(--accent-rgb), 0.12);
+      }
+
+      .age-language .language-button:focus-visible,
+      .age-language .language-button:hover {
+        transform: translateY(-1px);
+        outline: none;
+      }
+
+      .age-language .language-flag {
+        display: inline-flex;
+        width: 20px;
+        height: 14px;
+      }
+
+      .age-language .language-flag svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .age-marquee {
+        position: fixed;
+        top: clamp(30px, 6vw, 90px);
+        left: 0;
+        right: 0;
+        z-index: 90;
+        overflow: hidden;
+        pointer-events: none;
+        padding: 10px 0;
+        background: linear-gradient(
+          90deg,
+          rgba(var(--accent-rgb), 0.12),
+          rgba(var(--accent-rgb), 0.2),
+          rgba(var(--accent-rgb), 0.12)
+        );
+      }
+
+      .age-marquee-track {
+        display: inline-flex;
+        gap: 64px;
+        padding: 12px 0;
+        width: max-content;
+        animation: marquee-slide 14s linear infinite;
+        color: #ffde3b;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        font-weight: 800;
+        font-size: clamp(22px, 3.4vw, 38px);
+        filter: drop-shadow(0 0 16px rgba(255, 222, 59, 0.75));
+        white-space: nowrap;
+      }
+
+      @keyframes marquee-slide {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at top, rgba(var(--accent-rgb), 0.12), transparent 60%), var(--bg);
+        color: var(--fg);
+        font: 18px/1.5 "JetBrains Mono", "Fira Code", Menlo, Consolas, ui-monospace, monospace;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(20px, 5vw, 40px);
+        padding: clamp(24px, 6vw, 64px);
+      }
+
+      body:not(.age-ready) main {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      body.age-ready main {
+        opacity: 1;
+        transition: opacity 0.35s ease;
+      }
+
+      main {
+        width: min(720px, 100%);
+        margin: clamp(90px, 14vw, 160px) auto 0;
+        text-align: center;
+        display: grid;
+        gap: clamp(24px, 6vw, 36px);
+        border: 1px solid rgba(var(--accent-rgb), 0.28);
+        padding: clamp(34px, 8vw, 48px);
+        background: rgba(0, 12, 9, 0.82);
+        box-shadow: 0 32px 60px rgba(var(--accent-rgb), 0.18);
+      }
+
+      .type {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: normal;
+        letter-spacing: 2px;
+        text-transform: lowercase;
+        text-align: center;
+      }
+
+      .caret {
+        display: inline-block;
+        width: 10px;
+        height: 1.1em;
+        background: currentColor;
+        margin-left: 6px;
+        animation: blink 1s steps(2, end) infinite;
+        animation-play-state: paused;
+        vertical-align: -0.1em;
+      }
+
+      @keyframes blink {
+        0%,
+        49% {
+          opacity: 1;
+        }
+        50%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .choices {
+        margin-top: 18px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        row-gap: 6px;
+        white-space: normal;
+        text-align: center;
+      }
+
+      .choices[data-visible="true"] {
+        opacity: 1;
+      }
+
+      .subscription-modal {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: clamp(24px, 6vw, 64px);
+        background: rgba(0, 8, 5, 0.2);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 999;
+      }
+
+      .subscription-modal.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .subscription-card {
+        width: min(100%, 520px);
+        border: 1px solid rgba(var(--accent-rgb), 0.32);
+        background: rgba(0, 10, 7, 0.92);
+        padding: clamp(28px, 6vw, 42px);
+        text-align: center;
+        display: grid;
+        gap: 18px;
+        box-shadow: 0 28px 46px rgba(var(--accent-rgb), 0.24);
+      }
+
+      .subscription-title {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      .subscription-card .choices {
+        margin-top: 0;
+        justify-content: center;
+      }
+
+      .bracket {
+        color: var(--muted);
+      }
+
+      .choice {
+        display: inline-block;
+        padding: 6px 14px;
+        margin: 0 6px;
+        color: var(--fg);
+        text-decoration: none;
+        border-bottom: 2px solid rgba(var(--accent-rgb), 0.45);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      }
+
+      .choice:hover,
+      .choice:focus-visible {
+        background: rgba(var(--accent-rgb), 0.12);
+        outline: none;
+        transform: translateY(-2px);
+        box-shadow: 0 18px 28px rgba(var(--accent-rgb), 0.2);
+      }
+
+      .yes-message {
+        margin: clamp(20px, 5vw, 32px) auto 0;
+        padding: 18px clamp(18px, 5vw, 26px);
+        width: min(520px, 100%);
+        text-transform: uppercase;
+        letter-spacing: 1.4px;
+        font-size: clamp(12px, 3vw, 14px);
+        color: rgba(248, 255, 248, 0.82);
+        background: rgba(0, 20, 12, 0.68);
+        border: 1px solid rgba(var(--accent-rgb), 0.32);
+        box-shadow: 0 24px 40px rgba(var(--accent-rgb), 0.18);
+        text-align: center;
+        word-break: break-word;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .yes-message span {
+        display: block;
+      }
+
+      .touring-card {
+        margin: clamp(18px, 5vw, 30px) auto 0;
+        width: min(520px, 100%);
+        padding: clamp(18px, 5vw, 26px);
+        text-transform: uppercase;
+        letter-spacing: 1.6px;
+        color: rgba(248, 255, 248, 0.82);
+        background: rgba(0, 20, 12, 0.68);
+        border: 1px solid rgba(var(--accent-rgb), 0.32);
+        box-shadow: 0 24px 40px rgba(var(--accent-rgb), 0.18);
+        display: grid;
+        gap: 12px;
+      }
+
+      .touring-title {
+        margin: 0;
+        font-size: 0.9rem;
+        letter-spacing: 3px;
+        color: var(--muted);
+      }
+
+      .touring-list {
+        display: grid;
+        gap: 10px;
+        font-size: 0.88rem;
+      }
+
+      .touring-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed rgba(var(--accent-rgb), 0.2);
+      }
+
+      .touring-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .touring-city {
+        text-align: left;
+      }
+
+      .touring-date {
+        text-align: right;
+        color: rgba(248, 255, 248, 0.85);
+      }
+
+      .touring-row.is-unavailable {
+        color: rgba(255, 120, 120, 0.85);
+      }
+
+      .touring-row.is-unavailable .touring-date {
+        color: rgba(255, 180, 190, 0.85);
+      }
+
+      @media (max-width: 430px) {
+        .choices {
+          flex-wrap: nowrap;
+          gap: 8px;
+          letter-spacing: 1px;
+          font-size: 15px;
+        }
+
+        .choice {
+          padding: 6px 10px;
+          min-width: 0;
+        }
+      }
+
+      .challenge-hint {
+        margin-top: 6px;
+        font-size: clamp(11px, 2.6vw, 13px);
+        color: rgba(248, 255, 248, 0.7);
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+
+      .cookie-banner {
+        position: fixed;
+        bottom: clamp(16px, 4vw, 26px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(680px, calc(100% - clamp(24px, 6vw, 48px)));
+        padding: clamp(18px, 4vw, 24px);
+        background: rgba(0, 12, 9, 0.96);
+        border: 1px solid rgba(var(--accent-rgb), 0.35);
+        box-shadow: 0 18px 40px rgba(var(--accent-rgb), 0.25);
+        color: rgba(248, 255, 248, 0.9);
+        display: none;
+        z-index: 4000;
+        border-radius: 18px;
+        text-align: center;
+        letter-spacing: 1px;
+      }
+
+      .cookie-banner.show {
+        display: grid;
+        gap: clamp(12px, 3vw, 18px);
+      }
+
+      .cookie-banner p {
+        margin: 0;
+        font-size: clamp(13px, 2.8vw, 15px);
+      }
+
+      .cookie-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .cookie-actions button {
+        padding: 10px 20px;
+        border: 1px solid rgba(var(--accent-rgb), 0.4);
+        background: rgba(var(--accent-rgb), 0.14);
+        color: var(--fg);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .cookie-actions button:hover,
+      .cookie-actions button:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(var(--accent-rgb), 0.25);
+        outline: none;
+      }
+
+      #fx {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(circle at center, rgba(var(--accent-rgb), 0.4), rgba(0, 0, 0, 0));
+        opacity: 0;
+        transform: scale(0.94);
+        transition: opacity 0.36s ease, transform 0.36s ease;
+      }
+
+      #fx[data-wipe="true"] {
+        opacity: 1;
+        transform: scale(1.06);
+      }
+
+      footer {
+        width: min(728px, 100%);
+        text-align: center;
+      }
+
+      footer img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+
+      #gate-matrix {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        display: none;
+        z-index: 9999;
+      }
+
+      #gate-matrix[data-active="true"] {
+        display: block;
+      }
+
+      #gate-matrix canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      #gate-exit {
+        position: fixed;
+        inset: 0;
+        background: #05080c;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 10000;
+        transition: opacity 0.18s ease;
+      }
+
+      #gate-exit[data-active="true"] {
+        opacity: 1;
+      }
+
+      body.age-exit main,
+      body.age-exit .yes-message,
+      body.age-exit .age-language,
+      body.age-exit .age-marquee {
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
+      @media (max-width: 520px) {
+        body {
+          padding: clamp(16px, 6vw, 32px);
+          gap: clamp(18px, 5vw, 32px);
+        }
+
+        main {
+          padding: clamp(24px, 7vw, 34px);
+          gap: clamp(18px, 6vw, 28px);
+        }
+
+        .type {
+          font-size: clamp(16px, 5vw, 20px);
+        }
+
+        .choices {
+          gap: 10px;
+        }
+
+        .choice {
+          min-width: 88px;
+          text-align: center;
+        }
+
+        .yes-message {
+          width: 100%;
+          padding: 16px clamp(14px, 6vw, 22px);
+          font-size: clamp(11px, 4vw, 13px);
+        }
+
+        footer img {
+          width: min(420px, 100%);
+        }
+      }
+    </style>
+    <script src="matrix-phone.js" defer></script>
+
+  </head>
+  <body class="age-gate">
+    <div class="age-language" role="group" aria-label="language selector">
+      <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
+        <span class="language-flag" aria-hidden="true">
+          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+            <rect width="24" height="16" fill="#012169"></rect>
+            <path
+              d="M0 0L9.5 6.5V0H14.5V6.5L24 0V3L15.5 8H24V8.5H15.5L24 13V16L14.5 9.5V16H9.5V9.5L0 16V13L8.5 8.5H0V8H8.5L0 3Z"
+              fill="#fff"
+            ></path>
+            <path
+              d="M0 0L10 6.5V0H14V6.5L24 0V2.5L13.5 8.5H24V9.5H13.5L24 15.5V16L14 9.5V16H10V9.5L0 16V13.5L10.5 9.5H0V8.5H10.5L0 2.5Z"
+              fill="#c8102e"
+              opacity="0.8"
+            ></path>
+            <path d="M9.5 0H14.5V6H24V10H14.5V16H9.5V10H0V6H9.5Z" fill="#fff"></path>
+            <path d="M10.5 0H13.5V6H24V10H13.5V16H10.5V10H0V6H10.5Z" fill="#c8102e"></path>
+          </svg>
+        </span>
+        <span class="language-code">EN</span>
+      </button>
+      <button type="button" class="language-button" data-language-choice="fr" aria-pressed="false">
+        <span class="language-flag" aria-hidden="true">
+          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+            <rect width="24" height="16" fill="#fff"></rect>
+            <rect width="8" height="16" fill="#002395"></rect>
+            <rect width="8" height="16" x="16" fill="#ED2939"></rect>
+          </svg>
+        </span>
+        <span class="language-code">FR</span>
+      </button>
+    </div>
+    <div class="age-marquee" aria-hidden="true">
+      <div id="age-marquee-track" class="age-marquee-track"></div>
+    </div>
+    <div class="theme-switchers" role="group" aria-label="theme switcher">
+      <button class="theme-button" type="button" data-theme-switch="pink" aria-label="switch to pink theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 21s-7-4.35-7-10.08C5 7.16 7.6 5 10.2 5c1.26 0 1.93.52 1.8 1.82C12.27 5.52 12.94 5 14.2 5 16.8 5 19 7.16 19 10.92 19 16.65 12 21 12 21Z"
+          />
+        </svg>
+      </button>
+      <button class="theme-button" type="button" data-theme-switch="christmas" aria-label="switch to snow theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 2.5a1 1 0 0 1 1 1v3.1l1.8-1.04a1 1 0 1 1 1 1.73L14 8.33v1.34l2.68-1.55.9-2.3a1 1 0 1 1 1.86.72l-.41 1.06 1.26-.73a1 1 0 1 1 1 1.73L19.9 10l1.45.83a1 1 0 0 1-1 1.74L18.5 12.1l-.9 1.55 1.63 1.12 1.36-.79a1 1 0 0 1 1 1.73l-.7.4.62.36a1 1 0 1 1-1 1.73l-1.17-.67-.42 1.07a1 1 0 1 1-1.86-.72l.9-2.31L15 14.1v1.58l1.8 1.03a1 1 0 1 1-1 1.73L13 17.53v3a1 1 0 1 1-2 0v-3l-2.8 1.6a1 1 0 1 1-1-1.73L10 15.68V14.1l-2.78 1.6-.9 2.31a1 1 0 1 1-1.86-.72l.42-1.07-1.17.67a1 1 0 0 1-1-1.73l.62-.36-.7-.4a1 1 0 1 1 1-1.73l1.36.79 1.63-1.12-.9-1.55-1.85.47a1 1 0 1 1-.5-1.93L4.1 10l-1.45-.83a1 1 0 0 1 1-1.74L5.5 8.9l.9-1.55-1.54-.89a1 1 0 1 1 1-1.73l1.26.73-.41-1.06a1 1 0 1 1 1.86-.72l.9 2.3L10 9.67V8.33L8.2 7.29a1 1 0 1 1 1-1.73L11 6.6v-3.1a1 1 0 0 1 1-1Z"
+          />
+        </svg>
+      </button>
+      <button class="theme-button" type="button" data-theme-switch="default" aria-label="switch to neon green theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M6.5 9C4.57 9 3 10.57 3 12.5S4.57 16 6.5 16c1.52 0 2.68-.82 4.05-2.42L10.7 13.4C11.76 12.06 12.73 11 14 11c1.78 0 3.25 1.34 3.25 3s-1.47 3-3.25 3c-1.52 0-2.68-.82-4.05-2.42l-.15-.18C9.97 13.06 8.99 12 7.75 12a1 1 0 1 0 0 2c.48 0 .94.32 1.83 1.3l.17.18C11.01 16.94 12.24 18 14 18c2.84 0 5.25-2.24 5.25-5s-2.41-5-5.25-5c-1.9 0-3.17.97-4.5 2.67l-.17.21C8.7 12.28 7.98 13 7 13a1.5 1.5 0 0 1 0-3c1.52 0 2.68.82 4.05 2.42l.15.18C12.99 14.94 14.02 16 15.25 16a1 1 0 1 0 0-2c-.48 0-.94-.32-1.83-1.3l-.17-.18C12.99 10.06 11.76 9 10 9Z"
+          />
+        </svg>
+      </button>
+    </div>
+    <script>
+      (function applyStoredTheme() {
+        const THEME_KEY = "hvh_theme_key";
+        const body = document.body;
+        if (!body) return;
+                const isHolidayWindow = () => {
+          const now = new Date();
+          const month = now.getMonth();
+          const day = now.getDate();
+          return month === 11 || (month === 0 && day <= 2);
+        };
+
+        const isValentineWindow = () => {
+          const now = new Date();
+          const month = now.getMonth();
+          const day = now.getDate();
+          return month === 1 && day <= 18;
+        };
+
+        const applyTheme = (key) => {
+          body.classList.remove("pink-mode", "christmas-mode");
+          if (key === "pink") body.classList.add("pink-mode");
+          if (key === "christmas") body.classList.add("christmas-mode");
+        };
+        const saved = (() => {
+          try {
+            return window.localStorage.getItem(THEME_KEY);
+          } catch (_error) {
+            return null;
+          }
+        })();
+        if (isHolidayWindow()) {
+          applyTheme("christmas");
+        } else if (isValentineWindow()) {
+          applyTheme("pink");
+        } else if (saved) {
+          applyTheme(saved);
+        }
+        window.hvhApplyTheme = (key) => {
+          applyTheme(key);
+          try {
+            window.localStorage.setItem(THEME_KEY, key || "default");
+          } catch (_error) {}
+        };
+      })();
+    </script>
+    <script>
+      (function enableThemeButtons() {
+        const buttons = document.querySelectorAll("[data-theme-switch]");
+        if (!buttons.length) return;
+
+        const map = {
+          pink: "pink",
+          christmas: "christmas",
+          default: "default",
+        };
+
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const key = map[button.dataset.themeSwitch];
+            if (!key && key !== "default") return;
+            if (typeof window.hvhApplyTheme === "function") {
+              window.hvhApplyTheme(key);
+            }
+          });
+        });
+      })();
+    </script>
+    <script>
+      (function setupLanguageSwitcher() {
+        const LANGUAGE_KEY = "hvh_inside_language";
+        const SUPPORTED = ["en", "fr"];
+        const translations = {
+          en: {
+            question: "are you legally aged?",
+            yes: "yes",
+            no: "no",
+            line1: "MINIMUM TRIBUTE IS $400 CANADIAN DOLLARS FOR 30 MINUTES.",
+            line2: "RATHER JUST PLAY? TAP NO FOR THE FREE GAMES I FUNDED FOR YOU. ;)",
+          },
+          fr: {
+            question: "êtes-vous légalement majeur ?",
+            yes: "oui",
+            no: "non",
+            line1: "LE PÉRIPLE MINIMUM EST DE 400 DOLLARS CANADIENS POUR 30 MINUTES.",
+            line2: "VOUS VOULEZ JUSTE JOUER ? APPUYEZ SUR NON POUR LES JEUX GRATUITS QUE J'AI FINANCÉS POUR VOUS. ;)",
+          },
+        };
+
+        const buttons = document.querySelectorAll(".age-language [data-language-choice]");
+        const line = document.getElementById("line");
+        const inlineYes = document.getElementById("inline-yes");
+        const inlineNo = document.getElementById("inline-no");
+        const yesMessage = document.querySelector(".yes-message");
+
+        const getStored = () => {
+          try {
+            const stored = window.localStorage.getItem(LANGUAGE_KEY);
+            if (stored && SUPPORTED.includes(stored)) return stored;
+          } catch (_error) {}
+          return null;
+        };
+
+        const detectBrowser = () => {
+          const langs = Array.isArray(navigator.languages) ? navigator.languages : [navigator.language || "en"];
+          for (const lang of langs) {
+            const short = String(lang || "").slice(0, 2).toLowerCase();
+            if (SUPPORTED.includes(short)) return short;
+          }
+          return "en";
+        };
+
+        const apply = (lang, persist = true) => {
+          const target = SUPPORTED.includes(lang) ? lang : "en";
+          document.documentElement.setAttribute("lang", target);
+          if (persist) {
+            try {
+              window.localStorage.setItem(LANGUAGE_KEY, target);
+            } catch (_error) {}
+          }
+
+          const t = translations[target] || translations.en;
+          if (line) {
+            line.dataset.text = t.question;
+            line.textContent = t.question;
+          }
+          if (inlineYes) inlineYes.textContent = t.yes;
+          if (inlineNo) inlineNo.textContent = t.no;
+          if (yesMessage) {
+            const spans = yesMessage.querySelectorAll("span");
+            if (spans[0]) spans[0].textContent = t.line1;
+            if (spans[1]) spans[1].textContent = t.line2;
+          }
+
+          buttons.forEach((btn) => {
+            btn.setAttribute("aria-pressed", btn.dataset.languageChoice === target ? "true" : "false");
+          });
+        };
+
+        buttons.forEach((btn) => {
+          btn.addEventListener("click", () => apply(btn.dataset.languageChoice));
+        });
+
+        const initial = getStored() || detectBrowser();
+        apply(initial, true);
+      })();
+    </script>
+    <script>
+      (function setupMarquee() {
+        const track = document.getElementById("age-marquee-track");
+        if (!track) return;
+        const scheduleList = document.getElementById("touring-list");
+
+        const CITY_KEY = "hvh_current_city";
+        const now = new Date();
+        const monthMap = {
+          jan: 0,
+          feb: 1,
+          mar: 2,
+          apr: 3,
+          may: 4,
+          jun: 5,
+          jul: 6,
+          aug: 7,
+          sep: 8,
+          oct: 9,
+          nov: 10,
+          dec: 11,
+        };
+
+        const buildDate = (year, monthIndex, day) => new Date(year, monthIndex, day, 12, 0, 0);
+
+        const parseRange = (raw) => {
+          if (!raw) return null;
+          const text = raw.toLowerCase();
+          const untilMatch = text.match(/until\s+([a-z]{3})\s*(\d{1,2})/);
+          if (untilMatch) {
+            const monthIndex = monthMap[untilMatch[1]];
+            if (typeof monthIndex !== "number") return null;
+            const endDay = Number(untilMatch[2]);
+            const year = now.getFullYear();
+            return {
+              start: buildDate(year, monthIndex, 1),
+              end: buildDate(year, monthIndex, endDay),
+            };
+          }
+
+          const rangeMatch = text.match(
+            /(\d{1,2})\s*([a-z]{3})(?:\s*(?:am|pm))?\s*-\s*(\d{1,2})\s*([a-z]{3})/
+          );
+          if (rangeMatch) {
+            const startDay = Number(rangeMatch[1]);
+            const startMonth = monthMap[rangeMatch[2]];
+            const endDay = Number(rangeMatch[3]);
+            const endMonth = monthMap[rangeMatch[4]];
+            if (typeof startMonth !== "number" || typeof endMonth !== "number") return null;
+
+            let startYear = now.getFullYear();
+            let endYear = now.getFullYear();
+            if (endMonth < startMonth) {
+              endYear += 1;
+            }
+
+            return {
+              start: buildDate(startYear, startMonth, startDay),
+              end: buildDate(endYear, endMonth, endDay),
+            };
+          }
+
+          const singleMatch = text.match(/(\d{1,2})\s*([a-z]{3})/);
+          if (singleMatch) {
+            const day = Number(singleMatch[1]);
+            const monthIndex = monthMap[singleMatch[2]];
+            if (typeof monthIndex !== "number") return null;
+            const year = now.getFullYear();
+            const start = buildDate(year, monthIndex, day);
+            return { start, end: start };
+          }
+
+          return null;
+        };
+
+        const isUnavailable = (value) => {
+          if (!value) return true;
+          return /n\/a|unavailable/i.test(value);
+        };
+
+        const formatCity = (value) => {
+          if (!value) return "";
+          const trimmed = value.trim();
+          if (!trimmed) return "";
+          if (/[A-Z]/.test(trimmed)) return trimmed;
+          return trimmed.replace(/\b\w/g, (char) => char.toUpperCase());
+        };
+
+        const setMarquee = (city, unavailable = false) => {
+          const cityLabel = formatCity(city) || "Unavailable";
+          const bannerLabel = cityLabel || "Unavailable";
+          const textEn = unavailable
+            ? "CURRENTLY UNAVAILABLE"
+            : `CURRENTLY IN ${bannerLabel.toUpperCase()}`;
+          const textFr = unavailable
+            ? "ACTUELLEMENT INDISPONIBLE"
+            : `ACTUELLEMENT A ${bannerLabel.toUpperCase()}`;
+          const message = `ATTENTION! ${textEn} ATTENTION! ${textFr}`;
+          track.textContent = `${message} \u2022 ${message} \u2022 ${message}`;
+        };
+
+        const setScheduleMessage = (message) => {
+          if (!scheduleList) return;
+          scheduleList.innerHTML = "";
+          const row = document.createElement("div");
+          row.className = "touring-row touring-empty";
+          row.textContent = message;
+          scheduleList.appendChild(row);
+        };
+
+        const renderSchedule = (schedule) => {
+          if (!scheduleList) return;
+          scheduleList.innerHTML = "";
+          if (!Array.isArray(schedule) || !schedule.length) {
+            setScheduleMessage("Touring schedule updating.");
+            return;
+          }
+          schedule.forEach((stop) => {
+            const row = document.createElement("div");
+            row.className = "touring-row";
+            const city = formatCity(stop.city) || "Unavailable";
+            const unavailable = isUnavailable(stop.city);
+            if (unavailable) {
+              row.classList.add("is-unavailable");
+            }
+            const cityEl = document.createElement("span");
+            cityEl.className = "touring-city";
+            cityEl.textContent = city;
+            const dateEl = document.createElement("span");
+            dateEl.className = "touring-date";
+            dateEl.textContent = stop.date;
+            row.appendChild(cityEl);
+            row.appendChild(dateEl);
+            scheduleList.appendChild(row);
+          });
+        };
+
+        const applySchedule = (schedule) => {
+          if (!Array.isArray(schedule) || !schedule.length) {
+            setMarquee("", true);
+            renderSchedule([]);
+            return;
+          }
+          renderSchedule(schedule);
+          let activeCity = null;
+          schedule.forEach((stop) => {
+            const range = parseRange(stop.date);
+            if (!range) return;
+            if (now >= range.start && now <= range.end) {
+              activeCity = stop.city;
+            }
+          });
+
+          const unavailable = !activeCity || isUnavailable(activeCity);
+          const cityLabel = formatCity(activeCity);
+          if (!unavailable && cityLabel) {
+            try {
+              window.localStorage.setItem(CITY_KEY, cityLabel);
+            } catch (_error) {}
+          }
+          setMarquee(cityLabel, unavailable);
+        };
+
+        const parseScheduleFromHtml = (htmlText) => {
+          if (!htmlText) return [];
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlText, "text/html");
+          const rows = Array.from(doc.querySelectorAll(".touring-row"));
+          return rows
+            .map((row) => {
+              const cityEl = row.querySelector(".touring-city");
+              const dateEl = row.querySelector(".touring-date");
+              const city = cityEl ? cityEl.textContent.trim() : "";
+              const date = dateEl ? dateEl.textContent.trim() : "";
+              return city && date ? { city, date } : null;
+            })
+            .filter(Boolean);
+        };
+
+        setMarquee("", true);
+        renderSchedule([]);
+
+        fetch("inside.html", { cache: "no-store" })
+          .then((response) => {
+            if (!response.ok) throw new Error("fetch");
+            return response.text();
+          })
+          .then((htmlText) => {
+            const schedule = parseScheduleFromHtml(htmlText);
+            applySchedule(schedule);
+          })
+          .catch(() => {
+            setMarquee("", true);
+            setScheduleMessage("Touring schedule unavailable.");
+          });
+      })();
+    </script>
+    <script>
+      (function enableThemeTriggers() {
+        const buffer = [];
+        const triggers = [
+          { match: "matrixneon", action: () => setMode("green") },
+          { match: "matrix", action: () => setMode("green") },
+          { match: "neon", action: () => setMode("green") },
+          { match: "sexyvalentine", action: () => setMode("pink") },
+          { match: "valentine", action: () => setMode("pink") },
+          { match: "heart", action: () => setMode("pink") },
+          { match: "love", action: () => setMode("pink") },
+          { match: "sexy", action: () => setMode("pink") },
+          { match: "green", action: () => setMode("green") },
+          { match: "xmas", action: () => setMode("christmas") },
+          { match: "christmas", action: () => setMode("christmas") },
+          { match: "noel", action: () => setMode("christmas") },
+        ];
+        const maxLength = Math.max(...triggers.map((t) => t.match.length));
+
+        const recordSequence = (chars) => {
+          for (const raw of chars) {
+            const char = raw.toLowerCase();
+            if (!/[a-z]/.test(char)) continue;
+            buffer.push(char);
+            if (buffer.length > maxLength) {
+              buffer.shift();
+            }
+            const joined = buffer.join("");
+            for (const trigger of triggers) {
+              if (joined.endsWith(trigger.match)) {
+                trigger.action();
+                break;
+              }
+            }
+          }
+        };
+
+        document.addEventListener("keydown", (event) => {
+          if (event.metaKey || event.ctrlKey || event.altKey || event.key.length !== 1) return;
+          recordSequence(event.key);
+        });
+
+        document.addEventListener(
+          "beforeinput",
+          (event) => {
+            if (typeof event.data === "string" && event.data.length) {
+              recordSequence(event.data);
+            }
+          },
+          { capture: true }
+        );
+
+        document.addEventListener(
+          "input",
+          (event) => {
+            if (typeof event.data === "string" && event.data.length) {
+              recordSequence(event.data);
+              return;
+            }
+            if (event.target && typeof event.target.value === "string") {
+              const lastChar = event.target.value.slice(-1);
+              if (lastChar) {
+                recordSequence(lastChar);
+              }
+            }
+          },
+          { capture: true }
+        );
+      })();
+    </script>
+    <main>
+      <p class="type">
+        <span id="line" data-text="are you legally aged?">are you legally aged?</span>
+        <span class="caret" aria-hidden="true"></span>
+      </p>
+      <div id="inline-choices" class="choices" aria-hidden="true">
+        <span class="bracket">[</span>
+        <a id="inline-yes" class="choice" href="#">yes</a>
+        <span class="bracket">/</span>
+        <a id="inline-no" class="choice" href="#">no</a>
+        <span class="bracket">]</span>
+      </div>
+      <p class="yes-message">
+        <span>MINIMUM TRIBUTE IS $400 CANADIAN DOLLARS FOR 30 MINUTES.</span>
+        <span>DEPOSIT IS 20% OF THE TOTAL RATE.</span>
+        <span>RATHER JUST PLAY? TAP NO FOR THE FREE GAMES I FUNDED FOR YOU. ;)</span>
+      </p>
+    </main>
+    <div id="fx" aria-hidden="true"></div>
+    <div id="gate-matrix" aria-hidden="true">
+      <canvas id="gate-matrix-canvas"></canvas>
+    </div>
+    <div id="gate-exit" aria-hidden="true"></div>
+
+    <script>
+      const NEXT_URL = "inside.html";
+      const NO_URL = "https://papertoilet.com/";
+      const EVIL_LAUGH_MS = 3000;
+      const ACCESS_KEY = "hvh_age_gate_verified";
+      const ACCESS_COOKIE = "hvh_age_gate_verified";
+      const ACCESS_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 2;
+      const inlineChoices = document.getElementById("inline-choices");
+      const inlineYes = document.getElementById("inline-yes");
+      const inlineNo = document.getElementById("inline-no");
+
+      const readCookie = (name) => {
+        const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+        return match ? decodeURIComponent(match[1]) : "";
+      };
+
+      const hasAccess = (() => {
+        try {
+          if (window.localStorage.getItem(ACCESS_KEY) === "true") {
+            return true;
+          }
+        } catch (_error) {
+          // fall through to cookie check
+        }
+        return readCookie(ACCESS_COOKIE) === "true";
+      })();
+
+      if (hasAccess) {
+        window.location.replace(NEXT_URL);
+      }
+
+      const grantAccess = () => {
+        try {
+          window.localStorage.setItem(ACCESS_KEY, "true");
+        } catch (_error) {
+          /* localStorage unavailable */
+        }
+        try {
+          const parts = [
+            `${ACCESS_COOKIE}=true`,
+            `max-age=${ACCESS_COOKIE_MAX_AGE}`,
+            "path=/",
+            "SameSite=Lax",
+          ];
+          if (window.location && window.location.protocol === "https:") {
+            parts.push("Secure");
+          }
+          document.cookie = parts.join("; ");
+        } catch (_error) {
+          /* cookie unavailable */
+        }
+      };
+
+      const setChoicesVisibility = (element, visible) => {
+        if (!element) return;
+        if (visible) {
+          element.dataset.visible = "true";
+          element.setAttribute("aria-hidden", "false");
+        } else {
+          delete element.dataset.visible;
+          element.setAttribute("aria-hidden", "true");
+        }
+      };
+
+      const showInlineChoices = () => {
+        setChoicesVisibility(inlineChoices, true);
+      };
+
+      const typeWriter = (content, target, speed = 75) => {
+        target.textContent = "";
+        let index = 0;
+
+        const tick = () => {
+          if (index >= content.length) {
+            showInlineChoices();
+            return;
+          }
+
+          target.textContent += content[index];
+          index += 1;
+
+          const jitter = Math.random() * 40;
+          setTimeout(tick, speed + jitter);
+        };
+
+        tick();
+      };
+
+      window.addEventListener("DOMContentLoaded", () => {
+        if (hasAccess) {
+          return;
+        }
+        document.body.classList.add("age-ready");
+        const line = document.getElementById("line");
+        const caret = document.querySelector(".caret");
+        const text = (line.dataset.text || line.textContent).trim();
+
+        if (caret) {
+          const PRE_BLINKS = 1;
+          let completed = 0;
+
+          line.textContent = "";
+          caret.style.animationPlayState = "running";
+
+          const handleBlink = () => {
+            completed += 1;
+            if (completed >= PRE_BLINKS) {
+              caret.removeEventListener("animationiteration", handleBlink);
+              typeWriter(text, line);
+            }
+          };
+
+          caret.addEventListener("animationiteration", handleBlink);
+        } else {
+          typeWriter(text, line);
+        }
+      });
+
+      const handleNo = (event) => {
+        event.preventDefault();
+        window.location.href = NO_URL;
+      };
+
+      const gateExit = document.getElementById("gate-exit");
+
+      const showExitOverlay = () => {
+        if (!gateExit) return;
+        gateExit.setAttribute("aria-hidden", "false");
+        gateExit.dataset.active = "true";
+      };
+
+      const runMatrixSequence = async () => {
+        playEvilLaugh(EVIL_LAUGH_MS);
+
+        const matrixModule = window.hvhPhoneMatrix;
+        const baseDuration =
+          matrixModule && typeof matrixModule.RAIN_DURATION === "number"
+            ? matrixModule.RAIN_DURATION
+            : 3000;
+        const duration = Math.max(1200, baseDuration - 1000);
+
+        const gatePromise = runGateMatrix(duration);
+        const fallback = new Promise((resolve) => {
+          window.setTimeout(resolve, duration + 700);
+        });
+
+        if (matrixModule && typeof matrixModule.startSequence === "function") {
+          try {
+            await Promise.race([
+              Promise.all([
+                Promise.resolve(matrixModule.startSequence({ showButtonAfter: false, duration })),
+                gatePromise,
+              ]),
+              fallback,
+            ]);
+            return;
+          } catch (_error) {
+            // fall back to gate effect only
+          }
+        }
+
+        await Promise.race([gatePromise, fallback]);
+      };
+
+      const handleYes = async (event) => {
+        event.preventDefault();
+        document.body.classList.add("age-exit");
+        try {
+          await runMatrixSequence();
+        } catch (_error) {
+          await runGateMatrix().catch(() => {});
+        }
+        showExitOverlay();
+        window.setTimeout(() => {
+          grantAccess();
+          window.location.replace(NEXT_URL);
+        }, 120);
+      };
+
+      if (inlineNo) {
+        inlineNo.addEventListener("click", handleNo);
+      }
+      if (inlineYes) {
+        inlineYes.addEventListener("click", handleYes);
+      }
+
+      const triggerChoice = (...elements) => {
+        for (const element of elements) {
+          if (!element) continue;
+          element.click();
+          return true;
+        }
+        return false;
+      };
+
+      window.addEventListener("keydown", (event) => {
+        switch (event.key.toLowerCase()) {
+          case "y":
+            triggerChoice(inlineYes);
+            break;
+          case "n":
+            triggerChoice(inlineNo);
+            break;
+          case "enter":
+            if (document.activeElement?.classList.contains("choice")) {
+              document.activeElement.click();
+            }
+            break;
+          default:
+            break;
+        }
+      });
+      const gateOverlay = document.getElementById("gate-matrix");
+  const gateCanvas = document.getElementById("gate-matrix-canvas");
+  const gateCtx = gateCanvas.getContext("2d");
+      const BASE_GATE_SYMBOLS = Array.from(
+    "01!@#$%^&*()_+-=[]{};:,.?/~<>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  );
+  let gateAnimation;
+  let gateResizeHandler;
+
+      const gatePalette = () => {
+        const body = document.body;
+        if (body?.classList.contains("pink-mode")) {
+          return {
+            bg: "rgba(36, 8, 20, 0.28)",
+            glyph: "#ff5fae",
+            accent: "#ffd1e6",
+          };
+        }
+        if (body?.classList.contains("christmas-mode")) {
+          return {
+            bg: "rgba(10, 20, 28, 0.26)",
+            glyph: "#c7f2ff",
+            accent: "#f2fbff",
+          };
+        }
+        return {
+          bg: "rgba(1, 6, 4, 0.12)",
+          glyph: "#00ff99",
+          accent: "#e2fff4",
+        };
+      };
+
+      const gateSymbols = () => {
+        const body = document.body;
+        if (body?.classList.contains("pink-mode")) {
+          const heart = "♥";
+          return [...BASE_GATE_SYMBOLS, heart, heart, heart, heart];
+        }
+        if (body?.classList.contains("christmas-mode")) {
+          const snow = "✻";
+          const snow2 = "❄";
+          const snow3 = "❅";
+          // heavily favor snowflakes for Xmas
+          return [
+            ...Array(40).fill(snow),
+            ...Array(30).fill(snow2),
+            ...Array(20).fill(snow3),
+            ...Array(10).fill("*"),
+          ];
+        }
+        return BASE_GATE_SYMBOLS;
+      };
+
+  const resizeGateCanvas = () => {
+    gateCanvas.width = window.innerWidth;
+    gateCanvas.height = window.innerHeight;
+  };
+
+      const drawGateMatrix = (duration) =>
+        new Promise((resolve) => {
+          resizeGateCanvas();
+          if (gateResizeHandler) {
+            window.removeEventListener("resize", gateResizeHandler);
+          }
+          gateResizeHandler = () => resizeGateCanvas();
+          window.addEventListener("resize", gateResizeHandler);
+
+          const fontSize = Math.max(22, Math.floor(window.innerWidth / 68));
+          const columns = Math.max(1, Math.floor(window.innerWidth / fontSize));
+          const drops = new Array(columns)
+            .fill(0)
+            .map(() => Math.random() * (gateCanvas.height / fontSize));
+          gateCtx.font = `${fontSize}px "JetBrains Mono","Fira Code",monospace`;
+          const palette = gatePalette();
+          const symbols = gateSymbols();
+
+          const startTime = performance.now();
+          const endTime = startTime + duration;
+
+          const step = (timestamp) => {
+            gateCtx.fillStyle = palette.bg;
+            gateCtx.fillRect(0, 0, gateCanvas.width, gateCanvas.height);
+
+            drops.forEach((drop, index) => {
+              const glyph = symbols[Math.floor(Math.random() * symbols.length)];
+              const x = index * fontSize;
+              const y = drop * fontSize;
+              gateCtx.fillStyle = Math.random() > 0.9 ? palette.accent : palette.glyph;
+              gateCtx.fillText(glyph, x, y);
+
+              if (y > gateCanvas.height && Math.random() > 0.82) {
+                drops[index] = Math.random() * -10;
+              } else {
+                drops[index] += 1 + Math.random() * 0.15;
+              }
+            });
+
+            if (timestamp < endTime) {
+              gateAnimation = requestAnimationFrame(step);
+            } else {
+              resolve();
+            }
+          };
+
+          gateAnimation = requestAnimationFrame(step);
+        });
+
+      const cleanupGateMatrix = () => {
+        if (gateAnimation) {
+          cancelAnimationFrame(gateAnimation);
+          gateAnimation = null;
+        }
+        if (gateResizeHandler) {
+          window.removeEventListener("resize", gateResizeHandler);
+          gateResizeHandler = null;
+        }
+        gateOverlay.dataset.active = "false";
+        gateOverlay.setAttribute("aria-hidden", "true");
+      };
+
+      const runGateMatrix = (duration = 2000) => {
+        gateOverlay.dataset.active = "true";
+        gateOverlay.setAttribute("aria-hidden", "false");
+        return drawGateMatrix(duration)
+          .catch(() => {})
+          .finally(() => cleanupGateMatrix());
+      };
+</script>
+  </body>
+</html>
+
+
+
+
+

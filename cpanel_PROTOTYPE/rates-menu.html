@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rates &amp; Menu | Heidi Van Horny</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
+    />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-D5ZVVS819V"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-D5ZVVS819V");
+    </script>
+    <style>
+      :root {
+        --bg: #020202;
+        --fg: #f8fff8;
+        --accent: #00ff99;
+        --accent-rgb: 0, 255, 153;
+      }
+
+      body.pink-mode {
+        --bg: #0a0608;
+        --fg: #fff1f7;
+        --accent: #ff5fae;
+        --accent-rgb: 255, 95, 174;
+        background:
+          radial-gradient(circle at 18% 12%, rgba(255, 186, 220, 0.22), transparent 36%),
+          radial-gradient(circle at 78% 16%, rgba(255, 140, 200, 0.2), transparent 40%),
+          radial-gradient(circle at 56% 82%, rgba(160, 0, 70, 0.28), transparent 46%),
+          linear-gradient(160deg, #060006 0%, #1a0510 46%, #0b0106 100%);
+        color: var(--fg);
+      }
+
+      body.pink-mode .section-panel {
+        border-color: rgba(255, 95, 174, 0.36);
+        background: linear-gradient(140deg, rgba(255, 95, 174, 0.18), rgba(18, 6, 12, 0.92));
+        box-shadow: 0 24px 45px rgba(255, 80, 160, 0.2);
+      }
+
+      body.pink-mode .section-header h2 {
+        color: var(--accent);
+        text-shadow: 0 0 22px rgba(255, 95, 174, 0.55);
+      }
+
+      body.pink-mode .currency-badge {
+        border-color: rgba(255, 95, 174, 0.4);
+        background: rgba(24, 8, 14, 0.9);
+        box-shadow: 0 10px 18px rgba(255, 80, 160, 0.2);
+      }
+
+      body.pink-mode .rate-entry {
+        border-color: rgba(255, 95, 174, 0.32);
+        background: rgba(18, 6, 12, 0.9);
+      }
+
+      body.pink-mode .rate-entry::before,
+      body.pink-mode .rate-entry::after {
+        color: rgba(255, 95, 174, 0.28);
+      }
+
+      body.pink-mode .rate-card {
+        border-color: rgba(255, 95, 174, 0.32);
+        background: rgba(18, 6, 12, 0.88);
+        box-shadow: 0 20px 38px rgba(255, 80, 160, 0.18);
+      }
+
+      body.pink-mode .conditions-note {
+        border-color: rgba(255, 95, 174, 0.32);
+        background: rgba(18, 6, 12, 0.84);
+        color: rgba(255, 240, 250, 0.84);
+      }
+
+      body.pink-mode .section-footer {
+        color: rgba(255, 240, 250, 0.82);
+      }
+
+      body.pink-mode .rate-line .spacer {
+        border-bottom: 1px dotted rgba(255, 95, 174, 0.4);
+      }
+
+      body.pink-mode .section-intro,
+      body.pink-mode .rate-meta {
+        color: rgba(255, 240, 250, 0.8);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at top, rgba(0, 255, 153, 0.12), transparent 55%), var(--bg);
+        color: var(--fg);
+        font: 17px/1.6 "JetBrains Mono", "Fira Code", Menlo, Consolas, ui-monospace, monospace;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: clamp(32px, 6vw, 72px);
+      }
+
+      body.embedded {
+        min-height: 0;
+        padding: clamp(8px, 2.8vw, 14px);
+      }
+
+      body.embedded .section-panel {
+        width: 100%;
+      }
+
+      .section-panel {
+        width: min(960px, 100%);
+        margin: 0 auto;
+        border: 1px solid rgba(0, 255, 153, 0.26);
+        border-radius: 22px;
+        padding: clamp(28px, 5vw, 44px);
+        background: linear-gradient(140deg, rgba(0, 255, 153, 0.14), rgba(0, 12, 8, 0.82));
+        box-shadow: 0 24px 45px rgba(0, 255, 153, 0.16);
+        display: grid;
+        gap: clamp(20px, 4vw, 32px);
+      }
+
+      .section-header {
+        display: grid;
+        gap: 10px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+        font-size: clamp(26px, 3.6vw, 44px);
+        letter-spacing: 6px;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .section-intro {
+        margin: 0;
+        color: rgba(248, 255, 248, 0.72);
+        max-width: 640px;
+      }
+
+      .rates-currency-note {
+        margin: 4px 0 0;
+        font-size: 13px;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        color: rgba(248, 255, 248, 0.7);
+      }
+
+      .rates-currency-select {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(248, 255, 248, 0.8);
+      }
+
+      .rates-currency-select select {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(0, 255, 153, 0.35);
+        color: #f8fff8;
+        padding: 4px 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      body.pink-mode .rates-currency-note,
+      body.pink-mode .rates-currency-select {
+        color: rgba(255, 240, 250, 0.82);
+      }
+
+      body.pink-mode .rates-currency-select select {
+        background: rgba(20, 8, 14, 0.9);
+        border-color: rgba(255, 95, 174, 0.45);
+        color: #fff1f7;
+      }
+
+      body.christmas-mode {
+        --bg: #0b1822;
+        --fg: #eaf6ff;
+        --accent: #bfe9ff;
+        --accent-rgb: 191, 233, 255;
+        background:
+          radial-gradient(circle at 20% 12%, rgba(191, 233, 255, 0.22), transparent 40%),
+          radial-gradient(circle at 80% 16%, rgba(255, 255, 255, 0.16), transparent 42%),
+          radial-gradient(circle at 50% 85%, rgba(120, 190, 230, 0.18), transparent 55%),
+          #0b1822;
+        color: var(--fg);
+      }
+
+      body.christmas-mode .section-panel {
+        border-color: rgba(191, 233, 255, 0.3);
+        background: linear-gradient(140deg, rgba(191, 233, 255, 0.16), rgba(10, 20, 30, 0.92));
+        box-shadow: 0 24px 45px rgba(180, 230, 255, 0.18);
+      }
+
+      body.christmas-mode .section-header h2 {
+        color: var(--accent);
+        text-shadow: 0 0 22px rgba(191, 233, 255, 0.55);
+      }
+
+      body.christmas-mode .section-intro,
+      body.christmas-mode .rate-meta,
+      body.christmas-mode .section-footer {
+        color: rgba(234, 246, 255, 0.82);
+      }
+
+      body.christmas-mode .rate-entry {
+        border-color: rgba(191, 233, 255, 0.28);
+        background: rgba(8, 18, 26, 0.86);
+      }
+
+      body.christmas-mode .rate-entry::before,
+      body.christmas-mode .rate-entry::after {
+        color: rgba(191, 233, 255, 0.32);
+      }
+
+      body.christmas-mode .rate-line .spacer {
+        border-bottom: 1px dotted rgba(191, 233, 255, 0.38);
+      }
+
+      body.christmas-mode .rates-currency-select {
+        color: rgba(234, 246, 255, 0.85);
+      }
+
+      body.christmas-mode .rates-currency-select select {
+        background: rgba(8, 18, 26, 0.92);
+        border-color: rgba(191, 233, 255, 0.45);
+        color: #eaf6ff;
+      }
+
+      body.christmas-mode .rate-card {
+        border-color: rgba(191, 233, 255, 0.28);
+        background: rgba(8, 18, 26, 0.86);
+        box-shadow: 0 20px 38px rgba(180, 230, 255, 0.16);
+      }
+
+      body.christmas-mode .conditions-note {
+        border-color: rgba(191, 233, 255, 0.3);
+        background: rgba(8, 18, 26, 0.86);
+        color: rgba(234, 246, 255, 0.86);
+      }
+
+      .currency-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .currency-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 255, 153, 0.28);
+        background: rgba(0, 15, 11, 0.76);
+        font-size: 12px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: rgba(248, 255, 248, 0.85);
+        box-shadow: 0 10px 18px rgba(0, 255, 153, 0.12);
+      }
+
+      .rate-lines {
+        display: grid;
+        gap: 14px;
+      }
+
+      .rate-entry {
+        position: relative;
+        border: 1px solid rgba(0, 255, 153, 0.18);
+        border-radius: 14px;
+        background: rgba(0, 12, 9, 0.72);
+        padding: 14px 18px;
+        overflow: hidden;
+      }
+
+      .rate-entry::before,
+      .rate-entry::after {
+        content: attr(data-text);
+        position: absolute;
+        inset: 0;
+        padding: 14px 18px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(0, 255, 153, 0.28);
+        pointer-events: none;
+        mix-blend-mode: screen;
+        opacity: 0;
+      }
+
+      .rate-entry.rate-glitch::before {
+        opacity: 0.12;
+        transform: translate(2px, -1px);
+        animation: rateGlitch 4s steps(6, end) infinite;
+      }
+
+      .rate-entry.rate-glitch::after {
+        opacity: 0.12;
+        transform: translate(-2px, 1px);
+        animation: rateGlitchAlt 5s steps(7, end) infinite;
+      }
+
+      .rate-line {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-size: clamp(15px, 2.2vw, 18px);
+      }
+
+      .rate-line > span {
+        min-width: 0;
+      }
+
+      .rate-amount {
+        white-space: nowrap;
+      }
+
+      .rate-line .spacer {
+        flex: 1 1 auto;
+        border-bottom: 1px dotted rgba(0, 255, 153, 0.35);
+      }
+
+      .rate-meta {
+        margin: 10px 0 0;
+        font-size: 12px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: rgba(248, 255, 248, 0.6);
+      }
+
+      @keyframes rateGlitch {
+        0%,
+        100% {
+          clip-path: inset(0 0 0 0);
+        }
+        20% {
+          clip-path: inset(40% 0 10% 0);
+        }
+        40% {
+          clip-path: inset(10% 0 60% 0);
+        }
+        60% {
+          clip-path: inset(30% 0 35% 0);
+        }
+        80% {
+          clip-path: inset(70% 0 5% 0);
+        }
+      }
+
+      @keyframes rateGlitchAlt {
+        0%,
+        100% {
+          clip-path: inset(0 0 0 0);
+        }
+        25% {
+          clip-path: inset(5% 0 75% 0);
+        }
+        50% {
+          clip-path: inset(60% 0 20% 0);
+        }
+        75% {
+          clip-path: inset(15% 0 45% 0);
+        }
+      }
+
+      .section-footer {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgba(248, 255, 248, 0.72);
+        text-align: center;
+      }
+
+      .no-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+      }
+
+      .no-term {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        background: rgba(40, 0, 0, 0.65);
+        color: #ff4d6d;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .no-term::before {
+        content: "🚫";
+      }
+
+      .rate-grid {
+        display: grid;
+        gap: clamp(18px, 3vw, 28px);
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .rate-card {
+        border: 1px solid rgba(0, 255, 153, 0.28);
+        border-radius: 18px;
+        background: rgba(0, 12, 9, 0.7);
+        padding: clamp(18px, 3vw, 26px);
+        display: grid;
+        gap: 12px;
+      }
+
+      .rate-card h3 {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        font-size: clamp(18px, 2.2vw, 22px);
+        color: var(--accent);
+      }
+
+      .rate-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .rate-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 13px;
+        color: rgba(248, 255, 248, 0.8);
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: clamp(20px, 6vw, 36px);
+        }
+
+        .section-panel {
+          padding: clamp(20px, 5vw, 32px);
+        }
+
+        .section-header h2 {
+          letter-spacing: 4px;
+          font-size: clamp(22px, 5vw, 34px);
+        }
+
+        .rate-grid {
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .rate-entry {
+          padding: 10px 12px;
+        }
+
+        .rate-line {
+          letter-spacing: 2px;
+          font-size: clamp(13px, 3vw, 16px);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .section-header h2 {
+          letter-spacing: 3px;
+        }
+
+        .rate-line {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .rate-line .spacer {
+          display: none;
+        }
+
+        .rate-price {
+          align-self: flex-end;
+        }
+
+        .rate-card {
+          padding: 14px;
+        }
+
+        .rate-list li {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+        }
+
+        .rates-currency-select {
+          flex-wrap: wrap;
+        }
+      }
+
+      @media (max-width: 520px) {
+        body {
+          padding: 16px;
+          align-items: stretch;
+        }
+
+        .section-panel {
+          padding: 18px 16px;
+          border-radius: 16px;
+        }
+
+        .section-header {
+          text-align: center;
+          justify-items: center;
+        }
+
+        .section-intro {
+          text-align: center;
+        }
+
+        .rates-currency-select {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .rate-entry {
+          padding: 10px 10px;
+        }
+
+        .rate-line {
+          align-items: center;
+          text-align: center;
+          letter-spacing: 1.6px;
+          font-size: clamp(12px, 3.8vw, 15px);
+        }
+
+        .rate-price {
+          align-self: center;
+        }
+
+        .rate-meta {
+          text-align: center;
+        }
+
+        .rate-card h3 {
+          text-align: center;
+          letter-spacing: 3px;
+        }
+
+        .rate-list li {
+          align-items: center;
+          text-align: center;
+        }
+
+        .acronym-trigger {
+          width: 100%;
+          max-width: 320px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .section-header h2 {
+          letter-spacing: 2px;
+        }
+
+        .rate-line {
+          letter-spacing: 1.2px;
+        }
+      }
+
+      .conditions-note {
+        border: 1px dashed rgba(0, 255, 153, 0.35);
+        border-radius: 16px;
+        background: rgba(0, 10, 7, 0.65);
+        padding: clamp(18px, 3vw, 26px);
+        text-align: center;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: rgba(248, 255, 248, 0.76);
+      }
+
+      .acronym-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 4px auto 0;
+        padding: 12px 22px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 255, 153, 0.45);
+        background: rgba(0, 20, 12, 0.85);
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 140ms ease, box-shadow 140ms ease;
+      }
+
+      .acronym-trigger:hover,
+      .acronym-trigger:focus-visible {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 28px rgba(0, 255, 153, 0.25);
+      }
+
+      .acronym-panel {
+        width: min(1100px, 100%);
+        margin: 12px auto 0;
+        border: 1px solid rgba(0, 255, 153, 0.3);
+        border-radius: 16px;
+        background: rgba(0, 12, 9, 0.76);
+        padding: clamp(14px, 3vw, 20px);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.35);
+      }
+
+      .acronym-panel[hidden] {
+        display: none;
+      }
+
+      .acronym-grid {
+        width: 100%;
+        display: grid;
+        gap: clamp(16px, 3vw, 28px);
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        margin: 0;
+        padding-top: 0;
+      }
+
+      @media (max-width: 780px) {
+        .acronym-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .acronym-card {
+        border: 1px solid rgba(0, 255, 153, 0.32);
+        border-radius: 16px;
+        padding: 18px;
+        background: linear-gradient(140deg, rgba(0, 255, 153, 0.12), rgba(0, 20, 12, 0.9));
+        display: grid;
+        gap: 10px;
+        box-shadow: 0 22px 40px rgba(0, 255, 153, 0.18);
+      }
+
+      .acronym-term {
+        font-size: 18px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0;
+      }
+
+      .acronym-definition {
+        margin: 0;
+        font-size: 13px;
+        letter-spacing: 1.3px;
+        color: rgba(248, 255, 248, 0.78);
+      }
+
+      .acronym-reference {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 1.1px;
+        color: rgba(248, 255, 248, 0.7);
+      }
+
+      .acronym-reference a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+        text-decoration-thickness: 1px;
+      }
+
+      body.pink-mode .acronym-trigger {
+        border-color: rgba(255, 95, 174, 0.42);
+        background: rgba(24, 8, 14, 0.9);
+        color: var(--accent);
+        box-shadow: 0 18px 32px rgba(255, 80, 160, 0.2);
+      }
+
+      body.pink-mode .acronym-panel {
+        border-color: rgba(255, 95, 174, 0.3);
+        background: rgba(18, 6, 12, 0.88);
+      }
+
+      body.pink-mode .acronym-card {
+        border-color: rgba(255, 95, 174, 0.3);
+        background: linear-gradient(140deg, rgba(255, 95, 174, 0.14), rgba(18, 6, 12, 0.92));
+        box-shadow: 0 20px 36px rgba(255, 80, 160, 0.2);
+      }
+
+      body.pink-mode .acronym-term {
+        color: #ff5fae;
+      }
+
+      body.pink-mode .acronym-definition,
+      body.pink-mode .acronym-reference {
+        color: rgba(255, 240, 250, 0.8);
+      }
+
+      body.christmas-mode .acronym-trigger {
+        border-color: rgba(191, 233, 255, 0.4);
+        background: rgba(8, 18, 26, 0.9);
+        color: var(--accent);
+        box-shadow: 0 18px 32px rgba(180, 230, 255, 0.2);
+      }
+
+      body.christmas-mode .acronym-panel {
+        border-color: rgba(191, 233, 255, 0.3);
+        background: rgba(8, 18, 26, 0.9);
+      }
+
+      body.christmas-mode .acronym-card {
+        border-color: rgba(191, 233, 255, 0.3);
+        background: linear-gradient(140deg, rgba(191, 233, 255, 0.12), rgba(8, 18, 26, 0.92));
+        box-shadow: 0 20px 36px rgba(180, 230, 255, 0.18);
+      }
+
+      body.christmas-mode .acronym-term {
+        color: var(--accent);
+      }
+
+      body.christmas-mode .acronym-definition,
+      body.christmas-mode .acronym-reference {
+        color: rgba(234, 246, 255, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <section
+      id="rates-conditions"
+      class="section-panel"
+      aria-labelledby="rates-conditions-title"
+    >
+      <div class="section-header">
+        <h2 id="rates-conditions-title">rates &amp; menu</h2>
+        <p class="section-intro">
+          choose your experience, send the tribute, and keep the etiquette tight. the deeper you invest, the more i open up.
+        </p>
+        <div class="rates-currency-select">
+          <span>currency</span>
+          <select id="currency-selector" aria-label="currency selector">
+            <option value="CAD">CAD</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="USDC">USDC</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rate-lines">
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>30 min gfe</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="400">CA$400</span>
+          </div>
+          <p class="rate-meta">dfk, bbbj, daty, 69, bls, toys, cob, cof, msog (h)</p>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>30 min pse</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="500">CA$500</span>
+          </div>
+          <p class="rate-meta">
+            pse = gfe + cim, ff, dt, spit, dato (on me only), bdsm (submissive), slapping, fetishes, role playing
+          </p>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>1h gfe</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="700">CA$700</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>1h pse</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="800">CA$800</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>1.5h gfe</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="1000">CA$1000</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>1.5h pse</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="1100">CA$1100</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>2h gfe</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="1300">CA$1300</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>2h pse</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="1400">CA$1400</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>3h gfe/pse</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="1600">CA$1600</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>4h gfe/pse</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="2000">CA$2000</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>half day</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="3000">CA$3000</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>filming (extra)</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="500">CA$500</span>
+          </div>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>social experiment</span>
+            <span class="spacer"></span>
+            <span class="rate-amount" data-rate-amount="1000">CA$1000</span>
+          </div>
+          <p class="rate-meta">2h restaurant / public + 1h private sheets</p>
+        </div>
+
+        <div class="rate-entry">
+          <div class="rate-line">
+            <span>24h+ &amp; fly me to you</span>
+            <span class="spacer"></span>
+            <span>let's negotiate</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-footer">
+        <strong>longer sessions &amp; fly me to you appointments available &amp; negotiable.</strong>
+      </p>
+
+      <div class="no-grid" aria-label="non-negotiable boundaries">
+        <span class="no-term">no greek</span>
+        <span class="no-term">no bbfs</span>
+        <span class="no-term">no rimming</span>
+        <span class="no-term">no unhealthy fetish</span>
+        <span class="no-term">no digits anus</span>
+        <span class="no-term">no teeth on the clit</span>
+        <span class="no-term">no femdom</span>
+      </div>
+
+      <div class="rate-grid">
+        <article class="rate-card">
+          <h3>deposit</h3>
+          <ul class="rate-list">
+            <li>
+              <span class="rate-label">hold your spot</span>
+              <span class="rate-price">20%</span>
+            </li>
+            <li>
+              <span class="rate-label">accepted</span>
+              <span class="rate-price">etransfer, crypto, wise, paypal</span>
+            </li>
+            <li>
+              <span class="rate-label">no flake refunds</span>
+              <span class="rate-price">policy</span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="rate-card">
+          <h3>outcalls</h3>
+          <ul class="rate-list">
+            <li>
+              <span class="rate-label">within 2km</span>
+              <span class="rate-price">1h minimum</span>
+            </li>
+            <li>
+              <span class="rate-label">over 2km</span>
+              <span class="rate-price">1.5h minimum</span>
+            </li>
+            <li>
+              <span class="rate-label">no deposit</span>
+              <span class="rate-price">no visit</span>
+            </li>
+            <li>
+              <span class="rate-label">driver / security</span>
+              <span class="rate-price">you cover</span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="rate-card">
+          <h3>fly me to you</h3>
+          <ul class="rate-list">
+            <li>
+              <span class="rate-label">24h+ immersion</span>
+              <span class="rate-price">let's discuss</span>
+            </li>
+            <li>
+              <span class="rate-label">tickets &amp; stay</span>
+              <span class="rate-price">you cover</span>
+            </li>
+          </ul>
+        </article>
+      </div>
+
+      <button
+        id="acronym-trigger"
+        class="acronym-trigger"
+        type="button"
+        aria-expanded="false"
+        aria-controls="acronym-panel"
+      >
+        acronyms / what they mean
+      </button>
+      <section id="acronym-panel" class="acronym-panel" hidden aria-label="acronyms and meanings">
+      <div class="acronym-grid">
+        <article class="acronym-card">
+          <h3 class="acronym-term">gfe</h3>
+          <p class="acronym-definition">
+            girlfriend experience -- affectionate, unrushed connection with deep kissing, cuddles, and genuine social energy.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">pse</h3>
+          <p class="acronym-definition">
+            pornstar experience -- explicit, high-adrenaline performance with dirty talk, athletic positions, and bold extras.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">dfk</h3>
+          <p class="acronym-definition">
+            deep french kissing -- slow, open-mouth kissing with full tongue contact.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">bbbj</h3>
+          <p class="acronym-definition">
+            bare back blow job -- unprotected oral performed on you; always conditional on screening and hygiene.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">daty</h3>
+          <p class="acronym-definition">
+            dining at the y -- oral focus on my vulva; enthusiasm mandatory, teeth prohibited.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">dato</h3>
+          <p class="acronym-definition">
+            dining at the o -- oral worship of the booty. Impeccable prep and mutual respect required.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">cim</h3>
+          <p class="acronym-definition">
+            come in mouth -- finish lands with me, never without prior consent and impeccable manners.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">cof / cob</h3>
+          <p class="acronym-definition">
+            come on face / body -- release lands where we agree ahead of time so skin, hair, and glam stay protected.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">msog</h3>
+          <p class="acronym-definition">
+            multiple shots on goal -- clearance for more than one climax within the same booking.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">greek</h3>
+          <p class="acronym-definition">
+            greek -- anal intercourse. It stays on the premium menu only with prep, chemistry, and tribute.
+          </p>
+        </article>
+        <article class="acronym-card">
+          <h3 class="acronym-term">femdom</h3>
+          <p class="acronym-definition">
+            female dominance -- dominant power-play led by the woman (discipline, control, restraint, humiliation, pain).
+          </p>
+        </article>
+      </div>
+      </section>
+    </section>
+    <script>
+      const sendRatesHeight = () => {
+        if (window.parent === window) return;
+        const height = Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight
+        );
+        window.parent.postMessage(
+          { type: "hvh:height", id: "rates-services", height },
+          window.location.origin
+        );
+      };
+
+      (function setupEmbeddedMode() {
+        if (window.parent !== window) {
+          document.body.classList.add("embedded");
+        }
+      })();
+
+      (function () {
+        const body = document.body;
+        const THEME_STORAGE_KEY = "hvh_theme_key";
+
+        const applyTheme = (theme) => {
+          body.classList.remove("pink-mode", "christmas-mode");
+          if (theme === "pink") {
+            body.classList.add("pink-mode");
+          } else if (theme === "christmas") {
+            body.classList.add("christmas-mode");
+          }
+        };
+
+        const normalizeTheme = (theme) => {
+          if (theme === "green") return "default";
+          return theme;
+        };
+
+        const isValentineWindow = () => {
+          const now = new Date();
+          return now.getMonth() === 1 && now.getDate() <= 16;
+        };
+        const isHolidayWindow = () => {
+          const now = new Date();
+          const month = now.getMonth();
+          const day = now.getDate();
+          return month === 11 || (month === 0 && day <= 2);
+        };
+
+        const storedTheme = (() => {
+          try {
+            return window.localStorage.getItem(THEME_STORAGE_KEY);
+          } catch (_error) {
+            return null;
+          }
+        })();
+
+        const normalizedStoredTheme = normalizeTheme(storedTheme);
+        if (
+          normalizedStoredTheme === "pink" ||
+          normalizedStoredTheme === "christmas" ||
+          normalizedStoredTheme === "default"
+        ) {
+          applyTheme(normalizedStoredTheme);
+        } else if (isHolidayWindow()) {
+          applyTheme("christmas");
+        } else if (isValentineWindow()) {
+          applyTheme("pink");
+        }
+      })();
+
+      (function () {
+        const BASE = "CAD";
+        const FALLBACK_RATES = { USD: 0.73, EUR: 0.67, GBP: 0.58 };
+        const selector = document.getElementById("currency-selector");
+        const amounts = Array.from(document.querySelectorAll("[data-rate-amount]"));
+        const entries = Array.from(document.querySelectorAll(".rate-entry"));
+
+        const updateGlitchText = () => {
+          entries.forEach((entry) => {
+            const line = entry.querySelector(".rate-line");
+            if (!line) return;
+            const spans = Array.from(line.querySelectorAll("span")).filter(
+              (span) => !span.classList.contains("spacer")
+            );
+            if (!spans.length) return;
+            const label = spans[0].textContent.trim();
+            const value = spans[spans.length - 1].textContent.trim();
+            const text = value && value !== label ? `${label} - ${value}` : label;
+            entry.dataset.text = text;
+            entry.classList.add("rate-glitch");
+          });
+        };
+
+        const formatCurrency = (amount, currency) => {
+          try {
+            return new Intl.NumberFormat(undefined, {
+              style: "currency",
+              currency,
+              maximumFractionDigits: 0,
+            }).format(amount);
+          } catch (_error) {
+            return `${currency} ${Math.round(amount)}`;
+          }
+        };
+
+        const fetchRates = () =>
+          fetch(`https://api.exchangerate.host/latest?base=${BASE}`)
+            .then((response) => (response.ok ? response.json() : Promise.reject()))
+            .then((data) => data?.rates || FALLBACK_RATES)
+            .catch(() => FALLBACK_RATES);
+
+        const applyRates = (currency, rates = {}) => {
+          amounts.forEach((el) => {
+            const baseAmount = Number(el.dataset.rateAmount || "0");
+            let value = baseAmount;
+            if (currency !== BASE) {
+              const code = currency === "USDC" ? "USD" : currency;
+              const rate = rates?.[code] ?? FALLBACK_RATES[code];
+              if (typeof rate === "number") {
+                value = baseAmount * rate;
+              }
+            }
+            value = Math.ceil(value / 10) * 10;
+            const displayCurrency = currency === "USDC" ? "USD" : currency;
+            el.textContent = formatCurrency(value, displayCurrency);
+          });
+          updateGlitchText();
+        };
+
+        const init = async () => {
+          const rates = await fetchRates();
+          const current = selector ? selector.value || BASE : BASE;
+          applyRates(current, rates);
+          if (selector) {
+            selector.addEventListener("change", () => {
+              applyRates(selector.value || BASE, rates);
+            });
+          }
+          updateGlitchText();
+        };
+
+        if (amounts.length) {
+          init();
+        }
+      })();
+
+      (function () {
+        const trigger = document.getElementById("acronym-trigger");
+        const panel = document.getElementById("acronym-panel");
+
+        if (!trigger || !panel) return;
+
+        const setOpen = (open, { focusTrigger = false } = {}) => {
+          trigger.setAttribute("aria-expanded", open ? "true" : "false");
+          panel.hidden = !open;
+          if (focusTrigger) {
+            trigger.focus();
+          }
+          sendRatesHeight();
+        };
+
+        trigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          if (!panel.hidden) return;
+          setOpen(true);
+        });
+
+        window.addEventListener("message", (event) => {
+          if (event.origin !== window.location.origin) return;
+          const payload = event.data;
+          if (!payload || typeof payload !== "object") return;
+          if (payload.type === "hvh:theme") {
+            const theme = payload.theme === "green" ? "default" : payload.theme;
+            document.body.classList.remove("pink-mode", "christmas-mode");
+            if (theme === "pink") {
+              document.body.classList.add("pink-mode");
+            } else if (theme === "christmas") {
+              document.body.classList.add("christmas-mode");
+            }
+            sendRatesHeight();
+            return;
+          }
+          if (payload.type === "hvh:close-subpanels" && payload.id === "rates-services") {
+            setOpen(false);
+          }
+        });
+      })();
+
+      (function () {
+        if (window.parent === window) return;
+
+        if (document.readyState === "complete") {
+          sendRatesHeight();
+        } else {
+          window.addEventListener("load", sendRatesHeight);
+        }
+        window.addEventListener("resize", sendRatesHeight);
+        if ("ResizeObserver" in window) {
+          const observer = new ResizeObserver(() => sendRatesHeight());
+          observer.observe(document.body);
+        }
+        window.setTimeout(sendRatesHeight, 400);
+      })();
+    </script>
+  </body>
+</html>

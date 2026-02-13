@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>404 | Hacker Lab</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
+    />
+    
+    <style>
+      :root {
+        --bg: #020202;
+        --fg: #f8fff8;
+        --accent: #00ff99;
+        --danger: #ff5689;
+        --shadow: rgba(0, 255, 153, 0.24);
+        --board-width: clamp(220px, min(60vw, 360px), 420px);
+        --board-height: calc(var(--board-width) * 2);
+      }
+
+      @supports (height: 1dvh) {
+        :root {
+          --board-width: clamp(220px, min(60vw, 360px), 420px);
+          --board-height: calc(var(--board-width) * 2);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font: 16px/1.6 "JetBrains Mono", "Fira Code", Menlo, Consolas, ui-monospace, monospace;
+        background: radial-gradient(circle at 15% 20%, rgba(0, 255, 153, 0.16), transparent 55%),
+          radial-gradient(circle at 80% 85%, rgba(255, 86, 137, 0.15), transparent 60%), var(--bg);
+        color: var(--fg);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      header {
+        padding: clamp(16px, 3.5vw, 26px);
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        color: rgba(248, 255, 248, 0.76);
+      }
+
+      header h1 {
+        margin: 0 0 6px;
+        font-size: clamp(26px, 7vw, 52px);
+        letter-spacing: 8px;
+        color: var(--accent);
+        text-shadow: 0 0 18px rgba(0, 255, 153, 0.3);
+      }
+
+      header p {
+        margin: 0;
+      }
+
+      .game-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: clamp(12px, 4vw, 20px);
+        position: relative;
+      }
+
+      canvas {
+        width: var(--board-width);
+        height: var(--board-height);
+        background: rgba(0, 0, 0, 0.92);
+        border-radius: 28px;
+        border: 2px solid rgba(0, 255, 153, 0.36);
+        box-shadow: 0 30px 70px var(--shadow);
+        image-rendering: pixelated;
+        touch-action: none;
+      }
+
+      .hud {
+        position: absolute;
+        top: clamp(12px, 4vw, 26px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: inline-flex;
+        gap: clamp(12px, 4vw, 20px);
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 255, 153, 0.25);
+        background: rgba(0, 8, 6, 0.82);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-size: 12px;
+        color: rgba(248, 255, 248, 0.78);
+        box-shadow: 0 18px 38px rgba(0, 255, 153, 0.2);
+        pointer-events: none;
+      }
+
+      .hud span strong {
+        color: var(--accent);
+      }
+
+      .touch-hint {
+        position: absolute;
+        bottom: clamp(12px, 4vw, 22px);
+        left: 50%;
+        transform: translateX(-50%);
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        font-size: 11px;
+        color: rgba(248, 255, 248, 0.6);
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 255, 153, 0.18);
+        background: rgba(0, 8, 6, 0.7);
+        box-shadow: 0 12px 24px rgba(0, 255, 153, 0.16);
+        pointer-events: none;
+        text-align: center;
+        max-width: 88vw;
+      }
+
+      .actions {
+        padding: clamp(14px, 4vw, 24px);
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px clamp(18px, 4vw, 28px);
+        border-radius: 999px;
+        background: rgba(0, 255, 153, 0.14);
+        border: 1px solid rgba(0, 255, 153, 0.3);
+        color: var(--fg);
+        text-decoration: none;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-size: 12px;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        box-shadow: 0 0 0 transparent;
+      }
+
+      .actions a:hover,
+      .actions a:focus-visible {
+        background: rgba(0, 255, 153, 0.24);
+        box-shadow: 0 8px 24px rgba(0, 255, 153, 0.22);
+        transform: translateY(-2px);
+        outline: none;
+      }
+
+      .actions a.secondary {
+        border-color: rgba(255, 86, 137, 0.45);
+        background: rgba(255, 86, 137, 0.16);
+      }
+
+      .actions a.secondary:hover,
+      .actions a.secondary:focus-visible {
+        background: rgba(255, 86, 137, 0.28);
+        box-shadow: 0 8px 24px rgba(255, 86, 137, 0.25);
+      }
+
+      @media (max-width: 520px) {
+        header {
+          letter-spacing: 3px;
+        }
+
+        header h1 {
+          letter-spacing: 5px;
+        }
+
+        .hud {
+          font-size: 11px;
+          padding: 8px 16px;
+        }
+
+        .touch-hint {
+          font-size: 10px;
+          letter-spacing: 3px;
+        }
+      }
+      .cookie-banner {
+        position: fixed;
+        bottom: clamp(16px, 4vw, 26px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(680px, calc(100% - clamp(24px, 6vw, 48px)));
+        padding: clamp(18px, 4vw, 24px);
+        background: rgba(0, 12, 9, 0.96);
+        border: 1px solid rgba(0, 255, 153, 0.35);
+        box-shadow: 0 18px 40px rgba(0, 255, 153, 0.25);
+        color: rgba(248, 255, 248, 0.9);
+        display: none;
+        z-index: 4000;
+        border-radius: 18px;
+        text-align: center;
+        letter-spacing: 1px;
+      }
+
+      .cookie-banner.show {
+        display: grid;
+        gap: clamp(12px, 3vw, 18px);
+      }
+
+      .cookie-banner p {
+        margin: 0;
+        font-size: clamp(13px, 2.8vw, 15px);
+      }
+
+      .cookie-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .cookie-actions button {
+        padding: 10px 20px;
+        border: 1px solid rgba(0, 255, 153, 0.4);
+        background: rgba(0, 255, 153, 0.14);
+        color: var(--fg);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .cookie-actions button:hover,
+      .cookie-actions button:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(0, 255, 153, 0.25);
+        outline: none;
+      }
+    </style>
+    <script src="matrix-phone.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Hacker Lab</h1>
+      <p>signal is scrambled - drop the neon stacks to reboot the node.</p>
+    </header>
+    <div class="game-container">
+      <div class="hud">
+        <span>score <strong id="score">000000</strong></span>
+        <span>level <strong id="level">01</strong></span>
+        <span>lines <strong id="lines">000</strong></span>
+      </div>
+      <canvas id="game" width="300" height="600" aria-label="retro drop block grid"></canvas>
+      <div class="touch-hint">
+        swipe left/right to move - swipe down to drop - swipe up or tap to rotate
+      </div>
+    </div>
+    <div class="actions">
+      <a href="eyecandy.html" target="_blank" rel="noopener noreferrer">eye candy</a>
+      <a class="secondary" href="index.html">checkpoint</a>
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      const header = document.querySelector("header");
+      const actions = document.querySelector(".actions");
+      const gameContainer = document.querySelector(".game-container");
+
+      const updateBoardSize = () => {
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const headerHeight = header ? header.offsetHeight : 0;
+        const actionsHeight = actions ? actions.offsetHeight : 0;
+
+        let paddingTop = 0;
+        let paddingBottom = 0;
+
+        if (gameContainer) {
+          const styles = window.getComputedStyle(gameContainer);
+          paddingTop = parseFloat(styles.paddingTop) || 0;
+          paddingBottom = parseFloat(styles.paddingBottom) || 0;
+        }
+
+        const spacingBuffer = 40;
+        const aspectRatio = 2; // board is 10 columns by 20 rows
+        const availableHeight =
+          viewportHeight - headerHeight - actionsHeight - paddingTop - paddingBottom - spacingBuffer;
+        const maxWidth = viewportWidth * 0.8;
+
+        let boardWidth = Math.min(420, maxWidth, availableHeight / aspectRatio);
+
+        if (!Number.isFinite(boardWidth) || boardWidth <= 0) {
+          const fallbackHeight = viewportHeight * 0.7;
+          boardWidth = Math.max(200, Math.min(420, fallbackHeight / aspectRatio));
+          document.body.style.overflowY = "auto";
+        } else {
+          document.body.style.overflowY = "hidden";
+        }
+
+        const boardHeight = boardWidth * aspectRatio;
+
+        root.style.setProperty("--board-width", `${boardWidth}px`);
+        root.style.setProperty("--board-height", `${boardHeight}px`);
+      };
+
+      window.addEventListener("resize", updateBoardSize);
+      window.addEventListener("orientationchange", updateBoardSize);
+      updateBoardSize();
+
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const scoreDisplay = document.getElementById("score");
+      const levelDisplay = document.getElementById("level");
+      const linesDisplay = document.getElementById("lines");
+      const hintDisplay = document.querySelector(".touch-hint");
+
+      const COLS = 10;
+      const ROWS = 20;
+      const TILE_SIZE = 30;
+      const BOARD = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+      canvas.width = COLS * TILE_SIZE;
+      canvas.height = ROWS * TILE_SIZE;
+      ctx.imageSmoothingEnabled = false;
+
+      const TETROMINOES = [
+        {
+          name: "I",
+          color: "#55ffe9",
+          matrix: [
+            [0, 0, 0, 0],
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+          ]
+        },
+        {
+          name: "J",
+          color: "#62a6ff",
+          matrix: [
+            [1, 0, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+          ]
+        },
+        {
+          name: "L",
+          color: "#ffb84d",
+          matrix: [
+            [0, 0, 1],
+            [1, 1, 1],
+            [0, 0, 0]
+          ]
+        },
+        {
+          name: "O",
+          color: "#f9ff6e",
+          matrix: [
+            [1, 1],
+            [1, 1]
+          ]
+        },
+        {
+          name: "S",
+          color: "#69ff8d",
+          matrix: [
+            [0, 1, 1],
+            [1, 1, 0],
+            [0, 0, 0]
+          ]
+        },
+        {
+          name: "T",
+          color: "#d06bff",
+          matrix: [
+            [0, 1, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+          ]
+        },
+        {
+          name: "Z",
+          color: "#ff5f84",
+          matrix: [
+            [1, 1, 0],
+            [0, 1, 1],
+            [0, 0, 0]
+          ]
+        }
+      ];
+
+      let currentPiece = null;
+      let nextPiece = null;
+      let dropCounter = 0;
+      let dropInterval = 800;
+      let lastTime = 0;
+      let score = 0;
+      let lines = 0;
+      let level = 1;
+      let isGameOver = false;
+      let touchStartPoint = null;
+
+      const pad = (value, length = 3) => value.toString().padStart(length, "0");
+
+      const cloneMatrix = (matrix) => matrix.map((row) => [...row]);
+
+      const rotateMatrix = (matrix) => {
+        const size = matrix.length;
+        const rotated = matrix.map((row) => row.map(() => 0));
+        for (let y = 0; y < size; y += 1) {
+          for (let x = 0; x < size; x += 1) {
+            rotated[x][size - 1 - y] = matrix[y][x];
+          }
+        }
+        return rotated;
+      };
+
+      const createPiece = () => {
+        const template = TETROMINOES[Math.floor(Math.random() * TETROMINOES.length)];
+        return {
+          name: template.name,
+          color: template.color,
+          matrix: cloneMatrix(template.matrix),
+          x: 0,
+          y: 0
+        };
+      };
+
+      const topOffset = (matrix) => {
+        for (let y = 0; y < matrix.length; y += 1) {
+          if (matrix[y].some(Boolean)) {
+            return y;
+          }
+        }
+        return 0;
+      };
+
+      const resetBoard = () => {
+        for (let y = 0; y < ROWS; y += 1) {
+          BOARD[y].fill(null);
+        }
+      };
+
+      const updateScoreboard = () => {
+        scoreDisplay.textContent = score.toString().padStart(6, "0");
+        levelDisplay.textContent = pad(level, 2);
+        linesDisplay.textContent = pad(lines, 3);
+      };
+
+      const updateDifficulty = () => {
+        dropInterval = Math.max(120, 800 - (level - 1) * 70);
+      };
+
+      const collide = (board, piece) => {
+        const { matrix, x: offsetX, y: offsetY } = piece;
+        for (let y = 0; y < matrix.length; y += 1) {
+          for (let x = 0; x < matrix[y].length; x += 1) {
+            if (!matrix[y][x]) continue;
+            const px = x + offsetX;
+            const py = y + offsetY;
+            if (px < 0 || px >= COLS || py >= ROWS) {
+              return true;
+            }
+            if (py >= 0 && board[py][px]) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      const merge = (board, piece) => {
+        const { matrix, x: offsetX, y: offsetY, color } = piece;
+        for (let y = 0; y < matrix.length; y += 1) {
+          for (let x = 0; x < matrix[y].length; x += 1) {
+            if (!matrix[y][x]) continue;
+            const px = x + offsetX;
+            const py = y + offsetY;
+            if (py >= 0 && py < ROWS && px >= 0 && px < COLS) {
+              board[py][px] = color;
+            }
+          }
+        }
+      };
+
+      const clearLines = () => {
+        let cleared = 0;
+        for (let y = ROWS - 1; y >= 0; y -= 1) {
+          if (BOARD[y].every(Boolean)) {
+            BOARD.splice(y, 1);
+            BOARD.unshift(Array(COLS).fill(null));
+            cleared += 1;
+            y += 1;
+          }
+        }
+        if (cleared > 0) {
+          const lineScores = [0, 100, 300, 500, 800];
+          score += lineScores[cleared] * level;
+          lines += cleared;
+          level = Math.floor(lines / 10) + 1;
+          updateDifficulty();
+          updateScoreboard();
+        }
+      };
+
+      const spawnPiece = () => {
+        currentPiece = nextPiece || createPiece();
+        nextPiece = createPiece();
+        const offset = topOffset(currentPiece.matrix);
+        currentPiece.x = Math.floor(COLS / 2) - Math.ceil(currentPiece.matrix[0].length / 2);
+        currentPiece.y = -offset;
+        if (collide(BOARD, currentPiece)) {
+          handleGameOver();
+        }
+      };
+
+      const handleGameOver = () => {
+        isGameOver = true;
+        hintDisplay.textContent = "system overload - tap or press enter to reboot";
+      };
+
+      const resetGame = () => {
+        resetBoard();
+        score = 0;
+        lines = 0;
+        level = 1;
+        dropCounter = 0;
+        lastTime = 0;
+        isGameOver = false;
+        hintDisplay.textContent =
+          "swipe left/right to move - swipe down to drop - swipe up or tap to rotate";
+        updateDifficulty();
+        updateScoreboard();
+        nextPiece = createPiece();
+        spawnPiece();
+      };
+
+      const drawCell = (x, y, color) => {
+        const px = x * TILE_SIZE;
+        const py = y * TILE_SIZE;
+        const gradient = ctx.createLinearGradient(px, py, px + TILE_SIZE, py + TILE_SIZE);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, "#02130c");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(px + 1, py + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.35)";
+        ctx.strokeRect(px + 1, py + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+      };
+
+      const drawMatrix = (matrix, offset, color) => {
+        for (let y = 0; y < matrix.length; y += 1) {
+          for (let x = 0; x < matrix[y].length; x += 1) {
+            if (!matrix[y][x]) continue;
+            const px = x + offset.x;
+            const py = y + offset.y;
+            if (py >= 0) {
+              drawCell(px, py, color);
+            }
+          }
+        }
+      };
+
+      const drawBackground = () => {
+        ctx.fillStyle = "rgba(0, 16, 12, 0.94)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "rgba(0, 255, 153, 0.08)";
+        for (let y = 0; y <= ROWS; y += 1) {
+          ctx.beginPath();
+          ctx.moveTo(0, y * TILE_SIZE);
+          ctx.lineTo(canvas.width, y * TILE_SIZE);
+          ctx.stroke();
+        }
+        for (let x = 0; x <= COLS; x += 1) {
+          ctx.beginPath();
+          ctx.moveTo(x * TILE_SIZE, 0);
+          ctx.lineTo(x * TILE_SIZE, canvas.height);
+          ctx.stroke();
+        }
+      };
+
+      const drawBoard = () => {
+        for (let y = 0; y < ROWS; y += 1) {
+          for (let x = 0; x < COLS; x += 1) {
+            const cell = BOARD[y][x];
+            if (cell) {
+              drawCell(x, y, cell);
+            }
+          }
+        }
+      };
+
+      const draw = () => {
+        drawBackground();
+        drawBoard();
+        if (currentPiece) {
+          drawMatrix(currentPiece.matrix, { x: currentPiece.x, y: currentPiece.y }, currentPiece.color);
+        }
+      };
+
+      const tryMove = (dx, dy) => {
+        if (!currentPiece) return false;
+        currentPiece.x += dx;
+        currentPiece.y += dy;
+        if (collide(BOARD, currentPiece)) {
+          currentPiece.x -= dx;
+          currentPiece.y -= dy;
+          return false;
+        }
+        return true;
+      };
+
+      const rotatePiece = () => {
+        if (!currentPiece) return;
+        const rotated = rotateMatrix(currentPiece.matrix);
+        const previousMatrix = currentPiece.matrix;
+        const originalX = currentPiece.x;
+        currentPiece.matrix = rotated;
+        const offsets = [0, -1, 1, -2, 2];
+        for (const offset of offsets) {
+          currentPiece.x = originalX + offset;
+          if (!collide(BOARD, currentPiece)) {
+            return;
+          }
+        }
+        currentPiece.matrix = previousMatrix;
+        currentPiece.x = originalX;
+      };
+
+      const lockPiece = () => {
+        merge(BOARD, currentPiece);
+        clearLines();
+        spawnPiece();
+      };
+
+      const stepDown = (awardPoints = false) => {
+        if (!currentPiece) return;
+        if (!tryMove(0, 1)) {
+          lockPiece();
+          dropCounter = 0;
+        } else if (awardPoints) {
+          score += 1;
+          updateScoreboard();
+        }
+      };
+
+      const hardDrop = () => {
+        if (!currentPiece) return;
+        let distance = 0;
+        while (tryMove(0, 1)) {
+          distance += 1;
+        }
+        if (distance > 0) {
+          score += distance * 2;
+          updateScoreboard();
+        }
+        lockPiece();
+        dropCounter = 0;
+      };
+
+      const gameLoop = (time = 0) => {
+        const delta = time - lastTime;
+        lastTime = time;
+        if (!isGameOver) {
+          dropCounter += delta;
+          if (dropCounter >= dropInterval) {
+            stepDown(false);
+            dropCounter = 0;
+          }
+        }
+        draw();
+        requestAnimationFrame(gameLoop);
+      };
+
+      window.addEventListener("keydown", (event) => {
+        const key = event.key;
+        if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " "].includes(key)) {
+          event.preventDefault();
+        }
+        if (isGameOver && (key === "Enter" || key === " ")) {
+          resetGame();
+          return;
+        }
+        if (isGameOver) return;
+        switch (key) {
+          case "ArrowLeft":
+            tryMove(-1, 0);
+            break;
+          case "ArrowRight":
+            tryMove(1, 0);
+            break;
+          case "ArrowDown":
+            stepDown(true);
+            break;
+          case "ArrowUp":
+            rotatePiece();
+            break;
+          case " ":
+            hardDrop();
+            break;
+          default:
+            break;
+        }
+      });
+
+      canvas.addEventListener(
+        "touchstart",
+        (event) => {
+          if (event.touches.length > 1) return;
+          event.preventDefault();
+          if (isGameOver) {
+            resetGame();
+            touchStartPoint = null;
+            return;
+          }
+          const touch = event.changedTouches[0];
+          touchStartPoint = { x: touch.clientX, y: touch.clientY };
+        },
+        { passive: false }
+      );
+
+      canvas.addEventListener(
+        "touchend",
+        (event) => {
+          if (!touchStartPoint) {
+            event.preventDefault();
+            return;
+          }
+          const touch = event.changedTouches[0];
+          const deltaX = touch.clientX - touchStartPoint.x;
+          const deltaY = touch.clientY - touchStartPoint.y;
+          const absX = Math.abs(deltaX);
+          const absY = Math.abs(deltaY);
+          const threshold = 24;
+
+          if (isGameOver) {
+            touchStartPoint = null;
+            return;
+          }
+
+          if (absX < threshold && absY < threshold) {
+            rotatePiece();
+          } else if (absX > absY) {
+            if (deltaX > 0) {
+              tryMove(1, 0);
+            } else {
+              tryMove(-1, 0);
+            }
+          } else if (deltaY > 0) {
+            stepDown(true);
+          } else {
+            rotatePiece();
+          }
+
+          touchStartPoint = null;
+          event.preventDefault();
+        },
+        { passive: false }
+      );
+
+      canvas.addEventListener(
+        "touchmove",
+        (event) => {
+          if (event.touches.length === 1) {
+            event.preventDefault();
+          }
+        },
+        { passive: false }
+      );
+
+      resetGame();
+      requestAnimationFrame(gameLoop);
+    </script>
+      <script>
+      (function () {
+        const COOKIE_KEY = "hvh_cookie_choice_v2";
+        const banner = document.getElementById("cookie-banner");
+        const acceptBtn = banner?.querySelector('[data-cookie-action="accept"]');
+        const rejectBtn = banner?.querySelector('[data-cookie-action="reject"]');
+        const TRACKING_ID = "G-D5ZVVS819V";
+
+        function loadGoogleAnalytics() {
+          if (window._hvhGaLoaded) return;
+          window._hvhGaLoaded = true;
+          window.dataLayer = window.dataLayer || [];
+          window.gtag =
+            window.gtag ||
+            function gtag() {
+              window.dataLayer.push(arguments);
+            };
+          const script = document.createElement("script");
+          script.async = true;
+          script.src = `https://www.googletagmanager.com/gtag/js?id=${TRACKING_ID}`;
+          document.head.appendChild(script);
+          window.gtag("js", new Date());
+          window.gtag("config", TRACKING_ID);
+        }
+
+        function hideBanner() {
+          if (!banner) return;
+          banner.classList.remove("show");
+          banner.setAttribute("aria-hidden", "true");
+        }
+
+        const stored = (() => {
+          try {
+            return window.localStorage.getItem(COOKIE_KEY);
+          } catch (error) {
+            return null;
+          }
+        })();
+
+        if (stored === "accepted") {
+          loadGoogleAnalytics();
+        } else if (banner) {
+          banner.classList.add("show");
+          banner.setAttribute("aria-hidden", "false");
+        }
+
+        acceptBtn?.addEventListener("click", () => {
+          try {
+            window.localStorage.setItem(COOKIE_KEY, "accepted");
+          } catch (error) {}
+          loadGoogleAnalytics();
+          hideBanner();
+        });
+
+        rejectBtn?.addEventListener("click", () => {
+          try {
+            window.localStorage.setItem(COOKIE_KEY, "rejected");
+          } catch (error) {}
+          hideBanner();
+        });
+      })();
+    </script>
+  </body>
+</html>
+
+
+

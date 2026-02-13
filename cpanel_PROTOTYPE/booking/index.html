@@ -1,0 +1,2347 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Van Booking Portal | Heidi Van Horny</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
+    />
+    <style>
+      :root {
+        --bg: #fff5fb;
+        --bg-2: #ffe3f2;
+        --ink: #12040a;
+        --pink: #ff2d93;
+        --hot: #ff006e;
+        --neon: #ff48a5;
+        --line: rgba(255, 0, 110, 0.25);
+        --shadow: rgba(255, 0, 110, 0.22);
+        --mono: "Courier Prime", "IBM Plex Mono", "Courier New", Courier, monospace;
+        --bubble: "Baloo 2", "Cooper Black", "Bookman Old Style", "Georgia", serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--mono);
+        color: var(--ink);
+        background: radial-gradient(circle at 20% 10%, #ffe1f0 0%, #fff5fb 45%, #fff 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        width: 520px;
+        height: 520px;
+        border-radius: 50%;
+        filter: blur(0px);
+        opacity: 0.45;
+        z-index: 0;
+      }
+
+      body::before {
+        top: -240px;
+        right: -120px;
+        background: radial-gradient(circle, rgba(255, 0, 110, 0.3), transparent 70%);
+      }
+
+      body::after {
+        bottom: -260px;
+        left: -140px;
+        background: radial-gradient(circle, rgba(255, 72, 165, 0.35), transparent 70%);
+      }
+
+      header {
+        position: relative;
+        z-index: 1;
+        padding: 64px 24px 32px;
+        max-width: 980px;
+        margin: 0 auto;
+        animation: floatIn 0.9s ease-out;
+      }
+
+      .back-row {
+        margin-bottom: 16px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--hot);
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+
+      .back-link:hover,
+      .back-link:focus-visible {
+        outline: none;
+        box-shadow: 0 12px 22px rgba(255, 0, 110, 0.18);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--hot);
+        font-size: 12px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-family: var(--bubble);
+        font-size: clamp(2.6rem, 5vw, 4.4rem);
+        margin: 0 0 12px;
+        color: var(--hot);
+        text-shadow: 0 0 12px rgba(255, 0, 110, 0.4);
+      }
+
+      .subtitle {
+        font-size: clamp(1rem, 1.3vw, 1.2rem);
+        max-width: 620px;
+        margin: 0 0 22px;
+        color: #3b0f23;
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 0 24px 90px;
+      }
+
+      form {
+        display: grid;
+        gap: 24px;
+      }
+
+      .wizard-top {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px 16px;
+        box-shadow: 0 16px 30px var(--shadow);
+      }
+
+      .wizard-count {
+        font-size: 0.9rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--hot);
+        font-weight: 700;
+      }
+
+      .wizard-title {
+        margin: 8px 0 10px;
+        color: #4a0d26;
+        font-size: 0.95rem;
+      }
+
+      .wizard-status {
+        margin: 8px 0 0;
+        color: #7a1c45;
+        font-size: 0.86rem;
+      }
+
+      .wizard-bar {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 0, 110, 0.1);
+        overflow: hidden;
+      }
+
+      .wizard-fill {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(135deg, #ff2d93, #ff006e);
+        transition: width 0.2s ease;
+      }
+
+      .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 20px 40px var(--shadow);
+        animation: fadeUp 0.8s ease-out;
+      }
+
+      .panel h2 {
+        margin: 0 0 16px;
+        font-size: 1.1rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--hot);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .span-2 {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        margin-bottom: 6px;
+        color: #6b173f;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        font-family: var(--mono);
+        font-size: 0.95rem;
+        background: #fff9fc;
+        color: var(--ink);
+        transition: border 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--hot);
+        box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.18);
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .radio-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .radio-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        background: #fff9fc;
+        cursor: pointer;
+      }
+
+      .radio-card input {
+        margin: 0;
+      }
+
+      .checkbox-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin-top: 6px;
+      }
+
+      .checkbox-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        background: #fff9fc;
+        cursor: pointer;
+      }
+
+      .checkbox-card input {
+        margin: 0;
+        width: 16px;
+        height: 16px;
+        accent-color: var(--hot);
+      }
+
+      .hint {
+        font-size: 0.85rem;
+        color: #7a1c45;
+        margin-top: 8px;
+      }
+
+      .time-preview {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(255, 0, 110, 0.08);
+        font-size: 0.9rem;
+      }
+
+      .day-calendar {
+        position: relative;
+        margin-top: 14px;
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 0, 110, 0.2);
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      .day-calendar::before {
+        content: attr(data-city);
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: clamp(2rem, 8vw, 5rem);
+        color: rgba(255, 45, 147, 0.08);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .day-calendar .slot {
+        position: relative;
+        z-index: 1;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.2);
+        background: #fff7fb;
+        color: #4a0d26;
+        font-size: 0.9rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .day-calendar .slot.available:hover,
+      .day-calendar .slot.available:focus-visible {
+        outline: none;
+        border-color: rgba(255, 0, 110, 0.6);
+        box-shadow: 0 10px 18px rgba(255, 0, 110, 0.18);
+        transform: translateY(-1px);
+      }
+
+      .day-calendar .slot.blocked {
+        background: rgba(255, 0, 110, 0.12);
+        color: rgba(74, 13, 38, 0.55);
+        cursor: not-allowed;
+      }
+
+      .day-calendar .slot.selected {
+        border-color: rgba(255, 0, 110, 0.8);
+        background: rgba(255, 0, 110, 0.18);
+        font-weight: 700;
+      }
+
+      .day-empty {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px dashed rgba(255, 0, 110, 0.28);
+        background: rgba(255, 0, 110, 0.06);
+        color: #6b173f;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.82rem;
+      }
+
+      .availability-summary {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 0.9rem;
+        color: #4a0d26;
+      }
+
+      .availability-summary span {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 0, 110, 0.08);
+        border: 1px solid rgba(255, 0, 110, 0.2);
+      }
+
+      .deposit-box {
+        border: 1px dashed rgba(255, 0, 110, 0.4);
+        border-radius: 18px;
+        padding: 16px;
+        background: rgba(255, 0, 110, 0.06);
+      }
+
+      .deposit-box strong {
+        font-size: 1.4rem;
+        color: var(--hot);
+      }
+
+      .deposit-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin: 10px 0;
+      }
+
+      .deposit-total {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        font-size: 0.95rem;
+        color: #3b0f23;
+      }
+
+      .deposit-total span {
+        font-weight: 700;
+        color: var(--hot);
+      }
+
+      .deposit-currency {
+        display: grid;
+        gap: 6px;
+        min-width: 160px;
+      }
+
+      .deposit-currency label {
+        margin: 0;
+      }
+
+      #depositRateNote:empty {
+        display: none;
+      }
+
+      #totalRateNote:empty {
+        display: none;
+      }
+
+      .consent {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 18px;
+        font-size: 0.9rem;
+        color: #3b0f23;
+      }
+
+      .cta {
+        margin-top: 18px;
+        padding: 14px 22px;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #ff2d93, #ff006e);
+        color: #fff;
+        font-size: 1rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 16px 30px rgba(255, 0, 110, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px rgba(255, 0, 110, 0.4);
+      }
+
+      .whatsapp-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 12px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: 1px solid var(--hot);
+        color: var(--hot);
+        text-decoration: none;
+        font-size: 0.95rem;
+      }
+
+      .popup-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 4, 8, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 9999;
+      }
+
+      .popup-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .popup-card {
+        width: min(420px, 92vw);
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 20px 22px;
+        box-shadow: 0 18px 36px rgba(255, 0, 110, 0.22);
+        text-align: center;
+      }
+
+      .popup-card h3 {
+        margin: 0 0 8px;
+        font-family: var(--bubble);
+        color: var(--hot);
+      }
+
+      .popup-card p {
+        margin: 0 0 16px;
+        color: #3b0f23;
+      }
+
+      .popup-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 14px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: 1px solid var(--hot);
+        color: var(--hot);
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .popup-link.hidden {
+        display: none;
+      }
+
+      .alert-popup-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 4, 8, 0.55);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+        z-index: 10000;
+      }
+
+      .alert-popup-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .alert-popup-card {
+        width: min(460px, 92vw);
+        background: #fff;
+        border: 2px solid rgba(255, 0, 110, 0.45);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 18px 36px rgba(255, 0, 110, 0.24);
+        text-align: center;
+      }
+
+      .alert-popup-card.shake {
+        animation: popupShake 0.34s ease-in-out;
+      }
+
+      .alert-popup-card h3 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--hot);
+      }
+
+      .alert-popup-card p {
+        margin: 0 0 14px;
+        color: #3b0f23;
+        line-height: 1.5;
+      }
+
+      .whatsapp-cta[hidden] {
+        display: none;
+      }
+
+      .status {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: #7a1c45;
+      }
+
+      .wizard-nav {
+        position: sticky;
+        bottom: 10px;
+        z-index: 5;
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 12px 22px rgba(255, 0, 110, 0.16);
+        backdrop-filter: blur(4px);
+      }
+
+      .wizard-nav .cta {
+        margin-top: 0;
+        flex: 1;
+      }
+
+      .cta.secondary {
+        background: #fff;
+        color: var(--hot);
+        border: 1px solid rgba(255, 0, 110, 0.32);
+        box-shadow: none;
+      }
+
+      .cta.secondary:hover {
+        box-shadow: 0 10px 18px rgba(255, 0, 110, 0.2);
+      }
+
+      .version-stamp {
+        margin: 24px auto 40px;
+        max-width: 980px;
+        padding: 0 24px;
+        font-size: 0.75rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(58, 15, 35, 0.65);
+        text-align: center;
+      }
+
+      .muted {
+        color: #7a1c45;
+        font-size: 0.85rem;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .wizard-hidden {
+        display: none !important;
+      }
+
+      @keyframes floatIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes popupShake {
+        0% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-8px);
+        }
+        40% {
+          transform: translateX(7px);
+        }
+        60% {
+          transform: translateX(-6px);
+        }
+        80% {
+          transform: translateX(5px);
+        }
+        100% {
+          transform: translateX(0);
+        }
+      }
+
+      @media (max-width: 900px) {
+        header {
+          padding-top: 48px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="back-row">
+        <a class="back-link" href="/inside.html">Back to inside</a>
+      </div>
+      <div class="tag">Heidi Van Horny</div>
+      <h1>Van Booking Portal</h1>
+      <p class="subtitle">
+        Simple, private scheduling. Send your request and I email the payment details. Your booking is confirmed after
+        payment is processed.
+      </p>
+    </header>
+
+    <main>
+      <form id="bookingForm" novalidate>
+        <div class="wizard-top" id="wizardTop">
+          <div class="wizard-count" id="wizardCount">1 / 1</div>
+          <p class="wizard-title" id="wizardTitle">Booking step</p>
+          <p class="wizard-status" id="wizardStatus" aria-live="assertive"></p>
+          <div class="wizard-bar"><span class="wizard-fill" id="wizardFill"></span></div>
+        </div>
+
+        <section class="panel" id="panelRequest">
+          <h2>Booking request</h2>
+          <div class="grid">
+            <div class="field">
+              <label for="name">Name</label>
+              <input id="name" name="name" type="text" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="phone">Phone number</label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel"
+                placeholder="+ (country code) 555 1234"
+                pattern="\\+?[0-9\\s()\\-]{6,}"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="field span-2" id="notesField">
+              <label for="notes">Requests, info, tell me about you if you wish :)</label>
+              <textarea
+                id="notes"
+                name="notes"
+                autocomplete="off"
+                placeholder="Optional. Share requests or any helpful info."
+              ></textarea>
+              <p class="hint">Optional. Keep it respectful.</p>
+            </div>
+            <div class="field">
+              <label for="preferred_date">Date of booking</label>
+              <input id="preferred_date" name="preferred_date" type="date" required />
+              <p class="hint" id="touringDayNote">
+                On that day, Heidi will be in: <strong id="touringDayCity">Select a date</strong>
+              </p>
+            </div>
+            <div class="field">
+              <label for="city">City of booking</label>
+              <select id="city" name="city" autocomplete="address-level2" required>
+                <option value="" disabled selected>chose option</option>
+                <option value="Montreal">Montreal</option>
+                <option value="Toronto">Toronto</option>
+                <option value="Vancouver">Vancouver</option>
+                <option value="Paris">Paris</option>
+                <option value="Milan">Milan</option>
+                <option value="London (UK)">London (UK)</option>
+                <option value="Berlin">Berlin</option>
+                <option value="Fly me to you">Fly me to you</option>
+              </select>
+              <p class="hint hidden" id="cityMismatchWarning" aria-live="polite">
+                Your selected city does not match the touring city for that date. Choose the touring city or Fly me to
+                you.
+              </p>
+            </div>
+            <div class="field">
+              <label for="currency">Currency</label>
+              <select id="currency" name="currency" required>
+                <option value="" disabled selected>chose option</option>
+                <option value="CAD">CAD</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="USDC">USDC</option>
+                <option value="BTC">BTC</option>
+                <option value="LTC">LTC</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="duration">Duration</label>
+              <select id="duration" name="duration" required></select>
+              <p class="hint" id="durationHint">Rates update with currency. Crypto shown in CAD.</p>
+              <a
+                id="whatsappDiscuss"
+                class="whatsapp-cta"
+                href="https://wa.me/15146076253"
+                target="_blank"
+                rel="noopener"
+                aria-label="Discuss 24+ hour bookings on WhatsApp"
+                hidden
+                >Discuss it with me on What's App</a
+              >
+            </div>
+            <div class="field">
+              <label for="experience">Service</label>
+              <select id="experience" name="experience" required>
+                <option value="" disabled>chose option</option>
+                <option value="gfe" selected>GFE</option>
+                <option value="pse">PSE</option>
+              </select>
+            </div>
+            <div class="field span-2" id="bookingTypeField">
+              <label>Location</label>
+              <div class="radio-row">
+                <label class="radio-card">
+                  <input type="radio" name="booking_type" value="incall" checked />
+                  <span>Incall</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="booking_type" value="outcall" />
+                  <span>Outcall</span>
+                </label>
+              </div>
+              <p class="hint">Outcall requires an address so I can confirm travel time.</p>
+            </div>
+            <div class="field span-2 hidden" id="outcallAddressField">
+              <label for="outcall_address">Outcall address</label>
+              <input id="outcall_address" name="outcall_address" type="text" autocomplete="street-address" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panelAvailability">
+          <h2>Daily availability</h2>
+          <p class="hint" id="availabilityNote">
+            Pick a date and duration to see available start times in order.
+          </p>
+          <div class="day-calendar" id="dayCalendar" data-city=""></div>
+          <div class="availability-summary" id="availabilitySummary"></div>
+          <div class="field" id="timeField">
+            <label for="preferred_time">Selected time</label>
+            <input id="preferred_time" name="preferred_time" type="text" readonly required />
+          </div>
+        </section>
+
+        <section class="panel" id="panelPayment">
+          <h2>Payment confirmation</h2>
+          <div class="deposit-box" id="depositBox">
+            <div class="deposit-total">Base rate: <span id="baseRateDisplay">Select duration</span></div>
+            <div class="deposit-total hidden" id="pseAddonRow">PSE add-on: <span id="pseAddonDisplay">--</span></div>
+            <div class="deposit-total">Total: <span id="totalRateDisplay">Select duration</span></div>
+            <div class="deposit-total">20% deposit: <strong id="depositRateDisplay">--</strong></div>
+            <p class="hint" id="totalRateNote"></p>
+            <p class="hint" id="depositRateNote">Deposit is 20% of total.</p>
+          </div>
+          <div class="grid" id="paymentGrid">
+            <div class="field" id="paymentMethodField">
+              <label for="payment_method">Payment method</label>
+              <select id="payment_method" name="payment_method" required>
+                <option value="" disabled selected>chose option</option>
+                <option value="paypal">PayPal</option>
+                <option value="wise">Wise</option>
+                <option value="interac">e-Transfer (Canada only)</option>
+                <option value="usdc">USDC</option>
+                <option value="btc">BTC</option>
+                <option value="ltc">LTC</option>
+              </select>
+            </div>
+          </div>
+          <label class="consent" for="deposit_confirm" id="depositConsentRow">
+            <input id="deposit_confirm" name="deposit_confirm" type="checkbox" required />
+            <span>I confirm the 20% deposit and payment method are correct.</span>
+          </label>
+          <p class="hint" id="paymentCryptoHint">Crypto amounts are shown as CAD reference.</p>
+        </section>
+
+        <section class="panel" id="panelSubmit">
+          <button class="cta" type="submit" id="submitBtn">Request booking</button>
+          <div class="status" id="formStatus"></div>
+        </section>
+
+        <div class="wizard-nav" id="wizardNav">
+          <button class="cta secondary" type="button" id="wizardBack">Back</button>
+          <button class="cta" type="button" id="wizardNext">Next</button>
+        </div>
+      </form>
+    </main>
+    <footer class="version-stamp">Version: 2026-01-23</footer>
+
+    <div id="successPopup" class="popup-overlay" aria-hidden="true">
+      <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+        <h3 id="successTitle">Request received</h3>
+        <p id="successMessage"></p>
+        <p class="muted" id="successEmail"></p>
+        <a id="successLink" class="popup-link hidden" href="#" target="_self" rel="noopener">Pay now</a>
+        <button class="cta" type="button" id="successClose">Got it</button>
+      </div>
+    </div>
+
+    <div id="alertPopup" class="alert-popup-overlay" aria-hidden="true">
+      <div class="alert-popup-card" role="dialog" aria-modal="true" aria-labelledby="alertPopupTitle">
+        <h3 id="alertPopupTitle">Attention</h3>
+        <p id="alertPopupMessage"></p>
+        <button class="cta" type="button" id="alertPopupClose">OK</button>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("bookingForm");
+      const durationSelect = document.getElementById("duration");
+      const experienceSelect = document.getElementById("experience");
+      const currencySelect = document.getElementById("currency");
+      const citySelect = document.getElementById("city");
+      const cityMismatchWarning = document.getElementById("cityMismatchWarning");
+      const preferredDate = document.getElementById("preferred_date");
+      const preferredTime = document.getElementById("preferred_time");
+      const nameInput = document.getElementById("name");
+      const phoneInput = document.getElementById("phone");
+      const notesInput = document.getElementById("notes");
+      const whatsappDiscuss = document.getElementById("whatsappDiscuss");
+      const touringDayCityEl = document.getElementById("touringDayCity");
+      const availabilityNote = document.getElementById("availabilityNote");
+      const availabilitySummary = document.getElementById("availabilitySummary");
+      const dayCalendar = document.getElementById("dayCalendar");
+      const panelRequest = document.getElementById("panelRequest");
+      const panelAvailability = document.getElementById("panelAvailability");
+      const panelPayment = document.getElementById("panelPayment");
+      const panelSubmit = document.getElementById("panelSubmit");
+      const paymentMethodField = document.getElementById("paymentMethodField");
+      const depositConsentRow = document.getElementById("depositConsentRow");
+      const paymentCryptoHint = document.getElementById("paymentCryptoHint");
+      const paymentGrid = document.getElementById("paymentGrid");
+      const outcallField = document.getElementById("outcallAddressField");
+      const bookingTypeField = document.getElementById("bookingTypeField");
+      const outcallInput = document.getElementById("outcall_address");
+      const statusEl = document.getElementById("formStatus");
+      const submitBtn = document.getElementById("submitBtn");
+      const paymentMethod = document.getElementById("payment_method");
+      const depositConfirm = document.getElementById("deposit_confirm");
+      const depositBox = document.getElementById("depositBox");
+      const baseRateDisplay = document.getElementById("baseRateDisplay");
+      const totalRateDisplay = document.getElementById("totalRateDisplay");
+      const pseAddonRow = document.getElementById("pseAddonRow");
+      const pseAddonDisplay = document.getElementById("pseAddonDisplay");
+      const depositRateDisplay = document.getElementById("depositRateDisplay");
+      const totalRateNote = document.getElementById("totalRateNote");
+      const depositRateNote = document.getElementById("depositRateNote");
+      const tourCityEl = document.getElementById("tourCity");
+      const tourTzEl = document.getElementById("tourTz");
+      const successPopup = document.getElementById("successPopup");
+      const successMessage = document.getElementById("successMessage");
+      const successEmail = document.getElementById("successEmail");
+      const successClose = document.getElementById("successClose");
+      const alertPopup = document.getElementById("alertPopup");
+      const alertPopupMessage = document.getElementById("alertPopupMessage");
+      const alertPopupClose = document.getElementById("alertPopupClose");
+      const emailInput = document.getElementById("email");
+      const wizardTop = document.getElementById("wizardTop");
+      const wizardCount = document.getElementById("wizardCount");
+      const wizardTitle = document.getElementById("wizardTitle");
+      const wizardStatus = document.getElementById("wizardStatus");
+      const wizardFill = document.getElementById("wizardFill");
+      const wizardNext = document.getElementById("wizardNext");
+      const wizardBack = document.getElementById("wizardBack");
+      const wizardNav = document.getElementById("wizardNav");
+      const CUSTOM_ALERT_SOUND = "/alert-badvibe.mp3";
+      const FALLBACK_ALERT_SOUND = "/winxp-alert.mp3";
+      const xpSound = new Audio(CUSTOM_ALERT_SOUND);
+      xpSound.preload = "auto";
+      xpSound.volume = 1;
+      let alertSoundFallbackLoaded = false;
+      xpSound.addEventListener(
+        "error",
+        () => {
+          if (alertSoundFallbackLoaded) return;
+          alertSoundFallbackLoaded = true;
+          xpSound.src = FALLBACK_ALERT_SOUND;
+          xpSound.load();
+        },
+        { once: true }
+      );
+      let bookingLocked = false;
+
+      const PROFANITY_PATTERNS = [
+        /\b(bitch|biatch|b!tch)\b/i,
+        /\b(fuck|fuk|fck|f\*+k|motherf\w*)\b/i,
+        /\b(slut|sl@t)\b/i,
+        /\b(whore|hore)\b/i,
+        /\b(cunt)\b/i,
+        /\b(hoe|skank|thot)\b/i,
+        /\b(stupid|idiot|dumb|moron|brainless|loser)\b/i,
+        /\b(worthless|useless|trash|pathetic)\b/i,
+        /\b(bimbo|dog|ugly)\b/i,
+        /\b(salope|pute|putain|connard|connasse|encule|enculee|enfoire|merde)\b/i,
+        /\b(puta|puto|cabron|pendejo|gilipollas|culero|pinche)\b/i,
+        /\b(puttana|stronzo|stronza|bastardo)\b/i,
+        /\b(vagabunda|otario|merda)\b/i,
+        /\b(schlampe|fotze|arschloch|scheisse|dummkopf)\b/i,
+        /\b(suka|blyat)\b/i,
+      ];
+      const setBookingLock = (message) => {
+        bookingLocked = true;
+        if (submitBtn) submitBtn.disabled = true;
+        form.querySelectorAll("input, select, textarea, button").forEach((el) => {
+          if (el.id === "successClose") return;
+          el.disabled = true;
+        });
+        statusEl.textContent = message || "Booking is unavailable.";
+      };
+
+      const checkBlacklist = async (email, phone) => {
+        try {
+          const response = await fetch("api/blacklist.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, phone }),
+          });
+          const data = await response.json();
+          return !!data.blocked;
+        } catch (_error) {
+          return false;
+        }
+      };
+
+      const checkBlacklistOnLoad = async () => {
+        try {
+          const response = await fetch("api/blacklist.php", { cache: "no-store" });
+          const data = await response.json();
+          if (data && data.blocked) {
+            setBookingLock("Booking is unavailable.");
+          }
+        } catch (_error) {}
+      };
+
+      let tourCity = "Touring city not set";
+      let tourTz = "America/Toronto";
+      let bufferMinutes = 30;
+      let selectedTourTimezone = tourTz;
+      let selectedBufferMinutes = bufferMinutes;
+      let availabilityMode = "open";
+      let blockedSlots = [];
+      let recurringBlocks = [];
+      let citySchedules = [];
+      let selectedSlotButton = null;
+      let wizardStepIndex = 0;
+
+        let tourSchedule = [
+          { start: "2026-02-08", end: "2026-02-14", city: "Montreal" },
+          { start: "2026-02-15", end: "2026-02-18", city: "Toronto" },
+          { start: "2026-02-19", end: "2026-02-21", city: "Vancouver" },
+          { start: "2026-02-22", end: "2026-03-04", city: "Montreal" },
+          { start: "2026-03-05", end: "2026-03-09", city: "London (UK)" },
+          { start: "2026-03-10", end: "2026-03-13", city: "Berlin" },
+          { start: "2026-03-14", end: "2026-03-19", city: "Paris" },
+        ];
+
+      const monitoredFields = Array.from(
+        form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea')
+      );
+      const BASE_CURRENCY = "CAD";
+      const DEPOSIT_PERCENT = 20;
+      const PSE_BILL_ADDON = 100;
+      const FIAT_CURRENCIES = ["CAD", "USD", "EUR", "GBP"];
+      const CRYPTO_CURRENCIES = ["USDC", "BTC", "LTC"];
+      const FX_OVERRIDES = {
+        EUR: 0.7,
+        GBP: 0.65,
+      };
+      const RATE_API = `https://api.exchangerate.host/latest?base=${BASE_CURRENCY}&symbols=${FIAT_CURRENCIES.join(",")}`;
+      const currencyCache = { rates: null };
+      const RATE_BRACKETS = [0.5, 1, 1.5, 2, 3, 4, 12];
+      const RATE_TABLE = {
+        gfe: {
+          0.5: 400,
+          1: 700,
+          1.5: 1000,
+          2: 1300,
+          3: 1600,
+          4: 2000,
+          12: 3000,
+        },
+        pse: {
+          0.5: 800,
+          1: 800,
+          1.5: 1100,
+          2: 1400,
+          3: 1600,
+          4: 2000,
+          12: 3000,
+        },
+        social: {
+          3: 1000,
+        },
+      };
+      const LONG_SESSION_MIN = 8;
+      const LONG_SESSION_MAX = 12;
+      const LONG_SESSION_RATE = 3000;
+      const DURATION_OPTIONS = [
+        { label: "30 minutes", hours: 0.5, value: "0.5" },
+        { label: "1 hour", hours: 1, value: "1" },
+        { label: "1.5 hours", hours: 1.5, value: "1.5" },
+        { label: "2 hours", hours: 2, value: "2" },
+        { label: "3 hours", hours: 3, value: "3" },
+        { label: "4 hours", hours: 4, value: "4" },
+        { label: "Social experiment (3 hours)", hours: 3, value: "social", rateKey: "social" },
+        { label: "8-12 hours", hours: 10, value: "8-12" },
+        { label: "24+ hours", hours: 0, value: "24+", custom: true },
+      ];
+
+      const containsProfanity = (value) => PROFANITY_PATTERNS.some((pattern) => pattern.test(value));
+
+      const playXpSound = () => {
+        try {
+          if (xpSound.src === "" || xpSound.src.endsWith("/")) {
+            xpSound.src = FALLBACK_ALERT_SOUND;
+          }
+          xpSound.pause();
+          xpSound.currentTime = 0;
+          xpSound.play().catch(() => {
+            try {
+              if (xpSound.src.indexOf(FALLBACK_ALERT_SOUND) === -1) {
+                xpSound.src = FALLBACK_ALERT_SOUND;
+                xpSound.load();
+                xpSound.play().catch(() => {});
+              }
+            } catch (_error) {}
+          });
+        } catch (_error) {}
+      };
+
+      const showBadVibe = (message = ":( bad vibe alert!") => {
+        const text = String(message || ":( bad vibe alert!");
+        statusEl.textContent = text;
+        playXpSound();
+        showAlertPopup(text);
+      };
+
+      const showWizardWarning = (message) => {
+        const text = String(message || "Please review this step and try again.");
+        if (wizardStatus) {
+          wizardStatus.textContent = text;
+        }
+        showBadVibe(text);
+      };
+
+      const closeAlertPopup = () => {
+        if (!alertPopup) return;
+        alertPopup.classList.remove("show");
+        alertPopup.setAttribute("aria-hidden", "true");
+      };
+
+      const showAlertPopup = (message) => {
+        if (!alertPopup || !alertPopupMessage) return;
+        alertPopupMessage.textContent = String(message || "");
+        alertPopup.classList.add("show");
+        alertPopup.setAttribute("aria-hidden", "false");
+        const card = alertPopup.querySelector(".alert-popup-card");
+        if (card) {
+          card.classList.remove("shake");
+          void card.offsetWidth;
+          card.classList.add("shake");
+        }
+        if (alertPopupClose) {
+          alertPopupClose.focus();
+        }
+      };
+
+      const closeSuccessPopup = () => {
+        if (!successPopup) return;
+        successPopup.classList.remove("show");
+        successPopup.setAttribute("aria-hidden", "true");
+      };
+
+      const showSuccessPopup = (message, link, emailValue) => {
+        if (!successPopup || !successMessage) return;
+        successMessage.textContent = message;
+        if (successEmail) {
+          if (emailValue) {
+            successEmail.textContent = `Payment email: ${emailValue}`;
+          } else {
+            successEmail.textContent = "";
+          }
+        }
+        successPopup.classList.add("show");
+        successPopup.setAttribute("aria-hidden", "false");
+        playXpSound();
+        if (successLink) {
+          if (link) {
+            successLink.href = link;
+            successLink.classList.remove("hidden");
+          } else {
+            successLink.classList.add("hidden");
+          }
+        }
+        if (successClose) {
+          successClose.focus();
+        }
+      };
+
+      if (successClose) {
+        successClose.addEventListener("click", closeSuccessPopup);
+      }
+      if (successPopup) {
+        successPopup.addEventListener("click", (event) => {
+          if (event.target === successPopup) {
+            closeSuccessPopup();
+          }
+        });
+      }
+      if (alertPopupClose) {
+        alertPopupClose.addEventListener("click", closeAlertPopup);
+      }
+      if (alertPopup) {
+        alertPopup.addEventListener("click", (event) => {
+          if (event.target === alertPopup) {
+            closeAlertPopup();
+          }
+        });
+      }
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        if (alertPopup && alertPopup.classList.contains("show")) {
+          closeAlertPopup();
+          return;
+        }
+        if (successPopup && successPopup.classList.contains("show")) {
+          closeSuccessPopup();
+        }
+      });
+
+      monitoredFields.forEach((field) => {
+        field.dataset.cleanValue = field.value || "";
+        field.addEventListener("input", () => {
+          const currentValue = field.value;
+          if (containsProfanity(currentValue)) {
+            field.value = field.dataset.cleanValue || "";
+            showBadVibe();
+            field.blur();
+            window.setTimeout(() => {
+              try {
+                field.focus({ preventScroll: false });
+              } catch (_error) {
+                field.focus();
+              }
+            }, 120);
+            return;
+          }
+          field.dataset.cleanValue = currentValue;
+        });
+      });
+
+      const detectDefaultCurrency = () => {
+        try {
+          const resolved = new Intl.NumberFormat().resolvedOptions().currency;
+          if (FIAT_CURRENCIES.includes(resolved)) return resolved;
+        } catch (_error) {
+          return BASE_CURRENCY;
+        }
+        return BASE_CURRENCY;
+      };
+
+      const formatCurrency = (amount, currency) => {
+        try {
+          const decimals = currency === BASE_CURRENCY || currency === "USD" ? 0 : 2;
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency,
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+          }).format(amount);
+        } catch (_error) {
+          return `${currency} ${amount.toFixed(2)}`;
+        }
+      };
+
+      const normalizeExperience = (value) => (value === "gfe" ? "gfe" : "pse");
+
+      const getBaseRate = (hours, experience, rateKey) => {
+        if (!Number.isFinite(hours) || hours <= 0) return 0;
+        if (rateKey === "social") {
+          return RATE_TABLE.social[3];
+        }
+        if (hours >= LONG_SESSION_MIN && hours <= LONG_SESSION_MAX) {
+          return LONG_SESSION_RATE;
+        }
+        const expKey = normalizeExperience(experience);
+        const rates = RATE_TABLE[expKey] || RATE_TABLE.gfe;
+        if (rates[hours]) return rates[hours];
+        let lower = null;
+        let upper = null;
+        const sorted = RATE_BRACKETS.slice().sort((a, b) => a - b);
+        for (const bracket of sorted) {
+          if (bracket < hours) {
+            lower = bracket;
+            continue;
+          }
+          if (bracket > hours) {
+            upper = bracket;
+            break;
+          }
+        }
+        if (lower === null) return rates[sorted[0]] || 0;
+        if (upper === null) return rates[sorted[sorted.length - 1]] || 0;
+        const lowerRate = rates[lower];
+        const upperRate = rates[upper];
+        const ratio = (hours - lower) / (upper - lower);
+        return Math.round(lowerRate + (upperRate - lowerRate) * ratio);
+      };
+
+      const getFiatRates = async () => {
+        if (currencyCache.rates) return currencyCache.rates;
+        try {
+          const response = await fetch(RATE_API);
+          if (!response.ok) throw new Error("Rate fetch failed");
+          const data = await response.json();
+          if (!data || !data.rates) throw new Error("Rate data missing");
+          currencyCache.rates = data.rates;
+          return data.rates;
+        } catch (_error) {
+          return null;
+        }
+      };
+
+      const formatRateLabel = async (amount, currency) => {
+        if (!currency || currency === BASE_CURRENCY) {
+          return formatCurrency(amount, BASE_CURRENCY);
+        }
+        if (currency === "USD") {
+          return formatCurrency(amount, "USD");
+        }
+        if (CRYPTO_CURRENCIES.includes(currency)) {
+          return `${formatCurrency(amount, BASE_CURRENCY)} CAD`;
+        }
+        const overrideRate = FX_OVERRIDES[currency];
+        if (typeof overrideRate === "number") {
+          return formatCurrency(amount * overrideRate, currency);
+        }
+        const rates = await getFiatRates();
+        const rate = rates ? rates[currency] : null;
+        if (!rate) {
+          return formatCurrency(amount, BASE_CURRENCY);
+        }
+        return formatCurrency(amount * rate, currency);
+      };
+
+      const updatePaymentSummary = async () => {
+        if (!baseRateDisplay || !totalRateDisplay || !depositRateDisplay) return;
+        const selected = durationSelect.selectedOptions[0];
+        if (!selected) {
+          baseRateDisplay.textContent = "Select duration";
+          totalRateDisplay.textContent = "Select duration";
+          depositRateDisplay.textContent = "--";
+          if (pseAddonRow) pseAddonRow.classList.add("hidden");
+          if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
+          if (totalRateNote) totalRateNote.textContent = "";
+          if (depositRateNote) depositRateNote.textContent = "Deposit is 20% of total.";
+          return;
+        }
+        const hours = Number(selected.dataset.hours || 0);
+        const rateKey = selected.dataset.rateKey || "";
+        const experience = experienceSelect.value || "gfe";
+        const currency = currencySelect.value || BASE_CURRENCY;
+        if (selected.dataset.custom === "true" || selected.value === "24+") {
+          baseRateDisplay.textContent = "Discuss on WhatsApp";
+          totalRateDisplay.textContent = "Discuss on WhatsApp";
+          depositRateDisplay.textContent = "--";
+          if (pseAddonRow) pseAddonRow.classList.add("hidden");
+          if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
+          if (totalRateNote) totalRateNote.textContent = "";
+          if (depositRateNote) {
+            depositRateNote.textContent = "Custom 24+ hour bookings are confirmed after WhatsApp discussion.";
+          }
+          if (durationSelect) {
+            durationSelect.setCustomValidity("Please discuss 24+ hour bookings on WhatsApp.");
+          }
+          if (whatsappDiscuss) {
+            whatsappDiscuss.hidden = false;
+          }
+          return;
+        }
+        if (durationSelect) {
+          durationSelect.setCustomValidity("");
+        }
+        if (whatsappDiscuss) {
+          whatsappDiscuss.hidden = true;
+        }
+        if (!Number.isFinite(hours) || hours <= 0) {
+          baseRateDisplay.textContent = "Select duration";
+          totalRateDisplay.textContent = "Select duration";
+          depositRateDisplay.textContent = "--";
+          if (pseAddonRow) pseAddonRow.classList.add("hidden");
+          if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
+          if (totalRateNote) totalRateNote.textContent = "";
+          if (depositRateNote) depositRateNote.textContent = `Deposit is ${DEPOSIT_PERCENT}% of total.`;
+          return;
+        }
+        const baseRate = getBaseRate(hours, experience, rateKey);
+        const pseAddonBase = normalizeExperience(experience) === "pse" ? PSE_BILL_ADDON : 0;
+        const totalBase = baseRate + pseAddonBase;
+        const depositBase = Math.round(totalBase * (DEPOSIT_PERCENT / 100));
+        const baseLabel = await formatRateLabel(baseRate, currency);
+        const totalLabel = await formatRateLabel(totalBase, currency);
+        const depositLabel = await formatRateLabel(depositBase, currency);
+        baseRateDisplay.textContent = baseLabel;
+        totalRateDisplay.textContent = totalLabel;
+        depositRateDisplay.textContent = depositLabel;
+        if (pseAddonRow && pseAddonDisplay) {
+          if (pseAddonBase > 0) {
+            const addonLabel = await formatRateLabel(pseAddonBase, currency);
+            pseAddonDisplay.textContent = addonLabel;
+            pseAddonRow.classList.remove("hidden");
+          } else {
+            pseAddonDisplay.textContent = "--";
+            pseAddonRow.classList.add("hidden");
+          }
+        }
+        if (totalRateNote) {
+          totalRateNote.textContent = CRYPTO_CURRENCIES.includes(currency) ? "Crypto reference shown in CAD." : "";
+        }
+        if (depositRateNote) {
+          depositRateNote.textContent = `Deposit is ${DEPOSIT_PERCENT}% of total.`;
+        }
+      };
+
+      const updateDurationOptions = async () => {
+        const currentCurrency = currencySelect.value || BASE_CURRENCY;
+        const currentExperience = experienceSelect.value || "gfe";
+        const previousValue = durationSelect.value;
+        durationSelect.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "choose option";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        durationSelect.appendChild(placeholder);
+
+        for (const entry of DURATION_OPTIONS) {
+          const option = document.createElement("option");
+          option.value = entry.value;
+          option.dataset.hours = String(entry.hours);
+          option.dataset.rateKey = entry.rateKey || "";
+          option.dataset.label = entry.label;
+          if (entry.custom) {
+            option.dataset.custom = "true";
+            option.textContent = `${entry.label} - discuss on WhatsApp`;
+          } else {
+            const baseRate = getBaseRate(entry.hours, currentExperience, entry.rateKey || "");
+            const priceLabel = await formatRateLabel(baseRate, currentCurrency);
+            option.textContent = `${entry.label} - ${priceLabel}`;
+          }
+          durationSelect.appendChild(option);
+        }
+
+        if (
+          previousValue &&
+          Array.from(durationSelect.options).some((option) => option.value === previousValue)
+        ) {
+          durationSelect.value = previousValue;
+        } else {
+          durationSelect.value = "";
+        }
+        await updatePaymentSummary();
+        renderDayCalendar();
+      };
+
+        const normalizeTourSchedule = (list) => {
+          if (!Array.isArray(list)) return [];
+          return list
+            .map((entry) => ({
+              start: String(entry?.start || "").trim(),
+              end: String(entry?.end || "").trim(),
+              city: String(entry?.city || "").trim(),
+            }))
+            .filter(
+              (entry) =>
+                entry.start &&
+                entry.end &&
+                entry.city &&
+                /^\d{4}-\d{2}-\d{2}$/.test(entry.start) &&
+                /^\d{4}-\d{2}-\d{2}$/.test(entry.end) &&
+                entry.start <= entry.end
+            )
+            .sort((a, b) => a.start.localeCompare(b.start));
+        };
+
+        const normalizeCityScheduleList = (list) => {
+          if (!Array.isArray(list)) return [];
+          return list
+            .map((entry) => ({
+              city: String(entry?.city || "").trim(),
+              start: String(entry?.start || "").trim(),
+              end: String(entry?.end || "").trim(),
+              timezone: String(entry?.timezone || "").trim(),
+              buffer_minutes: Number(entry?.buffer_minutes || 0),
+            }))
+            .filter(
+              (entry) =>
+                entry.city &&
+                entry.start &&
+                entry.end &&
+                /^\d{4}-\d{2}-\d{2}$/.test(entry.start) &&
+                /^\d{4}-\d{2}-\d{2}$/.test(entry.end) &&
+                entry.start <= entry.end
+            )
+            .sort((a, b) => a.start.localeCompare(b.start));
+        };
+
+        const getCityForDate = (dateKey) => {
+          if (!dateKey) return "";
+          const match = tourSchedule.find((entry) => dateKey >= entry.start && dateKey <= entry.end);
+          return match ? match.city : "";
+        };
+
+      const normalizeCityName = (value) =>
+        String(value || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, " ");
+
+      const isFlyMeCity = (value) => normalizeCityName(value) === "fly me to you";
+
+      const getCityScheduleForDate = (dateKey, selectedCity = "") => {
+        if (!dateKey) return null;
+        let targetCity = selectedCity;
+        if (!targetCity || isFlyMeCity(targetCity)) {
+          targetCity = getCityForDate(dateKey);
+        }
+        if (!targetCity) return null;
+        const cityKey = normalizeCityName(targetCity);
+        return (
+          citySchedules.find(
+            (entry) =>
+              dateKey >= entry.start &&
+              dateKey <= entry.end &&
+              normalizeCityName(entry.city) === cityKey
+          ) || null
+        );
+      };
+
+      const updateSelectedTourContext = () => {
+        const dateKey = preferredDate?.value || "";
+        const cityValue = citySelect?.value || "";
+        const schedule = getCityScheduleForDate(dateKey, cityValue);
+        selectedTourTimezone = schedule?.timezone || tourTz;
+        const scheduleBuffer = Number(schedule?.buffer_minutes);
+        selectedBufferMinutes = Number.isFinite(scheduleBuffer) ? Math.max(0, scheduleBuffer) : bufferMinutes;
+        if (tourTzEl) {
+          tourTzEl.textContent = selectedTourTimezone;
+        }
+        const displayCity = schedule?.city || getCityForDate(dateKey) || tourCity;
+        if (tourCityEl) {
+          tourCityEl.textContent = displayCity;
+        }
+        return schedule;
+      };
+
+      const getNowInTourTimezone = () => {
+        try {
+          updateSelectedTourContext();
+          const parts = new Intl.DateTimeFormat("en-CA", {
+            timeZone: selectedTourTimezone || tourTz,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hourCycle: "h23",
+          }).formatToParts(new Date());
+          const values = {};
+          parts.forEach((part) => {
+            if (part.type !== "literal") {
+              values[part.type] = part.value;
+            }
+          });
+          const dateKey = `${values.year}-${values.month}-${values.day}`;
+          const minutes = Number(values.hour || 0) * 60 + Number(values.minute || 0);
+          return { dateKey, minutes };
+        } catch (_error) {
+          const fallback = new Date();
+          return {
+            dateKey: fallback.toISOString().split("T")[0],
+            minutes: fallback.getHours() * 60 + fallback.getMinutes(),
+          };
+        }
+      };
+
+      const setBookingDateFloor = () => {
+        if (!preferredDate) return;
+        const now = getNowInTourTimezone();
+        preferredDate.min = now.dateKey;
+      };
+
+      const validateDateNotPast = () => {
+        if (!preferredDate) return true;
+        preferredDate.setCustomValidity("");
+        if (!preferredDate.value) return true;
+        const now = getNowInTourTimezone();
+        if (preferredDate.value < now.dateKey) {
+          preferredDate.setCustomValidity("Pick today or a future date.");
+          return false;
+        }
+        return true;
+      };
+
+      const isSelectedDateTimeInPast = (dateKey, timeLabel) => {
+        if (!dateKey || !timeLabel) return false;
+        const minutes = timeToMinutes(timeLabel);
+        if (minutes === null) return false;
+        const now = getNowInTourTimezone();
+        if (dateKey < now.dateKey) return true;
+        if (dateKey > now.dateKey) return false;
+        return minutes <= now.minutes;
+      };
+
+      const validateCityForDate = ({ showMessage = true } = {}) => {
+        if (!citySelect || !preferredDate) return true;
+        updateSelectedTourContext();
+        citySelect.setCustomValidity("");
+        if (!citySelect.value || !preferredDate.value) {
+          if (cityMismatchWarning && showMessage) {
+            cityMismatchWarning.classList.add("hidden");
+          }
+          return true;
+        }
+        if (isFlyMeCity(citySelect.value)) {
+          if (cityMismatchWarning && showMessage) {
+            cityMismatchWarning.classList.add("hidden");
+          }
+          return true;
+        }
+        const touringCity = getCityForDate(preferredDate.value);
+        let message = "";
+        if (!touringCity) {
+          message = "No touring in this city/date. Read touring dates carefully or arrange Fly me to you.";
+        } else if (normalizeCityName(citySelect.value) !== normalizeCityName(touringCity)) {
+          message = `Heidi is in ${touringCity} on ${preferredDate.value}. Read touring carefully or arrange Fly me to you.`;
+        }
+        if (message) {
+          citySelect.setCustomValidity(message);
+          if (cityMismatchWarning && showMessage) {
+            cityMismatchWarning.textContent = message;
+            cityMismatchWarning.classList.remove("hidden");
+          }
+          return false;
+        }
+        if (cityMismatchWarning && showMessage) {
+          cityMismatchWarning.classList.add("hidden");
+        }
+        return true;
+      };
+
+      const validateSelectedTimeNotPast = () => {
+        if (!preferredDate || !preferredTime) return true;
+        if (!preferredDate.value || !preferredTime.value) return true;
+        if (isSelectedDateTimeInPast(preferredDate.value, preferredTime.value)) {
+          preferredTime.setCustomValidity("Please pick a future time.");
+          return false;
+        }
+        preferredTime.setCustomValidity("");
+        return true;
+      };
+
+      const timeToMinutes = (timeValue) => {
+        const [hour, minute] = String(timeValue || "").split(":").map((value) => Number(value));
+        if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+        return hour * 60 + minute;
+      };
+
+      const weekdayLabelToIndex = (label) => {
+        const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+        return map[label] ?? 0;
+      };
+
+      const getWeekdayIndex = (dateKey) => {
+        const [year, month, day] = String(dateKey).split("-").map((value) => Number(value));
+        if (!year || !month || !day) return 0;
+        const base = new Date(Date.UTC(year, month - 1, day, 12, 0));
+        const label = new Intl.DateTimeFormat("en-US", {
+          timeZone: selectedTourTimezone || tourTz,
+          weekday: "short",
+        }).format(base);
+        return weekdayLabelToIndex(label);
+      };
+
+      const isRecurringBlocked = (dateKey, windowStart, windowEnd) => {
+        if (!Array.isArray(recurringBlocks) || !recurringBlocks.length) return false;
+        const weekdayIndex = getWeekdayIndex(dateKey);
+        return recurringBlocks.some((block) => {
+          if (!block) return false;
+          const days = Array.isArray(block.days) ? block.days : [];
+          if (!days.includes(weekdayIndex)) return false;
+          if (block.all_day) return true;
+          const startMinutes = timeToMinutes(block.start);
+          const endMinutes = timeToMinutes(block.end);
+          if (startMinutes === null || endMinutes === null) return false;
+          return windowStart < endMinutes && windowEnd > startMinutes;
+        });
+      };
+
+      const isSlotBlocked = (dateKey, startMinutes, endMinutes) => {
+        if (availabilityMode === "closed") return true;
+        if (!Array.isArray(blockedSlots) || !blockedSlots.length) {
+          return isRecurringBlocked(dateKey, startMinutes, endMinutes);
+        }
+        const activeBuffer = Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes;
+        const windowStart = Math.max(0, startMinutes - activeBuffer);
+        const windowEnd = Math.min(1440, endMinutes + activeBuffer);
+        if (isRecurringBlocked(dateKey, windowStart, windowEnd)) {
+          return true;
+        }
+        return blockedSlots.some((entry) => {
+          if (!entry || entry.date !== dateKey) return false;
+          const blockStart = timeToMinutes(entry.start);
+          const blockEnd = timeToMinutes(entry.end);
+          if (blockStart === null || blockEnd === null) return false;
+          return windowStart < blockEnd && windowEnd > blockStart;
+        });
+      };
+
+      const clearSelectedSlot = () => {
+        if (selectedSlotButton) {
+          selectedSlotButton.classList.remove("selected");
+          selectedSlotButton = null;
+        }
+        if (preferredTime) {
+          preferredTime.value = "";
+          preferredTime.setCustomValidity("");
+        }
+      };
+
+      const getSelectedDurationMinutes = () => {
+        const selected = durationSelect?.selectedOptions?.[0];
+        if (!selected) return null;
+        if (selected.dataset.custom === "true" || selected.value === "24+") {
+          return null;
+        }
+        const hours = Number(selected.dataset.hours || 0);
+        if (!Number.isFinite(hours) || hours <= 0) {
+          return null;
+        }
+        return Math.max(30, Math.round(hours * 60));
+      };
+
+      const toTimeLabel = (minutes) => {
+        const safe = Math.max(0, Math.min(1439, Number(minutes) || 0));
+        const hour = String(Math.floor(safe / 60)).padStart(2, "0");
+        const minute = String(safe % 60).padStart(2, "0");
+        return `${hour}:${minute}`;
+      };
+
+      const renderDayCalendar = () => {
+        if (!dayCalendar || !availabilitySummary || !preferredDate) return;
+        const dateKey = preferredDate.value;
+        if (!dateKey) {
+          dayCalendar.innerHTML = "";
+          dayCalendar.dataset.city = "";
+          availabilitySummary.textContent = "";
+          if (touringDayCityEl) touringDayCityEl.textContent = "Select a date";
+          availabilityNote.textContent = "Pick a date to view availability.";
+          clearSelectedSlot();
+          return;
+        }
+
+        const cityContext = updateSelectedTourContext();
+        const dayCity = cityContext?.city || getCityForDate(dateKey) || tourCity;
+        if (touringDayCityEl) touringDayCityEl.textContent = dayCity || "TBA";
+        dayCalendar.dataset.city = dayCity || "TBA";
+        availabilityNote.textContent = "Availability shown for the selected date.";
+        validateCityForDate({ showMessage: true });
+
+        dayCalendar.innerHTML = "";
+        clearSelectedSlot();
+        const durationMinutes = getSelectedDurationMinutes();
+        if (!durationMinutes) {
+          const customMessage = document.createElement("p");
+          customMessage.className = "day-empty";
+          customMessage.textContent =
+            "Select a standard duration to view available times. 24+ hours is discussed on WhatsApp.";
+          dayCalendar.appendChild(customMessage);
+          availabilitySummary.innerHTML = "";
+          return;
+        }
+
+        if (!validateCityForDate({ showMessage: true })) {
+          const cityMessage = document.createElement("p");
+          cityMessage.className = "day-empty";
+          cityMessage.textContent = "Read touring dates carefully, or arrange Fly me to you.";
+          dayCalendar.appendChild(cityMessage);
+          availabilitySummary.innerHTML = "";
+          return;
+        }
+
+        const now = getNowInTourTimezone();
+        if (dateKey < now.dateKey) {
+          const pastDateMessage = document.createElement("p");
+          pastDateMessage.className = "day-empty";
+          pastDateMessage.textContent = "This date is in the past. Pick a future date.";
+          dayCalendar.appendChild(pastDateMessage);
+          availabilitySummary.innerHTML = "";
+          return;
+        }
+
+        const slots = [];
+        let blockedCount = 0;
+        for (let startMinutes = 0; startMinutes + durationMinutes <= 1440; startMinutes += 30) {
+          const endMinutes = startMinutes + durationMinutes;
+          if (dateKey === now.dateKey && startMinutes <= now.minutes) {
+            blockedCount += 1;
+            continue;
+          }
+          const blocked = isSlotBlocked(dateKey, startMinutes, endMinutes);
+          if (blocked) {
+            blockedCount += 1;
+            continue;
+          }
+          slots.push({
+            startLabel: toTimeLabel(startMinutes),
+            endLabel: toTimeLabel(endMinutes),
+          });
+        }
+
+        if (!slots.length) {
+          const emptyMessage = document.createElement("p");
+          emptyMessage.className = "day-empty";
+          emptyMessage.textContent = "No start times left for this date and duration.";
+          dayCalendar.appendChild(emptyMessage);
+        }
+
+        slots.forEach((slot) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "slot available";
+          button.textContent = `${slot.startLabel} - ${slot.endLabel}`;
+          button.addEventListener("click", () => {
+            if (selectedSlotButton) {
+              selectedSlotButton.classList.remove("selected");
+            }
+            selectedSlotButton = button;
+            selectedSlotButton.classList.add("selected");
+            if (preferredTime) {
+              preferredTime.value = slot.startLabel;
+              validateSelectedTimeNotPast();
+            }
+          });
+          if (preferredTime && preferredTime.value && preferredTime.value === slot.startLabel) {
+            selectedSlotButton = button;
+            selectedSlotButton.classList.add("selected");
+          }
+          dayCalendar.appendChild(button);
+        });
+
+        availabilitySummary.innerHTML = "";
+      };
+
+      const loadTourSchedule = async () => {
+        try {
+          const response = await fetch("api/site-content.php", { cache: "no-store" });
+          if (!response.ok) throw new Error("touring");
+          const data = await response.json();
+          const schedule = normalizeTourSchedule(data.touring || []);
+          if (schedule.length) {
+            tourSchedule = schedule;
+            validateCityForDate({ showMessage: true });
+            renderDayCalendar();
+          }
+        } catch (_error) {
+        }
+      };
+
+      const toggleOutcall = () => {
+        const selected = document.querySelector('input[name="booking_type"]:checked');
+        const isOutcall = selected && selected.value === "outcall";
+        if (outcallField) {
+          outcallField.classList.toggle("hidden", !isOutcall);
+        }
+        if (outcallInput) {
+          outcallInput.required = isOutcall;
+          if (!isOutcall) outcallInput.value = "";
+        }
+      };
+
+      const requestFields = Array.from(panelRequest?.querySelectorAll(".field") || []);
+      const cityField = citySelect ? citySelect.closest(".field") : null;
+      const dateField = preferredDate ? preferredDate.closest(".field") : null;
+      const durationField = durationSelect ? durationSelect.closest(".field") : null;
+      const experienceField = experienceSelect ? experienceSelect.closest(".field") : null;
+      const currencyField = currencySelect ? currencySelect.closest(".field") : null;
+      const nameField = nameInput ? nameInput.closest(".field") : null;
+      const phoneField = phoneInput ? phoneInput.closest(".field") : null;
+      const emailField = emailInput ? emailInput.closest(".field") : null;
+      const notesField = notesInput ? notesInput.closest(".field") : null;
+      const allPanels = [panelRequest, panelAvailability, panelPayment, panelSubmit].filter(Boolean);
+
+      const wizardSteps = [
+        {
+          key: "city",
+          title: "Where are you booking?",
+          panel: panelRequest,
+          requestFields: [cityField],
+          validate: () => citySelect?.reportValidity() ?? true,
+        },
+        {
+          key: "currency",
+          title: "Which currency?",
+          panel: panelRequest,
+          requestFields: [currencyField],
+          validate: () => currencySelect?.reportValidity() ?? true,
+        },
+        {
+          key: "date",
+          title: "What date do you want?",
+          panel: panelRequest,
+          requestFields: [dateField],
+          validate: () => {
+            setBookingDateFloor();
+            validateDateNotPast();
+            if (!(preferredDate?.reportValidity() ?? true)) return false;
+            if (!validateCityForDate({ showMessage: true })) {
+              citySelect?.reportValidity();
+              return false;
+            }
+            return true;
+          },
+        },
+        {
+          key: "type",
+          title: "Incall or outcall?",
+          panel: panelRequest,
+          requestFields: [bookingTypeField, outcallField],
+          validate: () => {
+            toggleOutcall();
+            const selected = document.querySelector('input[name="booking_type"]:checked');
+            if (!selected) return false;
+            if (outcallInput?.required && !(outcallInput?.reportValidity() ?? true)) {
+              return false;
+            }
+            return true;
+          },
+        },
+        {
+          key: "duration",
+          title: "How long?",
+          panel: panelRequest,
+          requestFields: [durationField],
+          validate: () => durationSelect?.reportValidity() ?? true,
+        },
+        {
+          key: "service",
+          title: "Which service?",
+          panel: panelRequest,
+          requestFields: [experienceField],
+          validate: () => experienceSelect?.reportValidity() ?? true,
+        },
+        {
+          key: "availability",
+          title: "Pick an available time",
+          panel: panelAvailability,
+          validate: () => {
+            if (!(durationSelect?.reportValidity() ?? true)) {
+              return false;
+            }
+            if (!validateDateNotPast()) {
+              preferredDate?.reportValidity();
+              return false;
+            }
+            if (!validateCityForDate({ showMessage: true })) {
+              citySelect?.reportValidity();
+              return false;
+            }
+            if (!(preferredTime?.reportValidity() ?? true)) {
+              return false;
+            }
+            if (!validateSelectedTimeNotPast()) {
+              preferredTime?.reportValidity();
+              return false;
+            }
+            return true;
+          },
+        },
+        {
+          key: "name",
+          title: "What name should I use?",
+          panel: panelRequest,
+          requestFields: [nameField],
+          validate: () => nameInput?.reportValidity() ?? true,
+        },
+        {
+          key: "phone",
+          title: "What phone number can I reach?",
+          panel: panelRequest,
+          requestFields: [phoneField],
+          validate: () => phoneInput?.reportValidity() ?? true,
+        },
+        {
+          key: "email",
+          title: "What email should receive payment details?",
+          panel: panelRequest,
+          requestFields: [emailField],
+          validate: () => emailInput?.reportValidity() ?? true,
+        },
+        {
+          key: "notes",
+          title: "Requests, info, tell me about you if you wish :)",
+          panel: panelRequest,
+          requestFields: [notesField],
+          validate: () => true,
+        },
+        {
+          key: "payment-method",
+          title: "How will you send deposit?",
+          panel: panelPayment,
+          paymentMode: "method",
+          validate: () => paymentMethod?.reportValidity() ?? true,
+        },
+        {
+          key: "deposit-confirm",
+          title: "Confirm the deposit terms",
+          panel: panelPayment,
+          paymentMode: "confirm",
+          validate: () => depositConfirm?.reportValidity() ?? true,
+        },
+        {
+          key: "submit",
+          title: "Send your booking request",
+          panel: panelSubmit,
+          validate: () => true,
+        },
+      ];
+
+      const setPaymentStepMode = (mode) => {
+        if (!panelPayment) return;
+        if (depositBox) {
+          depositBox.classList.remove("wizard-hidden");
+        }
+        if (mode === "method") {
+          paymentGrid?.classList.remove("wizard-hidden");
+          depositConsentRow?.classList.add("wizard-hidden");
+          paymentCryptoHint?.classList.add("wizard-hidden");
+          return;
+        }
+        if (mode === "confirm") {
+          paymentGrid?.classList.add("wizard-hidden");
+          depositConsentRow?.classList.remove("wizard-hidden");
+          paymentCryptoHint?.classList.remove("wizard-hidden");
+          return;
+        }
+        paymentGrid?.classList.remove("wizard-hidden");
+        depositConsentRow?.classList.remove("wizard-hidden");
+        paymentCryptoHint?.classList.remove("wizard-hidden");
+      };
+
+      const renderWizardStep = (index) => {
+        if (!wizardSteps.length) return;
+        const safeIndex = Math.max(0, Math.min(wizardSteps.length - 1, index));
+        wizardStepIndex = safeIndex;
+        const step = wizardSteps[wizardStepIndex];
+        const total = wizardSteps.length;
+
+        allPanels.forEach((panel) => panel.classList.add("wizard-hidden"));
+        if (step.panel) {
+          step.panel.classList.remove("wizard-hidden");
+        }
+
+        requestFields.forEach((field) => field.classList.add("wizard-hidden"));
+        if (step.requestFields?.length) {
+          step.requestFields.forEach((field) => field?.classList.remove("wizard-hidden"));
+        }
+        if (step.key === "type") {
+          toggleOutcall();
+        }
+
+        if (step.panel === panelPayment) {
+          setPaymentStepMode(step.paymentMode || "all");
+        } else {
+          setPaymentStepMode("all");
+        }
+
+        if (wizardCount) {
+          wizardCount.textContent = `${wizardStepIndex + 1} / ${total}`;
+        }
+        if (wizardTitle) {
+          wizardTitle.textContent = step.title;
+        }
+        if (wizardFill) {
+          wizardFill.style.width = `${Math.round(((wizardStepIndex + 1) / total) * 100)}%`;
+        }
+        if (wizardBack) {
+          wizardBack.disabled = wizardStepIndex === 0;
+        }
+        if (wizardNext) {
+          wizardNext.classList.toggle("wizard-hidden", wizardStepIndex === total - 1);
+        }
+        if (wizardNav) {
+          wizardNav.classList.remove("wizard-hidden");
+        }
+        if (wizardTop) {
+          wizardTop.classList.remove("wizard-hidden");
+        }
+
+        if (step.key === "availability") {
+          renderDayCalendar();
+        }
+      };
+
+      const validateCurrentWizardStep = () => {
+        const step = wizardSteps[wizardStepIndex];
+        if (!step || typeof step.validate !== "function") return true;
+        return !!step.validate();
+      };
+
+      const getCurrentWizardWarningMessage = () => {
+        const step = wizardSteps[wizardStepIndex];
+        if (!step) {
+          return "Please review this step.";
+        }
+        const controls = [
+          citySelect,
+          preferredDate,
+          durationSelect,
+          preferredTime,
+          paymentMethod,
+          depositConfirm,
+          nameInput,
+          phoneInput,
+          emailInput,
+          notesInput,
+          outcallInput,
+        ];
+        for (const control of controls) {
+          if (!control) continue;
+          if (!control.checkValidity()) {
+            return control.validationMessage || `Please complete: ${step.title}.`;
+          }
+        }
+        return `Please complete: ${step.title}.`;
+      };
+
+      const nextWizardStep = () => {
+        if (!validateCurrentWizardStep()) {
+          showWizardWarning(getCurrentWizardWarningMessage());
+          return;
+        }
+        renderWizardStep(wizardStepIndex + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      const prevWizardStep = () => {
+        renderWizardStep(wizardStepIndex - 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      const loadAvailability = async () => {
+        try {
+          const response = await fetch("api/availability.php");
+          if (!response.ok) {
+            throw new Error("Availability not available");
+          }
+          const data = await response.json();
+          tourCity = data.tour_city || tourCity;
+          tourTz = data.tour_timezone || tourTz;
+          bufferMinutes = Number(data.buffer_minutes) || bufferMinutes;
+          selectedTourTimezone = tourTz;
+          selectedBufferMinutes = bufferMinutes;
+          availabilityMode = data.availability_mode || availabilityMode;
+          blockedSlots = Array.isArray(data.blocked) ? data.blocked : [];
+          recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
+          citySchedules = normalizeCityScheduleList(data.city_schedules || []);
+          updateSelectedTourContext();
+          setBookingDateFloor();
+          validateDateNotPast();
+          validateCityForDate({ showMessage: true });
+          renderDayCalendar();
+        } catch (_error) {
+          if (tourCityEl) tourCityEl.textContent = tourCity;
+          if (tourTzEl) tourTzEl.textContent = selectedTourTimezone || tourTz;
+        }
+      };
+
+      form.addEventListener("change", (event) => {
+        if (event.target.name === "booking_type") {
+          toggleOutcall();
+        }
+        if (event.target.id === "city") {
+          validateCityForDate({ showMessage: true });
+          renderDayCalendar();
+        }
+        if (event.target.id === "preferred_date") {
+          validateDateNotPast();
+          validateCityForDate({ showMessage: true });
+          renderDayCalendar();
+        }
+        if (event.target.id === "currency" || event.target.id === "experience") {
+          updateDurationOptions();
+        }
+        if (event.target.id === "duration") {
+          updatePaymentSummary();
+          renderDayCalendar();
+        }
+      });
+
+      if (wizardNext) {
+        wizardNext.addEventListener("click", nextWizardStep);
+      }
+      if (wizardBack) {
+        wizardBack.addEventListener("click", prevWizardStep);
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        statusEl.textContent = "";
+
+        const lastStepIndex = wizardSteps.length - 1;
+        if (wizardStepIndex !== lastStepIndex) {
+          nextWizardStep();
+          return;
+        }
+
+        if (bookingLocked) {
+          statusEl.textContent = "Booking is unavailable.";
+          return;
+        }
+
+        if (!validateDateNotPast()) {
+          preferredDate.reportValidity();
+          return;
+        }
+        if (!validateCityForDate({ showMessage: true })) {
+          citySelect.reportValidity();
+          return;
+        }
+        if (!validateSelectedTimeNotPast()) {
+          preferredTime.reportValidity();
+          return;
+        }
+
+        if (!form.reportValidity()) {
+          return;
+        }
+
+        const flaggedField = monitoredFields.find((field) => containsProfanity(field.value || ""));
+        if (flaggedField) {
+          showBadVibe();
+          flaggedField.focus();
+          return;
+        }
+
+        const emailValue = emailInput ? emailInput.value.trim() : "";
+        const phoneValue = form.querySelector("#phone")?.value?.trim() || "";
+        if (await checkBlacklist(emailValue, phoneValue)) {
+          setBookingLock("Booking is unavailable.");
+          return;
+        }
+
+        const formData = new FormData(form);
+        const selected = durationSelect.selectedOptions[0];
+        const activeSchedule = updateSelectedTourContext();
+        const payload = Object.fromEntries(formData.entries());
+        payload.duration_label = selected?.dataset.label || "";
+        payload.duration_hours = selected?.dataset.hours || "0";
+        payload.duration_rate_key = selected?.dataset.rateKey || "";
+        payload.currency = currencySelect.value || "";
+        payload.deposit_percent = String(DEPOSIT_PERCENT);
+        payload.deposit_confirm = formData.get("deposit_confirm") ? "1" : "";
+        payload.tour_timezone = selectedTourTimezone || tourTz;
+        payload.tour_city = activeSchedule?.city || getCityForDate(preferredDate.value) || tourCity;
+        payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
+        payload.preferred_time = preferredTime.value || "";
+
+        try {
+          const response = await fetch("api/request.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const raw = await response.text();
+          let result = {};
+          if (raw) {
+            try {
+              result = JSON.parse(raw);
+            } catch (_error) {
+              throw new Error("Server error. Try again.");
+            }
+          }
+          if (!response.ok) {
+            throw new Error(result.error || "Server error. Try again.");
+          }
+          const successText = `Request sent. Your reference: ${result.id}. Check your email to proceed with payment.`;
+          statusEl.textContent = successText;
+          const fallbackPayLink = result.id ? `/booking/pay/index.php?id=${encodeURIComponent(result.id)}` : "";
+          const paymentLink =
+            result.payment_page || (result.payment_link_is_url ? result.payment_link : "") || fallbackPayLink;
+          const emailValue = emailInput ? emailInput.value.trim() : "";
+          showSuccessPopup(successText, paymentLink, emailValue);
+          form.reset();
+          currencySelect.value = detectDefaultCurrency();
+          await updateDurationOptions();
+          toggleOutcall();
+          setBookingDateFloor();
+          validateCityForDate({ showMessage: true });
+          renderDayCalendar();
+          updatePaymentSummary();
+          renderWizardStep(0);
+        } catch (error) {
+          statusEl.textContent = `Couldn't send that. ${error.message}`;
+        }
+      });
+
+      currencySelect.value = detectDefaultCurrency();
+      setBookingDateFloor();
+      updateDurationOptions();
+      toggleOutcall();
+      validateCityForDate({ showMessage: true });
+      renderDayCalendar();
+      renderWizardStep(0);
+      loadTourSchedule();
+      loadAvailability();
+      checkBlacklistOnLoad();
+    </script>
+  </body>
+</html>
+
+

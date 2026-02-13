@@ -1,0 +1,49 @@
+Custom Tracking Overview
+========================
+
+Purpose
+-------
+The `tracking.js` module powers all in-house analytics. It replaces third-party trackers by logging lightweight events straight from the browser to a collector endpoint you control.
+
+How It Works
+------------
+1. Configuration is read from `window.hvhTrackingConfig` (see `<head>` of each HTML page). Key options:
+   - `endpoint`: URL that receives POSTed JSON events. Nothing is transmitted until this is set.
+   - `siteId`: Identifier included with every payload so you can separate environments.
+   - `debug`: When `true`, logs tracker actions to the console for troubleshooting.
+2. When a page loads, the script:
+   - Creates/stores anonymous `visitorId` (localStorage) and `sessionId` (sessionStorage).
+   - Emits a `page_view` event with URL, referrer, viewport, user agent, etc.
+   - Listens for link/button clicks and form submissions, emitting `interaction` or `form_submit`.
+   - Tracks time on page; when the visitor leaves, a `page_close` event records total and engaged duration.
+3. Events are sent using `fetch` with `keepalive`; on unload it falls back to `navigator.sendBeacon` when available.
+
+Custom Events
+-------------
+Use `window.hvhTracker.track(eventName, data)` anywhere on the site to record additional behaviour (e.g. `hvhTracker.track("cta_click", { id: "vip-menu" })`). Events inherit the standard payload metadata automatically.
+
+Data Collected
+--------------
+- Basic session meta: visitor/session IDs, timestamps, URL, referrer, language, viewport and screen sizes, user agent.
+- Interaction context: element tag, id/class, link target, coordinates, optional `data-track-label`.
+- Form meta: form id/name/action/method (never includes field values).
+- Timing: total time on page, engaged time (pauses when tab hidden), session duration.
+
+Storage & Privacy
+-----------------
+- Only anonymous IDs are persisted (`localStorage` + `sessionStorage`); no cookies are set.
+- No personal form content is recorded—only metadata.
+- Respect local regulations by updating your privacy policy and offering opt-outs if required.
+
+Getting Started
+---------------
+1. Deploy an endpoint to collect events (serverless function, Supabase edge function, etc.) that accepts JSON POSTs.
+2. Update `window.hvhTrackingConfig.endpoint` with that URL (optionally set `debug: true` while testing).
+3. Watch your endpoint logs/database to confirm incoming events.
+4. Add `hvhTracker.track(...)` calls wherever deeper insight is needed.
+
+Operational Tips
+----------------
+- Throttle or filter server-side to prevent event spam.
+- Version your event schema if you expand the payload.
+- Protect the collector endpoint with rate limits or secret tokens if exposed publicly.

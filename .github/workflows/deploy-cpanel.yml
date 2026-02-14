@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - "booking/**"
       - "cpanel_PROTOTYPE/**"
       - ".github/workflows/deploy-cpanel.yml"
   workflow_dispatch:
@@ -25,4 +26,14 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: cpanel_PROTOTYPE/
           server-dir: /public_html/
+          dangerous-clean-slate: false
+
+      - name: Deploy booking portal via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: booking/
+          server-dir: /public_html/booking/
           dangerous-clean-slate: false

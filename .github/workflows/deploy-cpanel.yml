@@ -29,6 +29,17 @@ jobs:
           server-dir: /
           dangerous-clean-slate: false
 
+      - name: Deploy via FTP (fallback public_html)
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: cpanel_PROTOTYPE/
+          server-dir: /public_html/
+          dangerous-clean-slate: false
+
       - name: Deploy booking portal via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -37,4 +48,15 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: booking/
           server-dir: /booking/
+          dangerous-clean-slate: false
+
+      - name: Deploy booking portal via FTP (fallback public_html)
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: booking/
+          server-dir: /public_html/booking/
           dangerous-clean-slate: false

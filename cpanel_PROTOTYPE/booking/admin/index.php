@@ -1032,36 +1032,120 @@ require_admin_ui();
     </header>
 
     <main>
-      <div class="hidden" aria-hidden="true">
-        <input id="tourCity" type="text" />
-        <select id="tourTimezone"></select>
-        <input id="bufferMinutes" type="number" />
-        <input id="calendarStart" type="date" />
-        <input id="calendarDay" type="date" />
-        <input id="calendarMonth" type="month" />
-        <button id="calendarToday" type="button"></button>
-        <div id="calendarGrid"></div>
-        <input id="blockedDate" type="date" />
-        <input id="blockedStart" type="time" />
-        <input id="blockedEnd" type="time" />
-        <input id="blockedReason" type="text" />
-        <input id="blockedFullRangeStart" type="date" />
-        <input id="blockedFullRangeEnd" type="date" />
-        <div id="blockedStatus"></div>
-        <div id="blockedList"></div>
-        <button id="addBlocked" type="button"></button>
-        <button id="blockFullDay" type="button"></button>
-        <button id="blockFullRange" type="button"></button>
-        <div id="recurringDays"></div>
-        <input id="recurringAllDay" type="checkbox" />
-        <input id="recurringStart" type="time" />
-        <input id="recurringEnd" type="time" />
-        <input id="recurringReason" type="text" />
-        <button id="addRecurring" type="button"></button>
-        <div id="recurringStatus"></div>
+      <section data-admin-panel-group="schedule" id="calendarEditorSection">
+        <h2>City calendar editor</h2>
+        <p class="hint">After wizard Done, you can edit slots here and then switch to Clients.</p>
+        <div class="grid">
+          <div class="field">
+            <label for="tourCity">Current tour city</label>
+            <input id="tourCity" type="text" readonly />
+          </div>
+          <div class="field">
+            <label for="tourTimezone">Tour timezone</label>
+            <select id="tourTimezone"></select>
+          </div>
+          <div class="field">
+            <label for="bufferMinutes">Default buffer (minutes)</label>
+            <input id="bufferMinutes" type="number" min="0" max="240" step="5" />
+          </div>
+        </div>
+        <div class="row calendar-controls">
+          <div class="segmented" role="group" aria-label="Calendar view">
+            <button class="seg-btn" data-calendar-view="week" aria-pressed="true" type="button">Week</button>
+            <button class="seg-btn" data-calendar-view="day" aria-pressed="false" type="button">Day</button>
+            <button class="seg-btn" data-calendar-view="month" aria-pressed="false" type="button">Month</button>
+          </div>
+          <div class="field calendar-field" data-calendar-field="week">
+            <label for="calendarStart">Week start</label>
+            <input id="calendarStart" type="date" />
+          </div>
+          <div class="field calendar-field" data-calendar-field="day" hidden>
+            <label for="calendarDay">Day</label>
+            <input id="calendarDay" type="date" />
+          </div>
+          <div class="field calendar-field" data-calendar-field="month" hidden>
+            <label for="calendarMonth">Month</label>
+            <input id="calendarMonth" type="month" />
+          </div>
+          <button class="btn secondary" id="calendarToday" type="button">Today</button>
+        </div>
+        <div class="calendar">
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+        <div class="calendar-legend">
+          <span class="legend-dot blocked"></span> Blocked
+          <span class="legend-dot booking"></span> Booking
+          <span class="legend-dot outcall"></span> Outcall
+          <span class="legend-dot paid"></span> Paid
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="blockedDate">Block date</label>
+            <input id="blockedDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="blockedStart">Start</label>
+            <input id="blockedStart" type="time" />
+          </div>
+          <div class="field">
+            <label for="blockedEnd">End</label>
+            <input id="blockedEnd" type="time" />
+          </div>
+          <div class="field span-2">
+            <label for="blockedReason">Reason</label>
+            <input id="blockedReason" type="text" placeholder="Optional reason" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="addBlocked" type="button">Block slot</button>
+          <button class="btn ghost" id="blockFullDay" type="button">Block full day</button>
+          <span class="status" id="blockedStatus"></span>
+        </div>
+        <div class="grid">
+          <div class="field">
+            <label for="blockedFullRangeStart">Full-day range start</label>
+            <input id="blockedFullRangeStart" type="date" />
+          </div>
+          <div class="field">
+            <label for="blockedFullRangeEnd">Full-day range end</label>
+            <input id="blockedFullRangeEnd" type="date" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="blockFullRange" type="button">Block full range</button>
+          <button class="btn ghost" id="toggleBlockedList" type="button">Show blocked slots</button>
+        </div>
+        <div id="blockedList" class="hidden"></div>
+
+        <div class="grid">
+          <div class="field span-2">
+            <label>Recurring days</label>
+            <div id="recurringDays"></div>
+          </div>
+          <div class="field">
+            <label for="recurringAllDay">All day</label>
+            <input id="recurringAllDay" type="checkbox" />
+          </div>
+          <div class="field">
+            <label for="recurringStart">Recurring start</label>
+            <input id="recurringStart" type="time" />
+          </div>
+          <div class="field">
+            <label for="recurringEnd">Recurring end</label>
+            <input id="recurringEnd" type="time" />
+          </div>
+          <div class="field span-2">
+            <label for="recurringReason">Recurring reason</label>
+            <input id="recurringReason" type="text" placeholder="Optional reason" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="addRecurring" type="button">Add recurring block</button>
+          <span class="status" id="recurringStatus"></span>
+        </div>
         <div id="recurringList"></div>
-        <button id="toggleBlockedList" type="button"></button>
-      </div>
+      </section>
 
       <div class="folder-switcher" role="tablist" aria-label="Admin folders">
         <button class="folder-button" id="panelScheduleBtn" type="button" data-admin-panel="schedule" aria-pressed="true">
@@ -1213,6 +1297,7 @@ require_admin_ui();
       const saveTourScheduleBtn = document.getElementById("saveTourSchedule");
       const cityScheduleWizard = document.getElementById("cityScheduleWizard");
       const cityScheduleStatus = document.getElementById("cityScheduleStatus");
+      const calendarEditorSection = document.getElementById("calendarEditorSection");
       const clearCityTemplatesBtn = document.getElementById("clearCityTemplates");
       const galleryList = document.getElementById("galleryList");
       const galleryStatus = document.getElementById("galleryStatus");
@@ -2310,6 +2395,17 @@ require_admin_ui();
           .join(", ");
       };
 
+      const renderRecurringDayChoices = () => {
+        if (!recurringDays) return;
+        const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        recurringDays.innerHTML = labels
+          .map(
+            (label, index) =>
+              `<label><input type="checkbox" value="${index}" /> ${label}</label>`
+          )
+          .join("");
+      };
+
       const renderRecurringList = () => {
         if (!recurringList) return;
         if (!recurringBlocks.length) {
@@ -2861,6 +2957,11 @@ require_admin_ui();
             applyCityTemplateBlocks({ announce: false });
             queueAutoSave(t("saving_city_schedule"));
             await saveAvailability();
+            renderCalendarView();
+            setAdminPanel("schedule", true);
+            if (calendarEditorSection) {
+              calendarEditorSection.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
             if (cityScheduleStatus) {
               cityScheduleStatus.textContent = t("city_updated_applied", { city: current.city });
             }
@@ -3585,6 +3686,7 @@ require_admin_ui();
 
       setCalendarView("week");
       populateTimezones();
+      renderRecurringDayChoices();
       loadAvailability();
       loadTourSchedule();
       loadGallery();

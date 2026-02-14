@@ -404,6 +404,30 @@ require_admin_ui();
         color: #2a0d1a;
       }
 
+      input[type="date"]::-webkit-calendar-picker-indicator,
+      input[type="month"]::-webkit-calendar-picker-indicator,
+      input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+        opacity: 1;
+        filter: none;
+      }
+
+      .tour-row input[type="date"] {
+        color: #111 !important;
+        -webkit-text-fill-color: #111 !important;
+        caret-color: #111;
+        background: #fff !important;
+        color-scheme: light;
+      }
+
+      .tour-row input[type="date"]::-webkit-datetime-edit,
+      .tour-row input[type="date"]::-webkit-datetime-edit-text,
+      .tour-row input[type="date"]::-webkit-datetime-edit-month-field,
+      .tour-row input[type="date"]::-webkit-datetime-edit-day-field,
+      .tour-row input[type="date"]::-webkit-datetime-edit-year-field {
+        color: #111 !important;
+        -webkit-text-fill-color: #111 !important;
+      }
+
       .grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));

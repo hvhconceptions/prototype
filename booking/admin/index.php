@@ -206,6 +206,7 @@ require_admin_ui();
         right: clamp(14px, 4vw, 24px);
         left: auto;
         display: inline-flex;
+        align-items: center;
         gap: 8px;
         padding: 0;
         border: none;
@@ -215,17 +216,23 @@ require_admin_ui();
       }
 
       .age-language .language-button {
+        appearance: none;
+        -webkit-appearance: none;
         display: inline-flex;
         align-items: center;
         gap: 6px;
         padding: 2px 4px;
-        border: none;
-        background: transparent;
+        border: 0 !important;
+        border-radius: 0;
+        background: transparent !important;
+        box-shadow: none !important;
         color: #2a0d1a;
         cursor: pointer;
         letter-spacing: 1px;
         text-transform: uppercase;
         font-size: 12px;
+        line-height: 1;
+        -webkit-tap-highlight-color: transparent;
         transition: transform 0.12s ease, opacity 0.12s ease;
       }
 
@@ -513,12 +520,6 @@ require_admin_ui();
         background: transparent;
         border: 1px dashed var(--hot);
         color: var(--hot);
-      }
-
-      .btn.love {
-        background: linear-gradient(135deg, #ff61b2, #ff2d93);
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.4);
       }
 
       .status {
@@ -1070,7 +1071,6 @@ require_admin_ui();
         <div class="editor-list" id="cityScheduleWizard"></div>
         <div class="row">
           <button class="btn ghost" id="clearCityTemplates" type="button">Clear template blocks</button>
-          <a class="btn love" id="cityLoveLogo" href="/inside.html" target="_blank" rel="noopener">LOVE LOGO</a>
           <button class="btn" id="saveAvailability" type="button">Save city schedule</button>
           <span class="status" id="cityScheduleStatus"></span>
         </div>
@@ -1218,7 +1218,6 @@ require_admin_ui();
           city_wizard_timezone_hint: "Timezone is shown automatically for each city card.",
           save_city_schedule: "Save city schedule",
           clear_template_blocks: "Clear template blocks",
-          love_logo: "Love logo",
           eye_candy_title: "Eye candy",
           eye_candy_hint: "Use full paths like /photos/heidi15.jpg and short alt text.",
           add_eye_candy: "Add eye candy",
@@ -1341,7 +1340,6 @@ require_admin_ui();
           city_wizard_timezone_hint: "Le fuseau horaire est affiche automatiquement pour chaque carte ville.",
           save_city_schedule: "Sauvegarder le planning ville",
           clear_template_blocks: "Effacer les blocs modele",
-          love_logo: "Logo love",
           eye_candy_title: "Eye candy",
           eye_candy_hint: "Utilisez des chemins complets comme /photos/heidi15.jpg et un court texte alt.",
           add_eye_candy: "Ajouter eye candy",
@@ -1524,7 +1522,6 @@ require_admin_ui();
         setTextById("cityWizardTimezoneHint", t("city_wizard_timezone_hint"));
         setTextById("saveAvailability", t("save_city_schedule"));
         setTextById("clearCityTemplates", t("clear_template_blocks"));
-        setTextById("cityLoveLogo", t("love_logo"));
         setTextById("gallerySectionTitle", t("eye_candy_title"));
         setTextById("gallerySectionHint", t("eye_candy_hint"));
         setTextById("addGalleryRow", t("add_eye_candy"));

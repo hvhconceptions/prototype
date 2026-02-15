@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy via FTP
+        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -30,6 +31,7 @@ jobs:
           dangerous-clean-slate: false
 
       - name: Deploy via FTP (fallback public_html)
+        if: always()
         continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -41,6 +43,8 @@ jobs:
           dangerous-clean-slate: false
 
       - name: Deploy booking portal via FTP
+        if: always()
+        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -51,6 +55,7 @@ jobs:
           dangerous-clean-slate: false
 
       - name: Deploy booking portal via FTP (fallback public_html)
+        if: always()
         continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:

@@ -1319,14 +1319,17 @@
           availability_read_touring: "Read touring dates carefully, or arrange Fly me to you.",
           availability_past_date: "This date is in the past. Pick a future date.",
           availability_none_left: "No start times left for this date and duration.",
+          step_city_date: "City and date",
           step_where_booking: "Where are you booking?",
           step_currency: "Which currency?",
           step_date: "What date do you want?",
           step_type: "Incall or outcall?",
+          step_duration_service: "Duration and service",
           step_duration: "How long?",
           step_service: "Which service?",
           step_pick_time: "Pick an available time",
           step_name: "What name should I use?",
+          step_contact: "Phone and email",
           step_phone: "What phone number can I reach?",
           step_email: "What email should receive payment details?",
           step_notes: "Requests, info, tell me about you if you wish :)",
@@ -1427,14 +1430,17 @@
           availability_read_touring: "Lisez les dates de tournee, ou choisissez Fly me to you.",
           availability_past_date: "Cette date est passee. Choisissez une date future.",
           availability_none_left: "Aucune heure de depart restante pour cette date et duree.",
+          step_city_date: "Ville et date",
           step_where_booking: "Ou reservez-vous?",
           step_currency: "Quelle devise?",
           step_date: "Quelle date voulez-vous?",
           step_type: "Incall ou outcall?",
+          step_duration_service: "Duree et service",
           step_duration: "Quelle duree?",
           step_service: "Quel service?",
           step_pick_time: "Choisissez une heure disponible",
           step_name: "Quel nom dois-je utiliser?",
+          step_contact: "Telephone et email",
           step_phone: "Quel numero pour vous joindre?",
           step_email: "Quel email doit recevoir les details de paiement?",
           step_notes: "Demandes, infos, parlez-moi de vous si vous voulez :)",
@@ -2407,25 +2413,12 @@
 
       const wizardSteps = [
         {
-          key: "city",
-          titleKey: "step_where_booking",
+          key: "city-date",
+          titleKey: "step_city_date",
           panel: panelRequest,
-          requestFields: [cityField],
-          validate: () => citySelect?.reportValidity() ?? true,
-        },
-        {
-          key: "currency",
-          titleKey: "step_currency",
-          panel: panelRequest,
-          requestFields: [currencyField],
-          validate: () => currencySelect?.reportValidity() ?? true,
-        },
-        {
-          key: "date",
-          titleKey: "step_date",
-          panel: panelRequest,
-          requestFields: [dateField],
+          requestFields: [cityField, dateField],
           validate: () => {
+            if (!(citySelect?.reportValidity() ?? true)) return false;
             setBookingDateFloor();
             validateDateNotPast();
             if (!(preferredDate?.reportValidity() ?? true)) return false;
@@ -2435,6 +2428,13 @@
             }
             return true;
           },
+        },
+        {
+          key: "currency",
+          titleKey: "step_currency",
+          panel: panelRequest,
+          requestFields: [currencyField],
+          validate: () => currencySelect?.reportValidity() ?? true,
         },
         {
           key: "type",
@@ -2452,18 +2452,16 @@
           },
         },
         {
-          key: "duration",
-          titleKey: "step_duration",
+          key: "duration-service",
+          titleKey: "step_duration_service",
           panel: panelRequest,
-          requestFields: [durationField],
-          validate: () => durationSelect?.reportValidity() ?? true,
-        },
-        {
-          key: "service",
-          titleKey: "step_service",
-          panel: panelRequest,
-          requestFields: [experienceField],
-          validate: () => experienceSelect?.reportValidity() ?? true,
+          requestFields: [durationField, experienceField],
+          validate: () => {
+            const okDuration = durationSelect?.reportValidity() ?? true;
+            if (!okDuration) return false;
+            const okService = experienceSelect?.reportValidity() ?? true;
+            return okService;
+          },
         },
         {
           key: "availability",
@@ -2499,18 +2497,16 @@
           validate: () => nameInput?.reportValidity() ?? true,
         },
         {
-          key: "phone",
-          titleKey: "step_phone",
+          key: "contact",
+          titleKey: "step_contact",
           panel: panelRequest,
-          requestFields: [phoneField],
-          validate: () => phoneInput?.reportValidity() ?? true,
-        },
-        {
-          key: "email",
-          titleKey: "step_email",
-          panel: panelRequest,
-          requestFields: [emailField],
-          validate: () => emailInput?.reportValidity() ?? true,
+          requestFields: [phoneField, emailField],
+          validate: () => {
+            const okPhone = phoneInput?.reportValidity() ?? true;
+            if (!okPhone) return false;
+            const okEmail = emailInput?.reportValidity() ?? true;
+            return okEmail;
+          },
         },
         {
           key: "notes",

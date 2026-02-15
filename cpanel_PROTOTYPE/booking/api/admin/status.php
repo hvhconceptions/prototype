@@ -297,6 +297,8 @@ foreach ($requests as $index => &$request) {
             }
         }
     } elseif ($status === 'paid') {
+        // A paid request is always considered an accepted booking for availability blocking.
+        $request['status'] = 'accepted';
         $request['payment_status'] = 'paid';
         if ($requestEmail !== '' && ($request['paid_email_sent_at'] ?? '') === '') {
             $currencyLabel = $depositCurrency !== '' ? $depositCurrency : (PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'USD');
@@ -394,8 +396,9 @@ if ($found) {
     }));
     $isAccepted = (string) ($request['status'] ?? '') === 'accepted';
     $isPaid = (string) ($request['payment_status'] ?? '') === 'paid';
-    if ($isAccepted && $isPaid) {
-        $bookingBlocks = build_booking_blocks($request, 'paid');
+    if ($isAccepted || $isPaid) {
+        $bookingStatus = $isPaid ? 'paid' : 'accepted';
+        $bookingBlocks = build_booking_blocks($request, $bookingStatus);
         $blocked = array_merge($blocked, $bookingBlocks);
     }
     $availability['blocked'] = $blocked;

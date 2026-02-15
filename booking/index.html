@@ -812,6 +812,75 @@
           padding: 20px;
         }
       }
+
+      @media (max-width: 640px) {
+        body {
+          -webkit-text-size-adjust: 100%;
+        }
+
+        header {
+          padding: 52px 14px 22px;
+        }
+
+        main {
+          padding: 0 14px 72px;
+        }
+
+        .panel {
+          padding: 16px;
+          border-radius: 18px;
+        }
+
+        .age-language {
+          top: 10px;
+          right: 10px;
+          gap: 6px;
+        }
+
+        .age-language .language-button {
+          font-size: 11px;
+          gap: 4px;
+          padding: 1px 2px;
+        }
+
+        .wizard-nav {
+          bottom: 6px;
+          gap: 8px;
+          padding: 8px;
+        }
+
+        .wizard-nav .cta {
+          min-width: 0;
+          font-size: 0.85rem;
+          padding: 12px 14px;
+        }
+
+        .checkbox-list {
+          grid-template-columns: 1fr;
+        }
+
+        .deposit-currency {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .day-calendar {
+          padding: 12px;
+        }
+
+        .day-calendar::before {
+          letter-spacing: 0.16em;
+          font-size: clamp(1.5rem, 12vw, 3rem);
+        }
+      }
+
+      @supports (-webkit-touch-callout: none) {
+        input,
+        select,
+        textarea {
+          font-size: 16px;
+        }
+      }
     </style>
   </head>
   <body>

@@ -989,6 +989,116 @@ require_admin_ui();
           max-width: 100%;
         }
       }
+
+      @media (max-width: 640px) {
+        body {
+          overflow-x: hidden;
+          -webkit-text-size-adjust: 100%;
+        }
+
+        header {
+          padding: 44px 14px 14px;
+        }
+
+        main {
+          padding: 0 14px 42px;
+        }
+
+        section {
+          padding: 14px;
+          border-radius: 16px;
+        }
+
+        .age-language {
+          top: 10px;
+          right: 10px;
+        }
+
+        .age-language .language-button {
+          font-size: 11px;
+          gap: 4px;
+          padding: 1px 2px;
+        }
+
+        .folder-switcher {
+          gap: 8px;
+        }
+
+        .folder-button {
+          flex: 1 1 100%;
+          border-radius: 12px;
+          padding: 9px 12px;
+          font-size: 0.76rem;
+          letter-spacing: 0.05em;
+        }
+
+        .row {
+          align-items: stretch;
+        }
+
+        .row .btn,
+        .row .status {
+          width: 100%;
+        }
+
+        .city-toolbar .field,
+        .calendar-field {
+          min-width: 0;
+          width: 100%;
+          flex: 1 1 100%;
+        }
+
+        .calendar-controls {
+          align-items: stretch;
+        }
+
+        .segmented {
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .seg-btn {
+          width: 100%;
+          padding: 8px 6px;
+          font-size: 0.76rem;
+        }
+
+        .calendar {
+          padding: 8px;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .calendar-grid {
+          min-width: 560px;
+        }
+
+        .calendar-grid.month {
+          grid-template-columns: repeat(7, minmax(72px, 1fr));
+        }
+
+        .city-wizard-card {
+          padding: 14px;
+          border-radius: 16px;
+        }
+
+        .city-wizard-nav {
+          flex-wrap: wrap;
+        }
+
+        .city-wizard-nav .btn {
+          min-width: 0;
+          flex: 1 1 calc(50% - 6px);
+        }
+      }
+
+      @supports (-webkit-touch-callout: none) {
+        input,
+        select,
+        textarea {
+          font-size: 16px;
+        }
+      }
     </style>
   </head>
   <body>

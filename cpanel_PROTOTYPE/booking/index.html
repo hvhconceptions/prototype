@@ -19,7 +19,7 @@
         --neon: #ff48a5;
         --line: rgba(255, 0, 110, 0.25);
         --shadow: rgba(255, 0, 110, 0.22);
-        --mono: "Courier Prime", "IBM Plex Mono", "Courier New", Courier, monospace;
+        --mono: "Avenir Next", "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         --bubble: "Baloo 2", "Cooper Black", "Bookman Old Style", "Georgia", serif;
       }
 
@@ -59,6 +59,60 @@
         bottom: -260px;
         left: -140px;
         background: radial-gradient(circle, rgba(255, 72, 165, 0.35), transparent 70%);
+      }
+
+      .age-language {
+        position: fixed;
+        top: clamp(14px, 4vw, 24px);
+        right: clamp(14px, 4vw, 24px);
+        left: auto;
+        display: inline-flex;
+        gap: 8px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        z-index: 130;
+      }
+
+      .age-language .language-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 4px;
+        border: none;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-size: 12px;
+        transition: transform 0.12s ease, opacity 0.12s ease;
+      }
+
+      .age-language .language-button[aria-pressed="true"] {
+        opacity: 1;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .age-language .language-button:focus-visible,
+      .age-language .language-button:hover {
+        transform: translateY(-1px);
+        outline: none;
+        opacity: 0.9;
+      }
+
+      .age-language .language-flag {
+        display: inline-flex;
+        width: 20px;
+        height: 14px;
+      }
+
+      .age-language .language-flag svg {
+        width: 100%;
+        height: auto;
+        display: block;
       }
 
       header {
@@ -139,16 +193,23 @@
       .wizard-top {
         background: #fff;
         border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 14px 16px;
+        border-radius: 20px;
+        padding: 16px 18px;
         box-shadow: 0 16px 30px var(--shadow);
       }
 
       .wizard-count {
-        font-size: 0.9rem;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--hot);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 0, 110, 0.28);
+        background: rgba(255, 0, 110, 0.08);
+        font-size: 0.86rem;
+        letter-spacing: 0.04em;
+        text-transform: none;
+        color: #8e1e52;
         font-weight: 700;
       }
 
@@ -191,8 +252,8 @@
       .panel h2 {
         margin: 0 0 16px;
         font-size: 1.1rem;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-transform: none;
         color: var(--hot);
       }
 
@@ -208,11 +269,12 @@
 
       label {
         display: block;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.16em;
+        font-size: 0.9rem;
+        text-transform: none;
+        letter-spacing: 0.01em;
         margin-bottom: 6px;
         color: #6b173f;
+        font-weight: 600;
       }
 
       input,
@@ -227,6 +289,29 @@
         background: #fff9fc;
         color: var(--ink);
         transition: border 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      select,
+      option {
+        color: #2a0d1a !important;
+        background: #fff !important;
+      }
+
+      input[type="date"],
+      input[type="time"],
+      input[type="month"],
+      input[type="datetime-local"] {
+        color: #2a0d1a !important;
+        -webkit-text-fill-color: #2a0d1a;
+        background: #fff !important;
+        color-scheme: light;
+      }
+
+      input[type="date"]::-webkit-datetime-edit,
+      input[type="time"]::-webkit-datetime-edit,
+      input[type="month"]::-webkit-datetime-edit,
+      input[type="datetime-local"]::-webkit-datetime-edit {
+        color: #2a0d1a;
       }
 
       input:focus,
@@ -246,6 +331,20 @@
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
+      }
+
+      .followup-block {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.2);
+        background: rgba(255, 0, 110, 0.04);
+      }
+
+      .followup-title {
+        margin: 0 0 8px;
+        font-size: 0.84rem;
+        color: #5a1431;
       }
 
       .radio-card {
@@ -713,16 +812,116 @@
           padding: 20px;
         }
       }
+
+      @media (max-width: 640px) {
+        body {
+          -webkit-text-size-adjust: 100%;
+        }
+
+        header {
+          padding: 52px 14px 22px;
+        }
+
+        main {
+          padding: 0 14px 72px;
+        }
+
+        .panel {
+          padding: 16px;
+          border-radius: 18px;
+        }
+
+        .age-language {
+          top: 10px;
+          right: 10px;
+          gap: 6px;
+        }
+
+        .age-language .language-button {
+          font-size: 11px;
+          gap: 4px;
+          padding: 1px 2px;
+        }
+
+        .wizard-nav {
+          bottom: 6px;
+          gap: 8px;
+          padding: 8px;
+        }
+
+        .wizard-nav .cta {
+          min-width: 0;
+          font-size: 0.85rem;
+          padding: 12px 14px;
+        }
+
+        .checkbox-list {
+          grid-template-columns: 1fr;
+        }
+
+        .deposit-currency {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .day-calendar {
+          padding: 12px;
+        }
+
+        .day-calendar::before {
+          letter-spacing: 0.16em;
+          font-size: clamp(1.5rem, 12vw, 3rem);
+        }
+      }
+
+      @supports (-webkit-touch-callout: none) {
+        input,
+        select,
+        textarea {
+          font-size: 16px;
+        }
+      }
     </style>
   </head>
   <body>
+    <div class="age-language" role="group" aria-label="language selector">
+      <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
+        <span class="language-flag" aria-hidden="true">
+          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+            <rect width="24" height="16" fill="#012169"></rect>
+            <path
+              d="M0 0L9.5 6.5V0H14.5V6.5L24 0V3L15.5 8H24V8.5H15.5L24 13V16L14.5 9.5V16H9.5V9.5L0 16V13L8.5 8.5H0V8H8.5L0 3Z"
+              fill="#fff"
+            ></path>
+            <path
+              d="M0 0L10 6.5V0H14V6.5L24 0V2.5L13.5 8.5H24V9.5H13.5L24 15.5V16L14 9.5V16H10V9.5L0 16V13.5L10.5 9.5H0V8.5H10.5L0 2.5Z"
+              fill="#c8102e"
+              opacity="0.8"
+            ></path>
+            <path d="M9.5 0H14.5V6H24V10H14.5V16H9.5V10H0V6H9.5Z" fill="#fff"></path>
+            <path d="M10.5 0H13.5V6H24V10H13.5V16H10.5V10H0V6H10.5Z" fill="#c8102e"></path>
+          </svg>
+        </span>
+        <span class="language-code">EN</span>
+      </button>
+      <button type="button" class="language-button" data-language-choice="fr" aria-pressed="false">
+        <span class="language-flag" aria-hidden="true">
+          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+            <rect width="24" height="16" fill="#fff"></rect>
+            <rect width="8" height="16" fill="#002395"></rect>
+            <rect width="8" height="16" x="16" fill="#ED2939"></rect>
+          </svg>
+        </span>
+        <span class="language-code">FR</span>
+      </button>
+    </div>
     <header>
       <div class="back-row">
-        <a class="back-link" href="/inside.html">Back to inside</a>
+        <a class="back-link" id="backInsideLink" href="/inside.html">Back to inside</a>
       </div>
       <div class="tag">Heidi Van Horny</div>
-      <h1>Van Booking Portal</h1>
-      <p class="subtitle">
+      <h1 id="bookingTitle">Van Booking Portal</h1>
+      <p class="subtitle" id="bookingSubtitle">
         Simple, private scheduling. Send your request and I email the payment details. Your booking is confirmed after
         payment is processed.
       </p>
@@ -731,14 +930,14 @@
     <main>
       <form id="bookingForm" novalidate>
         <div class="wizard-top" id="wizardTop">
-          <div class="wizard-count" id="wizardCount">1 / 1</div>
+          <div class="wizard-count" id="wizardCount">Step 1 of 1</div>
           <p class="wizard-title" id="wizardTitle">Booking step</p>
           <p class="wizard-status" id="wizardStatus" aria-live="assertive"></p>
           <div class="wizard-bar"><span class="wizard-fill" id="wizardFill"></span></div>
         </div>
 
         <section class="panel" id="panelRequest">
-          <h2>Booking request</h2>
+          <h2 id="panelRequestTitle">Booking request</h2>
           <div class="grid">
             <div class="field">
               <label for="name">Name</label>
@@ -756,10 +955,54 @@
                 pattern="\\+?[0-9\\s()\\-]{6,}"
                 required
               />
+              <div class="followup-block">
+                <p class="followup-title" id="followupPhoneTitle">
+                  Would you like me to contact you about my next trip to this city by phone?
+                </p>
+                <div class="radio-row">
+                  <label class="radio-card">
+                    <input type="radio" name="contact_followup_phone" value="yes" />
+                    <span>Yes</span>
+                  </label>
+                  <label class="radio-card">
+                    <input type="radio" name="contact_followup_phone" value="no" checked />
+                    <span>No</span>
+                  </label>
+                </div>
+                <label for="followup_phone_other_cities" id="followupPhoneCitiesLabel">Other cities?</label>
+                <input
+                  id="followup_phone_other_cities"
+                  name="followup_phone_other_cities"
+                  type="text"
+                  placeholder="Optional: Toronto, Vancouver, Paris"
+                />
+              </div>
             </div>
             <div class="field">
               <label for="email">Email</label>
               <input id="email" name="email" type="email" autocomplete="email" required />
+              <div class="followup-block">
+                <p class="followup-title" id="followupEmailTitle">
+                  Would you like me to contact you about my next trip to this city by email?
+                </p>
+                <div class="radio-row">
+                  <label class="radio-card">
+                    <input type="radio" name="contact_followup_email" value="yes" />
+                    <span>Yes</span>
+                  </label>
+                  <label class="radio-card">
+                    <input type="radio" name="contact_followup_email" value="no" checked />
+                    <span>No</span>
+                  </label>
+                </div>
+                <label for="followup_email_other_cities" id="followupEmailCitiesLabel">Other cities?</label>
+                <input
+                  id="followup_email_other_cities"
+                  name="followup_email_other_cities"
+                  type="text"
+                  placeholder="Optional: Montreal, London, Berlin"
+                />
+              </div>
             </div>
             <div class="field span-2" id="notesField">
               <label for="notes">Requests, info, tell me about you if you wish :)</label>
@@ -820,7 +1063,7 @@
                 rel="noopener"
                 aria-label="Discuss 24+ hour bookings on WhatsApp"
                 hidden
-                >Discuss it with me on What's App</a
+                >Discuss it with me on WhatsApp</a
               >
             </div>
             <div class="field">
@@ -853,9 +1096,12 @@
         </section>
 
         <section class="panel" id="panelAvailability">
-          <h2>Daily availability</h2>
+          <h2 id="panelAvailabilityTitle">Daily availability</h2>
           <p class="hint" id="availabilityNote">
             Pick a date and duration to see available start times in order.
+          </p>
+          <p class="hint" id="timezoneHintLine">
+            Times shown in this city timezone: <strong id="tourTz">America/Toronto</strong>
           </p>
           <div class="day-calendar" id="dayCalendar" data-city=""></div>
           <div class="availability-summary" id="availabilitySummary"></div>
@@ -866,7 +1112,7 @@
         </section>
 
         <section class="panel" id="panelPayment">
-          <h2>Payment confirmation</h2>
+          <h2 id="panelPaymentTitle">Payment confirmation</h2>
           <div class="deposit-box" id="depositBox">
             <div class="deposit-total">Base rate: <span id="baseRateDisplay">Select duration</span></div>
             <div class="deposit-total hidden" id="pseAddonRow">PSE add-on: <span id="pseAddonDisplay">--</span></div>
@@ -891,7 +1137,7 @@
           </div>
           <label class="consent" for="deposit_confirm" id="depositConsentRow">
             <input id="deposit_confirm" name="deposit_confirm" type="checkbox" required />
-            <span>I confirm the 20% deposit and payment method are correct.</span>
+            <span id="depositConsentText">I confirm the 20% deposit and payment method are correct.</span>
           </label>
           <p class="hint" id="paymentCryptoHint">Crypto amounts are shown as CAD reference.</p>
         </section>
@@ -940,6 +1186,7 @@
       const phoneInput = document.getElementById("phone");
       const notesInput = document.getElementById("notes");
       const whatsappDiscuss = document.getElementById("whatsappDiscuss");
+      const durationHint = document.getElementById("durationHint");
       const touringDayCityEl = document.getElementById("touringDayCity");
       const availabilityNote = document.getElementById("availabilityNote");
       const availabilitySummary = document.getElementById("availabilitySummary");
@@ -970,10 +1217,13 @@
       const tourCityEl = document.getElementById("tourCity");
       const tourTzEl = document.getElementById("tourTz");
       const successPopup = document.getElementById("successPopup");
+      const successTitle = document.getElementById("successTitle");
       const successMessage = document.getElementById("successMessage");
       const successEmail = document.getElementById("successEmail");
+      const successLink = document.getElementById("successLink");
       const successClose = document.getElementById("successClose");
       const alertPopup = document.getElementById("alertPopup");
+      const alertPopupTitle = document.getElementById("alertPopupTitle");
       const alertPopupMessage = document.getElementById("alertPopupMessage");
       const alertPopupClose = document.getElementById("alertPopupClose");
       const emailInput = document.getElementById("email");
@@ -985,6 +1235,248 @@
       const wizardNext = document.getElementById("wizardNext");
       const wizardBack = document.getElementById("wizardBack");
       const wizardNav = document.getElementById("wizardNav");
+      const languageButtons = document.querySelectorAll(".age-language [data-language-choice]");
+      const LANGUAGE_KEY = "hvh_inside_language";
+      const SUPPORTED_LANGUAGES = ["en", "fr"];
+      let currentLanguage = "en";
+      const I18N = {
+        en: {
+          back_to_inside: "Back to inside",
+          booking_title: "Van Booking Portal",
+          booking_subtitle:
+            "Simple, private scheduling. Send your request and I email the payment details. Your booking is confirmed after payment is processed.",
+          wizard_step_label: "Booking step",
+          wizard_count: "Step {current} of {total}",
+          request_title: "Booking request",
+          label_name: "Name",
+          label_phone: "Phone number",
+          phone_placeholder: "+ (country code) 555 1234",
+          followup_phone_title: "Would you like me to contact you about my next trip to this city by phone?",
+          followup_email_title: "Would you like me to contact you about my next trip to this city by email?",
+          yes: "Yes",
+          no: "No",
+          other_cities: "Other cities?",
+          followup_phone_placeholder: "Optional: Toronto, Vancouver, Paris",
+          label_email: "Email",
+          followup_email_placeholder: "Optional: Montreal, London, Berlin",
+          label_notes: "Requests, info, tell me about you if you wish :)",
+          notes_placeholder: "Optional. Share requests or any helpful info.",
+          notes_hint: "Optional. Keep it respectful.",
+          label_date: "Date of booking",
+          touring_day_prefix: "On that day, Heidi will be in:",
+          select_date: "Select a date",
+          label_city: "City of booking",
+          choose_option: "choose option",
+          label_currency: "Currency",
+          label_duration: "Duration",
+          duration_hint: "Rates update with currency. Crypto shown in CAD.",
+          discuss_whatsapp: "Discuss it with me on WhatsApp",
+          label_service: "Service",
+          label_location: "Location",
+          incall: "Incall",
+          outcall: "Outcall",
+          outcall_hint: "Outcall requires an address so I can confirm travel time.",
+          outcall_address: "Outcall address",
+          availability_title: "Daily availability",
+          availability_note_default: "Pick a date and duration to see available start times in order.",
+          timezone_hint_prefix: "Times shown in this city timezone:",
+          selected_time: "Selected time",
+          payment_title: "Payment confirmation",
+          base_rate: "Base rate:",
+          pse_addon: "PSE add-on:",
+          total_rate: "Total:",
+          deposit_rate: "20% deposit:",
+          deposit_note: "Deposit is 20% of total.",
+          label_payment_method: "Payment method",
+          etransfer_canada: "e-Transfer (Canada only)",
+          deposit_consent: "I confirm the 20% deposit and payment method are correct.",
+          crypto_hint: "Crypto amounts are shown as CAD reference.",
+          request_booking: "Request booking",
+          back: "Back",
+          next: "Next",
+          success_title: "Request received",
+          pay_now: "Pay now",
+          got_it: "Got it",
+          alert_title: "Attention",
+          alert_ok: "OK",
+          booking_unavailable: "Booking is unavailable.",
+          bad_vibe_alert: ":( bad vibe alert!",
+          review_step: "Please review this step and try again.",
+          payment_email_prefix: "Payment email:",
+          select_duration: "Select duration",
+          discuss_whatsapp_short: "Discuss on WhatsApp",
+          custom_24h_note: "Custom 24+ hour bookings are confirmed after WhatsApp discussion.",
+          custom_24h_validity: "Please discuss 24+ hour bookings on WhatsApp.",
+          deposit_percent_note: "Deposit is {percent}% of total.",
+          crypto_reference_note: "Crypto reference shown in CAD.",
+          city_no_tour: "No touring in this city/date. Read touring dates carefully or arrange Fly me to you.",
+          city_date_mismatch: "Heidi is in {city} on {date}. Read touring carefully or arrange Fly me to you.",
+          availability_pick_date: "Pick a date to view availability.",
+          city_tba: "TBA",
+          availability_selected_date: "Availability shown for the selected date.",
+          availability_need_standard:
+            "Select a standard duration to view available times. 24+ hours is discussed on WhatsApp.",
+          availability_read_touring: "Read touring dates carefully, or arrange Fly me to you.",
+          availability_past_date: "This date is in the past. Pick a future date.",
+          availability_none_left: "No start times left for this date and duration.",
+          step_where_booking: "Where are you booking?",
+          step_currency: "Which currency?",
+          step_date: "What date do you want?",
+          step_type: "Incall or outcall?",
+          step_duration: "How long?",
+          step_service: "Which service?",
+          step_pick_time: "Pick an available time",
+          step_name: "What name should I use?",
+          step_phone: "What phone number can I reach?",
+          step_email: "What email should receive payment details?",
+          step_notes: "Requests, info, tell me about you if you wish :)",
+          step_payment_method: "How will you send deposit?",
+          step_deposit_confirm: "Confirm the deposit terms",
+          step_submit: "Send your booking request",
+          complete_step: "Please complete: {step}.",
+          success_request_sent: "Request sent. Your reference: {id}. Check your email to proceed with payment.",
+          send_error_prefix: "Couldn't send that.",
+          duration_30m: "30 minutes",
+          duration_1h: "1 hour",
+          duration_1_5h: "1.5 hours",
+          duration_2h: "2 hours",
+          duration_3h: "3 hours",
+          duration_4h: "4 hours",
+          duration_social: "Social experiment (3 hours)",
+          duration_8_12h: "8-12 hours",
+          duration_24p: "24+ hours",
+        },
+        fr: {
+          back_to_inside: "Retour a inside",
+          booking_title: "Portail de reservation Van",
+          booking_subtitle:
+            "Reservation simple et privee. Envoyez votre demande et je vous envoie les details de paiement par email. La reservation est confirmee apres validation du paiement.",
+          wizard_step_label: "Etape de reservation",
+          wizard_count: "Etape {current} sur {total}",
+          request_title: "Demande de reservation",
+          label_name: "Nom",
+          label_phone: "Numero de telephone",
+          phone_placeholder: "+ (indicatif pays) 555 1234",
+          followup_phone_title:
+            "Souhaitez-vous que je vous contacte pour mon prochain passage dans cette ville par telephone?",
+          followup_email_title:
+            "Souhaitez-vous que je vous contacte pour mon prochain passage dans cette ville par email?",
+          yes: "Oui",
+          no: "Non",
+          other_cities: "Autres villes?",
+          followup_phone_placeholder: "Optionnel: Toronto, Vancouver, Paris",
+          label_email: "Email",
+          followup_email_placeholder: "Optionnel: Montreal, Londres, Berlin",
+          label_notes: "Demandes, infos, parlez-moi de vous si vous voulez :)",
+          notes_placeholder: "Optionnel. Partagez vos demandes ou infos utiles.",
+          notes_hint: "Optionnel. Restez respectueux.",
+          label_date: "Date de reservation",
+          touring_day_prefix: "Ce jour-la, Heidi sera a:",
+          select_date: "Choisissez une date",
+          label_city: "Ville de reservation",
+          choose_option: "choisir une option",
+          label_currency: "Devise",
+          label_duration: "Duree",
+          duration_hint: "Les tarifs changent avec la devise. Crypto affichee en CAD.",
+          discuss_whatsapp: "Discuter avec moi sur WhatsApp",
+          label_service: "Service",
+          label_location: "Lieu",
+          incall: "Incall",
+          outcall: "Outcall",
+          outcall_hint: "Outcall demande une adresse pour confirmer le deplacement.",
+          outcall_address: "Adresse outcall",
+          availability_title: "Disponibilites du jour",
+          availability_note_default: "Choisissez date et duree pour voir les heures disponibles dans l'ordre.",
+          timezone_hint_prefix: "Heures affichees dans le fuseau de cette ville:",
+          selected_time: "Heure choisie",
+          payment_title: "Confirmation de paiement",
+          base_rate: "Tarif de base:",
+          pse_addon: "Supplement PSE:",
+          total_rate: "Total:",
+          deposit_rate: "Acompte 20%:",
+          deposit_note: "L'acompte est de 20% du total.",
+          label_payment_method: "Methode de paiement",
+          etransfer_canada: "e-Transfer (Canada seulement)",
+          deposit_consent: "Je confirme que l'acompte de 20% et la methode de paiement sont corrects.",
+          crypto_hint: "Les montants crypto sont affiches en reference CAD.",
+          request_booking: "Envoyer la demande",
+          back: "Retour",
+          next: "Suivant",
+          success_title: "Demande recue",
+          pay_now: "Payer maintenant",
+          got_it: "Compris",
+          alert_title: "Attention",
+          alert_ok: "OK",
+          booking_unavailable: "Reservation indisponible.",
+          bad_vibe_alert: ":( alerte bad vibe!",
+          review_step: "Verifiez cette etape puis recommencez.",
+          payment_email_prefix: "Email paiement:",
+          select_duration: "Choisissez la duree",
+          discuss_whatsapp_short: "Discuter sur WhatsApp",
+          custom_24h_note: "Les reservations 24h+ sont confirmees apres discussion WhatsApp.",
+          custom_24h_validity: "Veuillez discuter des reservations 24h+ sur WhatsApp.",
+          deposit_percent_note: "L'acompte est de {percent}% du total.",
+          crypto_reference_note: "Reference crypto affichee en CAD.",
+          city_no_tour: "Aucune tournee cette date dans cette ville. Lisez la tournee ou choisissez Fly me to you.",
+          city_date_mismatch: "Heidi est a {city} le {date}. Lisez la tournee ou choisissez Fly me to you.",
+          availability_pick_date: "Choisissez une date pour voir les disponibilites.",
+          city_tba: "A definir",
+          availability_selected_date: "Disponibilites pour la date choisie.",
+          availability_need_standard:
+            "Choisissez une duree standard pour voir les heures disponibles. Le 24h+ se discute sur WhatsApp.",
+          availability_read_touring: "Lisez les dates de tournee, ou choisissez Fly me to you.",
+          availability_past_date: "Cette date est passee. Choisissez une date future.",
+          availability_none_left: "Aucune heure de depart restante pour cette date et duree.",
+          step_where_booking: "Ou reservez-vous?",
+          step_currency: "Quelle devise?",
+          step_date: "Quelle date voulez-vous?",
+          step_type: "Incall ou outcall?",
+          step_duration: "Quelle duree?",
+          step_service: "Quel service?",
+          step_pick_time: "Choisissez une heure disponible",
+          step_name: "Quel nom dois-je utiliser?",
+          step_phone: "Quel numero pour vous joindre?",
+          step_email: "Quel email doit recevoir les details de paiement?",
+          step_notes: "Demandes, infos, parlez-moi de vous si vous voulez :)",
+          step_payment_method: "Comment enverrez-vous l'acompte?",
+          step_deposit_confirm: "Confirmez les conditions d'acompte",
+          step_submit: "Envoyer votre demande",
+          complete_step: "Veuillez completer: {step}.",
+          success_request_sent: "Demande envoyee. Votre reference: {id}. Verifiez votre email pour proceder au paiement.",
+          send_error_prefix: "Impossible d'envoyer.",
+          duration_30m: "30 minutes",
+          duration_1h: "1 heure",
+          duration_1_5h: "1,5 heure",
+          duration_2h: "2 heures",
+          duration_3h: "3 heures",
+          duration_4h: "4 heures",
+          duration_social: "Experience sociale (3 heures)",
+          duration_8_12h: "8-12 heures",
+          duration_24p: "24+ heures",
+        },
+      };
+      const formatTemplate = (template, vars = {}) =>
+        String(template || "").replace(/\{(\w+)\}/g, (_m, key) => (vars[key] ?? `{${key}}`));
+      const t = (key, vars = {}) => {
+        const pack = I18N[currentLanguage] || I18N.en;
+        const fallback = I18N.en[key] || key;
+        return formatTemplate(pack[key] || fallback, vars);
+      };
+      const getStoredLanguage = () => {
+        try {
+          const stored = window.localStorage.getItem(LANGUAGE_KEY);
+          if (stored && SUPPORTED_LANGUAGES.includes(stored)) return stored;
+        } catch (_error) {}
+        return null;
+      };
+      const detectBrowserLanguage = () => {
+        const langs = Array.isArray(navigator.languages) ? navigator.languages : [navigator.language || "en"];
+        for (const lang of langs) {
+          const short = String(lang || "").slice(0, 2).toLowerCase();
+          if (SUPPORTED_LANGUAGES.includes(short)) return short;
+        }
+        return "en";
+      };
       const CUSTOM_ALERT_SOUND = "/alert-badvibe.mp3";
       const FALLBACK_ALERT_SOUND = "/winxp-alert.mp3";
       const xpSound = new Audio(CUSTOM_ALERT_SOUND);
@@ -1027,7 +1519,7 @@
           if (el.id === "successClose") return;
           el.disabled = true;
         });
-        statusEl.textContent = message || "Booking is unavailable.";
+        statusEl.textContent = message || t("booking_unavailable");
       };
 
       const checkBlacklist = async (email, phone) => {
@@ -1049,7 +1541,7 @@
           const response = await fetch("api/blacklist.php", { cache: "no-store" });
           const data = await response.json();
           if (data && data.blocked) {
-            setBookingLock("Booking is unavailable.");
+            setBookingLock(t("booking_unavailable"));
           }
         } catch (_error) {}
       };
@@ -1118,16 +1610,17 @@
       const LONG_SESSION_MAX = 12;
       const LONG_SESSION_RATE = 3000;
       const DURATION_OPTIONS = [
-        { label: "30 minutes", hours: 0.5, value: "0.5" },
-        { label: "1 hour", hours: 1, value: "1" },
-        { label: "1.5 hours", hours: 1.5, value: "1.5" },
-        { label: "2 hours", hours: 2, value: "2" },
-        { label: "3 hours", hours: 3, value: "3" },
-        { label: "4 hours", hours: 4, value: "4" },
-        { label: "Social experiment (3 hours)", hours: 3, value: "social", rateKey: "social" },
-        { label: "8-12 hours", hours: 10, value: "8-12" },
-        { label: "24+ hours", hours: 0, value: "24+", custom: true },
+        { labelKey: "duration_30m", hours: 0.5, value: "0.5" },
+        { labelKey: "duration_1h", hours: 1, value: "1" },
+        { labelKey: "duration_1_5h", hours: 1.5, value: "1.5" },
+        { labelKey: "duration_2h", hours: 2, value: "2" },
+        { labelKey: "duration_3h", hours: 3, value: "3" },
+        { labelKey: "duration_4h", hours: 4, value: "4" },
+        { labelKey: "duration_social", hours: 3, value: "social", rateKey: "social" },
+        { labelKey: "duration_8_12h", hours: 10, value: "8-12" },
+        { labelKey: "duration_24p", hours: 0, value: "24+", custom: true },
       ];
+      const getDurationLabel = (entry) => t(entry?.labelKey || "");
 
       const containsProfanity = (value) => PROFANITY_PATTERNS.some((pattern) => pattern.test(value));
 
@@ -1150,15 +1643,15 @@
         } catch (_error) {}
       };
 
-      const showBadVibe = (message = ":( bad vibe alert!") => {
-        const text = String(message || ":( bad vibe alert!");
+      const showBadVibe = (message = t("bad_vibe_alert")) => {
+        const text = String(message || t("bad_vibe_alert"));
         statusEl.textContent = text;
         playXpSound();
         showAlertPopup(text);
       };
 
       const showWizardWarning = (message) => {
-        const text = String(message || "Please review this step and try again.");
+        const text = String(message || t("review_step"));
         if (wizardStatus) {
           wizardStatus.textContent = text;
         }
@@ -1198,7 +1691,7 @@
         successMessage.textContent = message;
         if (successEmail) {
           if (emailValue) {
-            successEmail.textContent = `Payment email: ${emailValue}`;
+            successEmail.textContent = `${t("payment_email_prefix")} ${emailValue}`;
           } else {
             successEmail.textContent = "";
           }
@@ -1369,13 +1862,13 @@
         if (!baseRateDisplay || !totalRateDisplay || !depositRateDisplay) return;
         const selected = durationSelect.selectedOptions[0];
         if (!selected) {
-          baseRateDisplay.textContent = "Select duration";
-          totalRateDisplay.textContent = "Select duration";
+          baseRateDisplay.textContent = t("select_duration");
+          totalRateDisplay.textContent = t("select_duration");
           depositRateDisplay.textContent = "--";
           if (pseAddonRow) pseAddonRow.classList.add("hidden");
           if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
           if (totalRateNote) totalRateNote.textContent = "";
-          if (depositRateNote) depositRateNote.textContent = "Deposit is 20% of total.";
+          if (depositRateNote) depositRateNote.textContent = t("deposit_note");
           return;
         }
         const hours = Number(selected.dataset.hours || 0);
@@ -1383,17 +1876,17 @@
         const experience = experienceSelect.value || "gfe";
         const currency = currencySelect.value || BASE_CURRENCY;
         if (selected.dataset.custom === "true" || selected.value === "24+") {
-          baseRateDisplay.textContent = "Discuss on WhatsApp";
-          totalRateDisplay.textContent = "Discuss on WhatsApp";
+          baseRateDisplay.textContent = t("discuss_whatsapp_short");
+          totalRateDisplay.textContent = t("discuss_whatsapp_short");
           depositRateDisplay.textContent = "--";
           if (pseAddonRow) pseAddonRow.classList.add("hidden");
           if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
           if (totalRateNote) totalRateNote.textContent = "";
           if (depositRateNote) {
-            depositRateNote.textContent = "Custom 24+ hour bookings are confirmed after WhatsApp discussion.";
+            depositRateNote.textContent = t("custom_24h_note");
           }
           if (durationSelect) {
-            durationSelect.setCustomValidity("Please discuss 24+ hour bookings on WhatsApp.");
+            durationSelect.setCustomValidity(t("custom_24h_validity"));
           }
           if (whatsappDiscuss) {
             whatsappDiscuss.hidden = false;
@@ -1407,13 +1900,13 @@
           whatsappDiscuss.hidden = true;
         }
         if (!Number.isFinite(hours) || hours <= 0) {
-          baseRateDisplay.textContent = "Select duration";
-          totalRateDisplay.textContent = "Select duration";
+          baseRateDisplay.textContent = t("select_duration");
+          totalRateDisplay.textContent = t("select_duration");
           depositRateDisplay.textContent = "--";
           if (pseAddonRow) pseAddonRow.classList.add("hidden");
           if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
           if (totalRateNote) totalRateNote.textContent = "";
-          if (depositRateNote) depositRateNote.textContent = `Deposit is ${DEPOSIT_PERCENT}% of total.`;
+          if (depositRateNote) depositRateNote.textContent = t("deposit_percent_note", { percent: DEPOSIT_PERCENT });
           return;
         }
         const baseRate = getBaseRate(hours, experience, rateKey);
@@ -1437,10 +1930,10 @@
           }
         }
         if (totalRateNote) {
-          totalRateNote.textContent = CRYPTO_CURRENCIES.includes(currency) ? "Crypto reference shown in CAD." : "";
+          totalRateNote.textContent = CRYPTO_CURRENCIES.includes(currency) ? t("crypto_reference_note") : "";
         }
         if (depositRateNote) {
-          depositRateNote.textContent = `Deposit is ${DEPOSIT_PERCENT}% of total.`;
+          depositRateNote.textContent = t("deposit_percent_note", { percent: DEPOSIT_PERCENT });
         }
       };
 
@@ -1451,7 +1944,7 @@
         durationSelect.innerHTML = "";
         const placeholder = document.createElement("option");
         placeholder.value = "";
-        placeholder.textContent = "choose option";
+        placeholder.textContent = t("choose_option");
         placeholder.disabled = true;
         placeholder.selected = true;
         durationSelect.appendChild(placeholder);
@@ -1461,14 +1954,14 @@
           option.value = entry.value;
           option.dataset.hours = String(entry.hours);
           option.dataset.rateKey = entry.rateKey || "";
-          option.dataset.label = entry.label;
+          option.dataset.label = getDurationLabel(entry);
           if (entry.custom) {
             option.dataset.custom = "true";
-            option.textContent = `${entry.label} - discuss on WhatsApp`;
+            option.textContent = `${getDurationLabel(entry)} - ${t("discuss_whatsapp_short")}`;
           } else {
             const baseRate = getBaseRate(entry.hours, currentExperience, entry.rateKey || "");
             const priceLabel = await formatRateLabel(baseRate, currentCurrency);
-            option.textContent = `${entry.label} - ${priceLabel}`;
+            option.textContent = `${getDurationLabel(entry)} - ${priceLabel}`;
           }
           durationSelect.appendChild(option);
         }
@@ -1653,9 +2146,9 @@
         const touringCity = getCityForDate(preferredDate.value);
         let message = "";
         if (!touringCity) {
-          message = "No touring in this city/date. Read touring dates carefully or arrange Fly me to you.";
+          message = t("city_no_tour");
         } else if (normalizeCityName(citySelect.value) !== normalizeCityName(touringCity)) {
-          message = `Heidi is in ${touringCity} on ${preferredDate.value}. Read touring carefully or arrange Fly me to you.`;
+          message = t("city_date_mismatch", { city: touringCity, date: preferredDate.value });
         }
         if (message) {
           citySelect.setCustomValidity(message);
@@ -1777,17 +2270,17 @@
           dayCalendar.innerHTML = "";
           dayCalendar.dataset.city = "";
           availabilitySummary.textContent = "";
-          if (touringDayCityEl) touringDayCityEl.textContent = "Select a date";
-          availabilityNote.textContent = "Pick a date to view availability.";
+          if (touringDayCityEl) touringDayCityEl.textContent = t("select_date");
+          availabilityNote.textContent = t("availability_pick_date");
           clearSelectedSlot();
           return;
         }
 
         const cityContext = updateSelectedTourContext();
         const dayCity = cityContext?.city || getCityForDate(dateKey) || tourCity;
-        if (touringDayCityEl) touringDayCityEl.textContent = dayCity || "TBA";
-        dayCalendar.dataset.city = dayCity || "TBA";
-        availabilityNote.textContent = "Availability shown for the selected date.";
+        if (touringDayCityEl) touringDayCityEl.textContent = dayCity || t("city_tba");
+        dayCalendar.dataset.city = dayCity || t("city_tba");
+        availabilityNote.textContent = t("availability_selected_date");
         validateCityForDate({ showMessage: true });
 
         dayCalendar.innerHTML = "";
@@ -1796,8 +2289,7 @@
         if (!durationMinutes) {
           const customMessage = document.createElement("p");
           customMessage.className = "day-empty";
-          customMessage.textContent =
-            "Select a standard duration to view available times. 24+ hours is discussed on WhatsApp.";
+          customMessage.textContent = t("availability_need_standard");
           dayCalendar.appendChild(customMessage);
           availabilitySummary.innerHTML = "";
           return;
@@ -1806,7 +2298,7 @@
         if (!validateCityForDate({ showMessage: true })) {
           const cityMessage = document.createElement("p");
           cityMessage.className = "day-empty";
-          cityMessage.textContent = "Read touring dates carefully, or arrange Fly me to you.";
+          cityMessage.textContent = t("availability_read_touring");
           dayCalendar.appendChild(cityMessage);
           availabilitySummary.innerHTML = "";
           return;
@@ -1816,7 +2308,7 @@
         if (dateKey < now.dateKey) {
           const pastDateMessage = document.createElement("p");
           pastDateMessage.className = "day-empty";
-          pastDateMessage.textContent = "This date is in the past. Pick a future date.";
+          pastDateMessage.textContent = t("availability_past_date");
           dayCalendar.appendChild(pastDateMessage);
           availabilitySummary.innerHTML = "";
           return;
@@ -1844,7 +2336,7 @@
         if (!slots.length) {
           const emptyMessage = document.createElement("p");
           emptyMessage.className = "day-empty";
-          emptyMessage.textContent = "No start times left for this date and duration.";
+          emptyMessage.textContent = t("availability_none_left");
           dayCalendar.appendChild(emptyMessage);
         }
 
@@ -1916,21 +2408,21 @@
       const wizardSteps = [
         {
           key: "city",
-          title: "Where are you booking?",
+          titleKey: "step_where_booking",
           panel: panelRequest,
           requestFields: [cityField],
           validate: () => citySelect?.reportValidity() ?? true,
         },
         {
           key: "currency",
-          title: "Which currency?",
+          titleKey: "step_currency",
           panel: panelRequest,
           requestFields: [currencyField],
           validate: () => currencySelect?.reportValidity() ?? true,
         },
         {
           key: "date",
-          title: "What date do you want?",
+          titleKey: "step_date",
           panel: panelRequest,
           requestFields: [dateField],
           validate: () => {
@@ -1946,7 +2438,7 @@
         },
         {
           key: "type",
-          title: "Incall or outcall?",
+          titleKey: "step_type",
           panel: panelRequest,
           requestFields: [bookingTypeField, outcallField],
           validate: () => {
@@ -1961,21 +2453,21 @@
         },
         {
           key: "duration",
-          title: "How long?",
+          titleKey: "step_duration",
           panel: panelRequest,
           requestFields: [durationField],
           validate: () => durationSelect?.reportValidity() ?? true,
         },
         {
           key: "service",
-          title: "Which service?",
+          titleKey: "step_service",
           panel: panelRequest,
           requestFields: [experienceField],
           validate: () => experienceSelect?.reportValidity() ?? true,
         },
         {
           key: "availability",
-          title: "Pick an available time",
+          titleKey: "step_pick_time",
           panel: panelAvailability,
           validate: () => {
             if (!(durationSelect?.reportValidity() ?? true)) {
@@ -2001,49 +2493,49 @@
         },
         {
           key: "name",
-          title: "What name should I use?",
+          titleKey: "step_name",
           panel: panelRequest,
           requestFields: [nameField],
           validate: () => nameInput?.reportValidity() ?? true,
         },
         {
           key: "phone",
-          title: "What phone number can I reach?",
+          titleKey: "step_phone",
           panel: panelRequest,
           requestFields: [phoneField],
           validate: () => phoneInput?.reportValidity() ?? true,
         },
         {
           key: "email",
-          title: "What email should receive payment details?",
+          titleKey: "step_email",
           panel: panelRequest,
           requestFields: [emailField],
           validate: () => emailInput?.reportValidity() ?? true,
         },
         {
           key: "notes",
-          title: "Requests, info, tell me about you if you wish :)",
+          titleKey: "step_notes",
           panel: panelRequest,
           requestFields: [notesField],
           validate: () => true,
         },
         {
           key: "payment-method",
-          title: "How will you send deposit?",
+          titleKey: "step_payment_method",
           panel: panelPayment,
           paymentMode: "method",
           validate: () => paymentMethod?.reportValidity() ?? true,
         },
         {
           key: "deposit-confirm",
-          title: "Confirm the deposit terms",
+          titleKey: "step_deposit_confirm",
           panel: panelPayment,
           paymentMode: "confirm",
           validate: () => depositConfirm?.reportValidity() ?? true,
         },
         {
           key: "submit",
-          title: "Send your booking request",
+          titleKey: "step_submit",
           panel: panelSubmit,
           validate: () => true,
         },
@@ -2098,10 +2590,10 @@
         }
 
         if (wizardCount) {
-          wizardCount.textContent = `${wizardStepIndex + 1} / ${total}`;
+          wizardCount.textContent = t("wizard_count", { current: wizardStepIndex + 1, total });
         }
         if (wizardTitle) {
-          wizardTitle.textContent = step.title;
+          wizardTitle.textContent = t(step.titleKey || "wizard_step_label");
         }
         if (wizardFill) {
           wizardFill.style.width = `${Math.round(((wizardStepIndex + 1) / total) * 100)}%`;
@@ -2133,7 +2625,7 @@
       const getCurrentWizardWarningMessage = () => {
         const step = wizardSteps[wizardStepIndex];
         if (!step) {
-          return "Please review this step.";
+          return t("review_step");
         }
         const controls = [
           citySelect,
@@ -2151,10 +2643,10 @@
         for (const control of controls) {
           if (!control) continue;
           if (!control.checkValidity()) {
-            return control.validationMessage || `Please complete: ${step.title}.`;
+            return control.validationMessage || t("complete_step", { step: t(step.titleKey || "wizard_step_label") });
           }
         }
-        return `Please complete: ${step.title}.`;
+        return t("complete_step", { step: t(step.titleKey || "wizard_step_label") });
       };
 
       const nextWizardStep = () => {
@@ -2238,7 +2730,7 @@
         }
 
         if (bookingLocked) {
-          statusEl.textContent = "Booking is unavailable.";
+          statusEl.textContent = t("booking_unavailable");
           return;
         }
 
@@ -2269,7 +2761,7 @@
         const emailValue = emailInput ? emailInput.value.trim() : "";
         const phoneValue = form.querySelector("#phone")?.value?.trim() || "";
         if (await checkBlacklist(emailValue, phoneValue)) {
-          setBookingLock("Booking is unavailable.");
+          setBookingLock(t("booking_unavailable"));
           return;
         }
 
@@ -2288,6 +2780,24 @@
         payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
         payload.preferred_time = preferredTime.value || "";
 
+        const parseServerJson = (rawText) => {
+          if (!rawText) return null;
+          try {
+            return JSON.parse(rawText);
+          } catch (_error) {
+            const start = rawText.indexOf("{");
+            const end = rawText.lastIndexOf("}");
+            if (start !== -1 && end > start) {
+              try {
+                return JSON.parse(rawText.slice(start, end + 1));
+              } catch (_innerError) {
+                return null;
+              }
+            }
+            return null;
+          }
+        };
+
         try {
           const response = await fetch("api/request.php", {
             method: "POST",
@@ -2297,18 +2807,12 @@
             body: JSON.stringify(payload),
           });
           const raw = await response.text();
-          let result = {};
-          if (raw) {
-            try {
-              result = JSON.parse(raw);
-            } catch (_error) {
-              throw new Error("Server error. Try again.");
-            }
-          }
+          const result = parseServerJson(raw) || {};
           if (!response.ok) {
-            throw new Error(result.error || "Server error. Try again.");
+            const fieldError = result?.fields ? Object.values(result.fields)[0] : "";
+            throw new Error(result.error || fieldError || `Server error (${response.status}).`);
           }
-          const successText = `Request sent. Your reference: ${result.id}. Check your email to proceed with payment.`;
+          const successText = t("success_request_sent", { id: result.id });
           statusEl.textContent = successText;
           const fallbackPayLink = result.id ? `/booking/pay/index.php?id=${encodeURIComponent(result.id)}` : "";
           const paymentLink =
@@ -2325,8 +2829,156 @@
           updatePaymentSummary();
           renderWizardStep(0);
         } catch (error) {
-          statusEl.textContent = `Couldn't send that. ${error.message}`;
+          statusEl.textContent = `${t("send_error_prefix")} ${error.message}`;
         }
+      });
+
+      const setLabelText = (fieldId, text) => {
+        const label = document.querySelector(`label[for="${fieldId}"]`);
+        if (label) label.textContent = text;
+      };
+      const setRadioLabelText = (name, value, text) => {
+        const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
+        const span = input?.closest("label")?.querySelector("span");
+        if (span) span.textContent = text;
+      };
+      const setOptionText = (selectId, value, text) => {
+        const option = document.querySelector(`#${selectId} option[value="${value}"]`);
+        if (option) option.textContent = text;
+      };
+      const setDepositRowPrefix = (selector, labelText) => {
+        const row = document.querySelector(selector);
+        if (!row) return;
+        const firstNode = Array.from(row.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+        if (firstNode) {
+          firstNode.nodeValue = `${labelText} `;
+        }
+      };
+      const applyLanguage = async (lang, persist = true) => {
+        currentLanguage = SUPPORTED_LANGUAGES.includes(lang) ? lang : "en";
+        document.documentElement.setAttribute("lang", currentLanguage);
+        if (persist) {
+          try {
+            window.localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+          } catch (_error) {}
+        }
+
+        document.title = t("booking_title");
+        const backInsideLink = document.getElementById("backInsideLink");
+        if (backInsideLink) backInsideLink.textContent = t("back_to_inside");
+        const bookingTitle = document.getElementById("bookingTitle");
+        if (bookingTitle) bookingTitle.textContent = t("booking_title");
+        const bookingSubtitle = document.getElementById("bookingSubtitle");
+        if (bookingSubtitle) bookingSubtitle.textContent = t("booking_subtitle");
+        const panelRequestTitle = document.getElementById("panelRequestTitle");
+        if (panelRequestTitle) panelRequestTitle.textContent = t("request_title");
+        const panelAvailabilityTitle = document.getElementById("panelAvailabilityTitle");
+        if (panelAvailabilityTitle) panelAvailabilityTitle.textContent = t("availability_title");
+        const panelPaymentTitle = document.getElementById("panelPaymentTitle");
+        if (panelPaymentTitle) panelPaymentTitle.textContent = t("payment_title");
+        if (wizardTitle) wizardTitle.textContent = t("wizard_step_label");
+
+        setLabelText("name", t("label_name"));
+        setLabelText("phone", t("label_phone"));
+        setLabelText("email", t("label_email"));
+        setLabelText("notes", t("label_notes"));
+        setLabelText("preferred_date", t("label_date"));
+        setLabelText("city", t("label_city"));
+        setLabelText("currency", t("label_currency"));
+        setLabelText("duration", t("label_duration"));
+        setLabelText("experience", t("label_service"));
+        setLabelText("outcall_address", t("outcall_address"));
+        setLabelText("preferred_time", t("selected_time"));
+        setLabelText("payment_method", t("label_payment_method"));
+
+        if (phoneInput) phoneInput.placeholder = t("phone_placeholder");
+        const followupPhoneTitle = document.getElementById("followupPhoneTitle");
+        if (followupPhoneTitle) followupPhoneTitle.textContent = t("followup_phone_title");
+        const followupEmailTitle = document.getElementById("followupEmailTitle");
+        if (followupEmailTitle) followupEmailTitle.textContent = t("followup_email_title");
+        const followupPhoneCitiesLabel = document.getElementById("followupPhoneCitiesLabel");
+        if (followupPhoneCitiesLabel) followupPhoneCitiesLabel.textContent = t("other_cities");
+        const followupEmailCitiesLabel = document.getElementById("followupEmailCitiesLabel");
+        if (followupEmailCitiesLabel) followupEmailCitiesLabel.textContent = t("other_cities");
+        const followupPhoneCities = document.getElementById("followup_phone_other_cities");
+        if (followupPhoneCities) followupPhoneCities.placeholder = t("followup_phone_placeholder");
+        const followupEmailCities = document.getElementById("followup_email_other_cities");
+        if (followupEmailCities) followupEmailCities.placeholder = t("followup_email_placeholder");
+        if (notesInput) notesInput.placeholder = t("notes_placeholder");
+        const notesHint = document.querySelector("#notesField .hint");
+        if (notesHint) notesHint.textContent = t("notes_hint");
+
+        setRadioLabelText("contact_followup_phone", "yes", t("yes"));
+        setRadioLabelText("contact_followup_phone", "no", t("no"));
+        setRadioLabelText("contact_followup_email", "yes", t("yes"));
+        setRadioLabelText("contact_followup_email", "no", t("no"));
+        setRadioLabelText("booking_type", "incall", t("incall"));
+        setRadioLabelText("booking_type", "outcall", t("outcall"));
+
+        const bookingLocationLabel = document.querySelector("#bookingTypeField > label:not(.radio-card)");
+        if (bookingLocationLabel) bookingLocationLabel.textContent = t("label_location");
+        const outcallHint = document.querySelector("#bookingTypeField .hint");
+        if (outcallHint) outcallHint.textContent = t("outcall_hint");
+
+        const touringDayNote = document.getElementById("touringDayNote");
+        if (touringDayNote && touringDayNote.childNodes.length) {
+          touringDayNote.childNodes[0].nodeValue = `${t("touring_day_prefix")} `;
+        }
+        if (touringDayCityEl && !preferredDate?.value) {
+          touringDayCityEl.textContent = t("select_date");
+        }
+        if (cityMismatchWarning && cityMismatchWarning.classList.contains("hidden")) {
+          cityMismatchWarning.textContent = t("city_no_tour");
+        }
+
+        const timezoneHintLine = document.getElementById("timezoneHintLine");
+        if (timezoneHintLine && timezoneHintLine.childNodes.length) {
+          timezoneHintLine.childNodes[0].nodeValue = `${t("timezone_hint_prefix")} `;
+        }
+        if (availabilityNote) availabilityNote.textContent = t("availability_note_default");
+        if (durationHint) durationHint.textContent = t("duration_hint");
+        if (whatsappDiscuss) {
+          whatsappDiscuss.textContent = t("discuss_whatsapp");
+          whatsappDiscuss.setAttribute("aria-label", t("discuss_whatsapp"));
+        }
+
+        setOptionText("city", "", t("choose_option"));
+        setOptionText("currency", "", t("choose_option"));
+        setOptionText("experience", "", t("choose_option"));
+        setOptionText("payment_method", "", t("choose_option"));
+        setOptionText("payment_method", "interac", t("etransfer_canada"));
+
+        setDepositRowPrefix("#depositBox .deposit-total:nth-of-type(1)", t("base_rate"));
+        setDepositRowPrefix("#pseAddonRow", t("pse_addon"));
+        setDepositRowPrefix("#depositBox .deposit-total:nth-of-type(3)", t("total_rate"));
+        setDepositRowPrefix("#depositBox .deposit-total:nth-of-type(4)", t("deposit_rate"));
+        const depositConsentText = document.getElementById("depositConsentText");
+        if (depositConsentText) depositConsentText.textContent = t("deposit_consent");
+        if (paymentCryptoHint) paymentCryptoHint.textContent = t("crypto_hint");
+        if (submitBtn) submitBtn.textContent = t("request_booking");
+        if (wizardBack) wizardBack.textContent = t("back");
+        if (wizardNext) wizardNext.textContent = t("next");
+        if (successTitle) successTitle.textContent = t("success_title");
+        if (successLink) successLink.textContent = t("pay_now");
+        if (successClose) successClose.textContent = t("got_it");
+        if (alertPopupTitle) alertPopupTitle.textContent = t("alert_title");
+        if (alertPopupClose) alertPopupClose.textContent = t("alert_ok");
+        if (depositRateNote) depositRateNote.textContent = t("deposit_note");
+
+        languageButtons.forEach((button) => {
+          button.setAttribute("aria-pressed", button.dataset.languageChoice === currentLanguage ? "true" : "false");
+        });
+
+        await updateDurationOptions();
+        await updatePaymentSummary();
+        renderWizardStep(wizardStepIndex);
+        renderDayCalendar();
+      };
+
+      languageButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          applyLanguage(button.dataset.languageChoice, true);
+        });
       });
 
       currencySelect.value = detectDefaultCurrency();
@@ -2339,6 +2991,8 @@
       loadTourSchedule();
       loadAvailability();
       checkBlacklistOnLoad();
+      const initialLanguage = getStoredLanguage() || detectBrowserLanguage();
+      applyLanguage(initialLanguage, true);
     </script>
   </body>
 </html>

@@ -1351,6 +1351,10 @@
           availability_read_touring: "Read touring dates carefully, or arrange Fly me to you.",
           availability_past_date: "This date is in the past. Pick a future date.",
           availability_none_left: "No start times left for this date and duration.",
+          step_booking: "Booking",
+          step_location_duration_service: "Location, duration and service",
+          step_name_phone_email: "Name, phone and email",
+          step_confirmation_payment: "Confirmation, bill and payment",
           step_city_date: "City and date",
           step_where_booking: "Where are you booking?",
           step_currency: "Which currency?",
@@ -1462,6 +1466,10 @@
           availability_read_touring: "Lisez les dates de tournee, ou choisissez Fly me to you.",
           availability_past_date: "Cette date est passee. Choisissez une date future.",
           availability_none_left: "Aucune heure de depart restante pour cette date et duree.",
+          step_booking: "Reservation",
+          step_location_duration_service: "Lieu, duree et service",
+          step_name_phone_email: "Nom, telephone et email",
+          step_confirmation_payment: "Confirmation, facture et paiement",
           step_city_date: "Ville et date",
           step_where_booking: "Ou reservez-vous?",
           step_currency: "Quelle devise?",
@@ -2483,15 +2491,16 @@
 
       const wizardSteps = [
         {
-          key: "city-date",
-          titleKey: "step_city_date",
-          panel: panelRequest,
-          requestFields: [cityField, dateField],
+          key: "booking",
+          titleKey: "step_booking",
+          panels: [panelRequest],
+          requestFields: [cityField, dateField, currencyField],
           validate: () => {
             if (!(citySelect?.reportValidity() ?? true)) return false;
             setBookingDateFloor();
             validateDateNotPast();
             if (!(preferredDate?.reportValidity() ?? true)) return false;
+            if (!(currencySelect?.reportValidity() ?? true)) return false;
             if (!validateCityForDate({ showMessage: true })) {
               citySelect?.reportValidity();
               return false;
@@ -2500,17 +2509,10 @@
           },
         },
         {
-          key: "currency",
-          titleKey: "step_currency",
-          panel: panelRequest,
-          requestFields: [currencyField],
-          validate: () => currencySelect?.reportValidity() ?? true,
-        },
-        {
-          key: "type",
-          titleKey: "step_type",
-          panel: panelRequest,
-          requestFields: [bookingTypeField, outcallField],
+          key: "location-duration-service",
+          titleKey: "step_location_duration_service",
+          panels: [panelRequest, panelAvailability],
+          requestFields: [bookingTypeField, outcallField, durationField, experienceField],
           validate: () => {
             toggleOutcall();
             const selected = document.querySelector('input[name="booking_type"]:checked');
@@ -2518,35 +2520,12 @@
             if (outcallInput?.required && !(outcallInput?.reportValidity() ?? true)) {
               return false;
             }
-            return true;
-          },
-        },
-        {
-          key: "duration-service",
-          titleKey: "step_duration_service",
-          panel: panelRequest,
-          requestFields: [durationField, experienceField],
-          validate: () => {
             const okDuration = durationSelect?.reportValidity() ?? true;
             if (!okDuration) return false;
             const okService = experienceSelect?.reportValidity() ?? true;
-            return okService;
-          },
-        },
-        {
-          key: "availability",
-          titleKey: "step_pick_time",
-          panel: panelAvailability,
-          validate: () => {
-            if (!(durationSelect?.reportValidity() ?? true)) {
-              return false;
-            }
+            if (!okService) return false;
             if (!validateDateNotPast()) {
               preferredDate?.reportValidity();
-              return false;
-            }
-            if (!validateCityForDate({ showMessage: true })) {
-              citySelect?.reportValidity();
               return false;
             }
             if (!(preferredTime?.reportValidity() ?? true)) {
@@ -2560,18 +2539,13 @@
           },
         },
         {
-          key: "name",
-          titleKey: "step_name",
-          panel: panelRequest,
-          requestFields: [nameField],
-          validate: () => nameInput?.reportValidity() ?? true,
-        },
-        {
-          key: "contact",
-          titleKey: "step_contact",
-          panel: panelRequest,
-          requestFields: [phoneField, emailField],
+          key: "identity",
+          titleKey: "step_name_phone_email",
+          panels: [panelRequest],
+          requestFields: [nameField, phoneField, emailField],
           validate: () => {
+            const okName = nameInput?.reportValidity() ?? true;
+            if (!okName) return false;
             const okPhone = phoneInput?.reportValidity() ?? true;
             if (!okPhone) return false;
             const okEmail = emailInput?.reportValidity() ?? true;
@@ -2579,31 +2553,15 @@
           },
         },
         {
-          key: "notes",
-          titleKey: "step_notes",
-          panel: panelRequest,
-          requestFields: [notesField],
-          validate: () => true,
-        },
-        {
-          key: "payment-method",
-          titleKey: "step_payment_method",
-          panel: panelPayment,
-          paymentMode: "method",
-          validate: () => paymentMethod?.reportValidity() ?? true,
-        },
-        {
-          key: "deposit-confirm",
-          titleKey: "step_deposit_confirm",
-          panel: panelPayment,
-          paymentMode: "confirm",
-          validate: () => depositConfirm?.reportValidity() ?? true,
-        },
-        {
-          key: "submit",
-          titleKey: "step_submit",
-          panel: panelSubmit,
-          validate: () => true,
+          key: "confirmation",
+          titleKey: "step_confirmation_payment",
+          panels: [panelPayment, panelSubmit],
+          paymentMode: "all",
+          validate: () => {
+            const okMethod = paymentMethod?.reportValidity() ?? true;
+            if (!okMethod) return false;
+            return depositConfirm?.reportValidity() ?? true;
+          },
         },
       ];
 
@@ -2635,21 +2593,20 @@
         wizardStepIndex = safeIndex;
         const step = wizardSteps[wizardStepIndex];
         const total = wizardSteps.length;
+        const visiblePanels = Array.isArray(step.panels) && step.panels.length ? step.panels : [step.panel].filter(Boolean);
 
         allPanels.forEach((panel) => panel.classList.add("wizard-hidden"));
-        if (step.panel) {
-          step.panel.classList.remove("wizard-hidden");
-        }
+        visiblePanels.forEach((panel) => panel?.classList.remove("wizard-hidden"));
 
         requestFields.forEach((field) => field.classList.add("wizard-hidden"));
         if (step.requestFields?.length) {
           step.requestFields.forEach((field) => field?.classList.remove("wizard-hidden"));
         }
-        if (step.key === "type") {
+        if (step.requestFields?.includes(bookingTypeField)) {
           toggleOutcall();
         }
 
-        if (step.panel === panelPayment) {
+        if (visiblePanels.includes(panelPayment)) {
           setPaymentStepMode(step.paymentMode || "all");
         } else {
           setPaymentStepMode("all");
@@ -2677,7 +2634,7 @@
           wizardTop.classList.remove("wizard-hidden");
         }
 
-        if (step.key === "availability") {
+        if (visiblePanels.includes(panelAvailability)) {
           renderDayCalendar();
         }
       };

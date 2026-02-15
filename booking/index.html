@@ -2233,35 +2233,6 @@
         if (!citySelect || !preferredDate) return true;
         updateSelectedTourContext();
         citySelect.setCustomValidity("");
-        if (!citySelect.value || !preferredDate.value) {
-          if (cityMismatchWarning && showMessage) {
-            cityMismatchWarning.classList.add("hidden");
-          }
-          return true;
-        }
-        if (isFlyMeCity(citySelect.value)) {
-          if (cityMismatchWarning && showMessage) {
-            cityMismatchWarning.classList.add("hidden");
-          }
-          return true;
-        }
-        const touringCity = getCityForDate(preferredDate.value);
-        const fallbackCity = getFallbackTourCity();
-        const expectedCity = touringCity || fallbackCity;
-        let message = "";
-        if (!expectedCity) {
-          message = t("city_no_tour");
-        } else if (normalizeCityName(citySelect.value) !== normalizeCityName(expectedCity)) {
-          message = t("city_date_mismatch", { city: expectedCity, date: preferredDate.value });
-        }
-        if (message) {
-          citySelect.setCustomValidity(message);
-          if (cityMismatchWarning && showMessage) {
-            cityMismatchWarning.textContent = message;
-            cityMismatchWarning.classList.remove("hidden");
-          }
-          return false;
-        }
         if (cityMismatchWarning && showMessage) {
           cityMismatchWarning.classList.add("hidden");
         }

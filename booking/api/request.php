@@ -279,14 +279,6 @@ if (!isset($errors['preferred_date']) && !isset($errors['preferred_time'])) {
 }
 
 $requestedCity = trim((string) ($payload['city'] ?? ''));
-if ($requestedCity !== '' && $preferredDate !== '' && !isset($errors['preferred_date']) && !is_fly_me_city($requestedCity)) {
-    $touringCity = get_touring_city_for_date($preferredDate);
-    if ($touringCity === '') {
-        $errors['city'] = 'Not touring on that date. Choose Fly me to you.';
-    } elseif (normalize_city_name($touringCity) !== normalize_city_name($requestedCity)) {
-        $errors['city'] = 'City does not match touring city for selected date. Choose ' . $touringCity . ' or Fly me to you.';
-    }
-}
 
 if (!empty($errors)) {
     json_response(['error' => 'Validation failed', 'fields' => $errors], 422);

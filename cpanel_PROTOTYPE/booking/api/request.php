@@ -28,6 +28,27 @@ function normalize_city_name(string $city): string
     return is_string($city) ? $city : '';
 }
 
+function parse_city_list(string $raw): array
+{
+    $parts = preg_split('/[,;\n\r]+/', $raw);
+    if (!is_array($parts)) {
+        return [];
+    }
+    $clean = [];
+    foreach ($parts as $part) {
+        $value = trim((string) $part);
+        if ($value === '') {
+            continue;
+        }
+        $key = normalize_city_name($value);
+        if ($key === '' || isset($clean[$key])) {
+            continue;
+        }
+        $clean[$key] = $value;
+    }
+    return array_values($clean);
+}
+
 function is_fly_me_city(string $city): bool
 {
     return normalize_city_name($city) === 'fly me to you';
@@ -258,14 +279,6 @@ if (!isset($errors['preferred_date']) && !isset($errors['preferred_time'])) {
 }
 
 $requestedCity = trim((string) ($payload['city'] ?? ''));
-if ($requestedCity !== '' && $preferredDate !== '' && !isset($errors['preferred_date']) && !is_fly_me_city($requestedCity)) {
-    $touringCity = get_touring_city_for_date($preferredDate);
-    if ($touringCity === '') {
-        $errors['city'] = 'Not touring on that date. Choose Fly me to you.';
-    } elseif (normalize_city_name($touringCity) !== normalize_city_name($requestedCity)) {
-        $errors['city'] = 'City does not match touring city for selected date. Choose ' . $touringCity . ' or Fly me to you.';
-    }
-}
 
 if (!empty($errors)) {
     json_response(['error' => 'Validation failed', 'fields' => $errors], 422);
@@ -428,6 +441,39 @@ if (!is_array($requests)) {
     $requests = [];
 }
 
+$followupPhoneRaw = strtolower(trim((string) ($payload['contact_followup_phone'] ?? 'no')));
+$followupEmailRaw = strtolower(trim((string) ($payload['contact_followup_email'] ?? 'no')));
+$followupPhone = in_array($followupPhoneRaw, ['yes', 'true', '1', 'on'], true);
+$followupEmail = in_array($followupEmailRaw, ['yes', 'true', '1', 'on'], true);
+$contactFollowup = ($followupPhone || $followupEmail) ? 'yes' : 'no';
+$followupChannels = [];
+if ($followupPhone) {
+    $followupChannels[] = 'phone';
+}
+if ($followupEmail) {
+    $followupChannels[] = 'email';
+}
+$contactChannel = implode(',', $followupChannels);
+$followupCities = [];
+$requestCity = trim((string) ($payload['city'] ?? ''));
+if ($contactFollowup === 'yes' && $requestCity !== '') {
+    $followupCities[] = $requestCity;
+}
+$followupCities = array_merge(
+    $followupCities,
+    parse_city_list((string) ($payload['followup_phone_other_cities'] ?? '')),
+    parse_city_list((string) ($payload['followup_email_other_cities'] ?? ''))
+);
+$followupCitiesUnique = [];
+foreach ($followupCities as $city) {
+    $key = normalize_city_name((string) $city);
+    if ($key === '' || isset($followupCitiesUnique[$key])) {
+        continue;
+    }
+    $followupCitiesUnique[$key] = trim((string) $city);
+}
+$followupCities = array_values($followupCitiesUnique);
+
 $paymentLink = build_payment_details($paymentMethod, $deposit);
 $paymentEmailSentAt = '';
 $requestEmail = trim((string) ($payload['email'] ?? ''));
@@ -459,9 +505,15 @@ if ($requestEmail !== '') {
     if ($deposit > 0) {
         $body .= "You will receive a confirmation email once your payment is accepted.\n";
     }
-    $contactPhone = CONTACT_SMS_WHATSAPP !== '' ? CONTACT_SMS_WHATSAPP : '(your phone number)';
+    $contactPhone = '(your phone number)';
+    if (defined('CONTACT_SMS_WHATSAPP')) {
+        $configuredPhone = trim((string) CONTACT_SMS_WHATSAPP);
+        if ($configuredPhone !== '') {
+            $contactPhone = $configuredPhone;
+        }
+    }
     $body .= "If you have any questions, contact me at " . $contactPhone . " through SMS or WHATSAPP.\n";
-    if (send_payment_email($requestEmail, $body)) {
+    if (function_exists('send_payment_email') && send_payment_email($requestEmail, $body)) {
         $paymentEmailSentAt = gmdate('c');
     }
 }
@@ -488,8 +540,13 @@ $request = [
     'tour_timezone' => $tourTimezone,
     'buffer_minutes' => (string) ($payload['buffer_minutes'] ?? ''),
     'notes' => trim((string) ($payload['notes'] ?? '')),
-    'contact_followup' => (string) ($payload['contact_followup'] ?? ''),
-    'contact_channel' => (string) ($payload['contact_channel'] ?? ''),
+    'contact_followup' => $contactFollowup,
+    'contact_channel' => $contactChannel,
+    'contact_followup_phone' => $followupPhone ? 'yes' : 'no',
+    'contact_followup_email' => $followupEmail ? 'yes' : 'no',
+    'followup_phone_other_cities' => trim((string) ($payload['followup_phone_other_cities'] ?? '')),
+    'followup_email_other_cities' => trim((string) ($payload['followup_email_other_cities'] ?? '')),
+    'followup_cities' => $followupCities,
     'deposit_confirmed' => $depositConfirmed,
     'payment_method' => $paymentMethod,
     'deposit_currency' => $depositCurrency,
@@ -524,8 +581,12 @@ $adminBody .= "Payment method: " . format_payment_method($paymentMethod) . "\n";
 $adminBody .= "Deposit confirmed: " . ($depositConfirmed ? 'yes' : 'no') . "\n";
 $adminBody .= "Deposit: " . $deposit . " " . ($depositCurrency !== '' ? $depositCurrency : PAYPAL_CURRENCY) . "\n";
 $adminBody .= "Request id: " . ($request['id'] ?? '') . "\n";
-send_admin_email($adminBody, 'New booking request');
-send_booking_push($request);
+if (function_exists('send_admin_email')) {
+    send_admin_email($adminBody, 'New booking request');
+}
+if (function_exists('send_booking_push')) {
+    send_booking_push($request);
+}
 
 $paymentLinkIsUrl = preg_match('/^https?:\\/\\//i', $paymentLink) === 1;
 $response = [

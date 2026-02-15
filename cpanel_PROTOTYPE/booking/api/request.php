@@ -33,15 +33,30 @@ function is_fly_me_city(string $city): bool
     return normalize_city_name($city) === 'fly me to you';
 }
 
+function get_fallback_tour_city(): string
+{
+    $availability = read_json_file(DATA_DIR . '/availability.json', [
+        'tour_city' => DEFAULT_TOUR_CITY,
+    ]);
+    $fallbackCity = trim((string) ($availability['tour_city'] ?? ''));
+    if ($fallbackCity === '') {
+        return '';
+    }
+    if (normalize_city_name($fallbackCity) === normalize_city_name(DEFAULT_TOUR_CITY)) {
+        return '';
+    }
+    return $fallbackCity;
+}
+
 function get_touring_city_for_date(string $dateKey): string
 {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateKey)) {
-        return '';
+        return get_fallback_tour_city();
     }
     $siteContent = read_site_content();
     $touring = $siteContent['touring'] ?? [];
     if (!is_array($touring)) {
-        return '';
+        return get_fallback_tour_city();
     }
     foreach ($touring as $entry) {
         if (!is_array($entry)) {
@@ -60,7 +75,7 @@ function get_touring_city_for_date(string $dateKey): string
             return $city;
         }
     }
-    return '';
+    return get_fallback_tour_city();
 }
 
 function get_city_schedule_for_request(array $availability, string $city, string $dateKey): array

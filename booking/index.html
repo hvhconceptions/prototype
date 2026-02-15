@@ -362,6 +362,11 @@
         margin: 0;
       }
 
+      .radio-card span {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
       .checkbox-list {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -516,6 +521,7 @@
       .deposit-total {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 10px;
         margin-bottom: 6px;
         font-size: 0.95rem;
@@ -859,9 +865,35 @@
           grid-template-columns: 1fr;
         }
 
+        .radio-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .radio-card {
+          width: 100%;
+        }
+
         .deposit-currency {
           min-width: 0;
           width: 100%;
+        }
+
+        #panelPayment .deposit-total {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+
+        #panelPayment .consent {
+          display: grid;
+          grid-template-columns: 20px 1fr;
+          gap: 10px;
+          align-items: start;
+        }
+
+        #panelPayment .consent input {
+          margin-top: 3px;
         }
 
         .day-calendar {
@@ -1153,7 +1185,7 @@
         </div>
       </form>
     </main>
-    <footer class="version-stamp">Version: 2026-01-23</footer>
+    <footer class="version-stamp">Version: 2026-02-15</footer>
 
     <div id="successPopup" class="popup-overlay" aria-hidden="true">
       <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="successTitle">
@@ -2040,6 +2072,70 @@
 
       const isFlyMeCity = (value) => normalizeCityName(value) === "fly me to you";
 
+      const getFallbackTourCity = () => {
+        const fallbackCity = String(tourCity || "").trim();
+        if (!fallbackCity) return "";
+        if (normalizeCityName(fallbackCity) === normalizeCityName("Touring city not set")) {
+          return "";
+        }
+        return fallbackCity;
+      };
+
+      const defaultCityOptions = citySelect
+        ? Array.from(citySelect.options)
+            .map((option) => String(option.value || "").trim())
+            .filter((value) => value && !isFlyMeCity(value))
+        : [];
+
+      const syncCityOptions = () => {
+        if (!citySelect) return;
+        const previousCity = citySelect.value;
+        const placeholderText =
+          citySelect.querySelector('option[value=""]')?.textContent || t("choose_option");
+        const flyMeLabel = "Fly me to you";
+        const cityPool = [
+          ...defaultCityOptions,
+          ...tourSchedule.map((entry) => String(entry?.city || "").trim()),
+          ...citySchedules.map((entry) => String(entry?.city || "").trim()),
+          getFallbackTourCity(),
+        ];
+        const seen = new Set();
+        const uniqueCities = [];
+        cityPool.forEach((city) => {
+          const cityLabel = String(city || "").trim();
+          const cityKey = normalizeCityName(cityLabel);
+          if (!cityKey || seen.has(cityKey) || isFlyMeCity(cityLabel)) return;
+          seen.add(cityKey);
+          uniqueCities.push(cityLabel);
+        });
+        citySelect.innerHTML = "";
+        const placeholderOption = document.createElement("option");
+        placeholderOption.value = "";
+        placeholderOption.disabled = true;
+        placeholderOption.textContent = placeholderText;
+        citySelect.appendChild(placeholderOption);
+        uniqueCities.forEach((city) => {
+          const option = document.createElement("option");
+          option.value = city;
+          option.textContent = city;
+          citySelect.appendChild(option);
+        });
+        const flyMeOption = document.createElement("option");
+        flyMeOption.value = flyMeLabel;
+        flyMeOption.textContent = flyMeLabel;
+        citySelect.appendChild(flyMeOption);
+
+        const previousKey = normalizeCityName(previousCity);
+        if (!previousKey) {
+          citySelect.value = "";
+          return;
+        }
+        const matchedOption = Array.from(citySelect.options).find(
+          (option) => normalizeCityName(option.value) === previousKey
+        );
+        citySelect.value = matchedOption ? matchedOption.value : "";
+      };
+
       const getCityScheduleForDate = (dateKey, selectedCity = "") => {
         if (!dateKey) return null;
         let targetCity = selectedCity;
@@ -2068,7 +2164,7 @@
         if (tourTzEl) {
           tourTzEl.textContent = selectedTourTimezone;
         }
-        const displayCity = schedule?.city || getCityForDate(dateKey) || tourCity;
+        const displayCity = schedule?.city || getCityForDate(dateKey) || getFallbackTourCity();
         if (tourCityEl) {
           tourCityEl.textContent = displayCity;
         }
@@ -2150,11 +2246,13 @@
           return true;
         }
         const touringCity = getCityForDate(preferredDate.value);
+        const fallbackCity = getFallbackTourCity();
+        const expectedCity = touringCity || fallbackCity;
         let message = "";
-        if (!touringCity) {
+        if (!expectedCity) {
           message = t("city_no_tour");
-        } else if (normalizeCityName(citySelect.value) !== normalizeCityName(touringCity)) {
-          message = t("city_date_mismatch", { city: touringCity, date: preferredDate.value });
+        } else if (normalizeCityName(citySelect.value) !== normalizeCityName(expectedCity)) {
+          message = t("city_date_mismatch", { city: expectedCity, date: preferredDate.value });
         }
         if (message) {
           citySelect.setCustomValidity(message);
@@ -2283,7 +2381,7 @@
         }
 
         const cityContext = updateSelectedTourContext();
-        const dayCity = cityContext?.city || getCityForDate(dateKey) || tourCity;
+        const dayCity = cityContext?.city || getCityForDate(dateKey) || getFallbackTourCity();
         if (touringDayCityEl) touringDayCityEl.textContent = dayCity || t("city_tba");
         dayCalendar.dataset.city = dayCity || t("city_tba");
         availabilityNote.textContent = t("availability_selected_date");
@@ -2380,9 +2478,10 @@
           const schedule = normalizeTourSchedule(data.touring || []);
           if (schedule.length) {
             tourSchedule = schedule;
-            validateCityForDate({ showMessage: true });
-            renderDayCalendar();
           }
+          syncCityOptions();
+          validateCityForDate({ showMessage: true });
+          renderDayCalendar();
         } catch (_error) {
         }
       };
@@ -2675,6 +2774,7 @@
           blockedSlots = Array.isArray(data.blocked) ? data.blocked : [];
           recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
           citySchedules = normalizeCityScheduleList(data.city_schedules || []);
+          syncCityOptions();
           updateSelectedTourContext();
           setBookingDateFloor();
           validateDateNotPast();
@@ -2772,7 +2872,7 @@
         payload.deposit_percent = String(DEPOSIT_PERCENT);
         payload.deposit_confirm = formData.get("deposit_confirm") ? "1" : "";
         payload.tour_timezone = selectedTourTimezone || tourTz;
-        payload.tour_city = activeSchedule?.city || getCityForDate(preferredDate.value) || tourCity;
+        payload.tour_city = activeSchedule?.city || getCityForDate(preferredDate.value) || getFallbackTourCity();
         payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
         payload.preferred_time = preferredTime.value || "";
 
@@ -2939,6 +3039,7 @@
         }
 
         setOptionText("city", "", t("choose_option"));
+        syncCityOptions();
         setOptionText("currency", "", t("choose_option"));
         setOptionText("experience", "", t("choose_option"));
         setOptionText("payment_method", "", t("choose_option"));
@@ -2978,6 +3079,7 @@
       });
 
       currencySelect.value = detectDefaultCurrency();
+      syncCityOptions();
       setBookingDateFloor();
       updateDurationOptions();
       toggleOutcall();

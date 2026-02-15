@@ -46,8 +46,8 @@ function normalize_admin_rate_record(array $record, int $now): array
     $first = (int) ($record['first'] ?? $now);
     $blockedUntil = (int) ($record['blocked_until'] ?? 0);
     $strikes = (int) ($record['strikes'] ?? 0);
-    if ($blockedUntil === -1) {
-        return ['count' => $count, 'first' => $first, 'blocked_until' => -1, 'strikes' => $strikes];
+    if ($blockedUntil < 0) {
+        $blockedUntil = 0;
     }
     if ($blockedUntil > $now) {
         return ['count' => $count, 'first' => $first, 'blocked_until' => $blockedUntil, 'strikes' => $strikes];
@@ -62,23 +62,19 @@ function record_admin_failure(array $state, string $ip, array $record, int $now)
 {
     $count = (int) ($record['count'] ?? 0) + 1;
     $first = (int) ($record['first'] ?? $now);
-    $blockedUntil = (int) ($record['blocked_until'] ?? 0);
+    $blockedUntil = max(0, (int) ($record['blocked_until'] ?? 0));
     $strikes = (int) ($record['strikes'] ?? 0);
-    if ($blockedUntil === -1) {
-        return;
-    }
     if (($now - $first) > ADMIN_RATE_LIMIT_WINDOW) {
         $count = 1;
         $first = $now;
         $blockedUntil = 0;
     }
     if ($count >= ADMIN_RATE_LIMIT_MAX) {
-        if ($strikes >= 1) {
-            $blockedUntil = -1;
-        } else {
-            $blockedUntil = $now + ADMIN_RATE_LIMIT_BLOCK;
-            $strikes = 1;
-        }
+        $strikes += 1;
+        $multiplier = max(1, min($strikes, 8));
+        $blockedUntil = $now + (ADMIN_RATE_LIMIT_BLOCK * $multiplier);
+        $count = 0;
+        $first = $now;
     }
     $state['ips'][$ip] = [
         'count' => $count,
@@ -145,7 +141,7 @@ function require_admin_ui(): void
     $state = load_admin_rate_state();
     $record = normalize_admin_rate_record($state['ips'][$ip] ?? [], $now);
     $blockedUntil = (int) ($record['blocked_until'] ?? 0);
-    if ($blockedUntil === -1 || $blockedUntil > $now) {
+    if ($blockedUntil > $now) {
         deny_rate_limit();
     }
     [$user, $pass] = get_basic_auth_credentials();

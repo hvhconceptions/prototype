@@ -46,8 +46,8 @@ function normalize_admin_rate_record(array $record, int $now): array
     $first = (int) ($record['first'] ?? $now);
     $blockedUntil = (int) ($record['blocked_until'] ?? 0);
     $strikes = (int) ($record['strikes'] ?? 0);
-    if ($blockedUntil === -1) {
-        return ['count' => $count, 'first' => $first, 'blocked_until' => -1, 'strikes' => $strikes];
+    if ($blockedUntil < 0) {
+        $blockedUntil = 0;
     }
     if ($blockedUntil > $now) {
         return ['count' => $count, 'first' => $first, 'blocked_until' => $blockedUntil, 'strikes' => $strikes];
@@ -62,23 +62,19 @@ function record_admin_failure(array $state, string $ip, array $record, int $now)
 {
     $count = (int) ($record['count'] ?? 0) + 1;
     $first = (int) ($record['first'] ?? $now);
-    $blockedUntil = (int) ($record['blocked_until'] ?? 0);
+    $blockedUntil = max(0, (int) ($record['blocked_until'] ?? 0));
     $strikes = (int) ($record['strikes'] ?? 0);
-    if ($blockedUntil === -1) {
-        return;
-    }
     if (($now - $first) > ADMIN_RATE_LIMIT_WINDOW) {
         $count = 1;
         $first = $now;
         $blockedUntil = 0;
     }
     if ($count >= ADMIN_RATE_LIMIT_MAX) {
-        if ($strikes >= 1) {
-            $blockedUntil = -1;
-        } else {
-            $blockedUntil = $now + ADMIN_RATE_LIMIT_BLOCK;
-            $strikes = 1;
-        }
+        $strikes += 1;
+        $multiplier = max(1, min($strikes, 8));
+        $blockedUntil = $now + (ADMIN_RATE_LIMIT_BLOCK * $multiplier);
+        $count = 0;
+        $first = $now;
     }
     $state['ips'][$ip] = [
         'count' => $count,
@@ -145,7 +141,7 @@ function require_admin_ui(): void
     $state = load_admin_rate_state();
     $record = normalize_admin_rate_record($state['ips'][$ip] ?? [], $now);
     $blockedUntil = (int) ($record['blocked_until'] ?? 0);
-    if ($blockedUntil === -1 || $blockedUntil > $now) {
+    if ($blockedUntil > $now) {
         deny_rate_limit();
     }
     [$user, $pass] = get_basic_auth_credentials();
@@ -2552,8 +2548,14 @@ require_admin_ui();
         availabilityStatus.textContent = "";
         try {
           const response = await fetch("../api/availability.php", { cache: "no-store" });
-          if (!response.ok) throw new Error("load");
-          const data = await response.json();
+          const payloadText = await response.text();
+          let data = {};
+          if (payloadText) {
+            data = JSON.parse(payloadText);
+          }
+          if (!response.ok) {
+            throw new Error(data.error || `HTTP ${response.status}`);
+          }
           tourCityInput.value = data.tour_city || "";
           tourTzSelect.value = data.tour_timezone || TIMEZONES[0];
           bufferInput.value = data.buffer_minutes || 30;
@@ -2581,8 +2583,9 @@ require_admin_ui();
             calendarMonth.value = todayKey.slice(0, 7);
           }
           renderCalendarView();
-        } catch (_error) {
-          availabilityStatus.textContent = t("unable_load_city_schedule");
+        } catch (error) {
+          const message = error && error.message ? ` (${error.message})` : "";
+          availabilityStatus.textContent = `${t("unable_load_city_schedule")}${message}`;
         }
       };
 
@@ -2614,14 +2617,19 @@ require_admin_ui();
             },
             body: JSON.stringify(payload),
           });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || "save");
+          const payloadText = await response.text();
+          let result = {};
+          if (payloadText) {
+            result = JSON.parse(payloadText);
+          }
+          if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
           availabilityStatus.textContent = t("city_schedule_saved");
           if (cityScheduleStatus) {
             cityScheduleStatus.textContent = t("city_schedules_saved");
           }
-        } catch (_error) {
-          availabilityStatus.textContent = t("failed_save_city_schedule");
+        } catch (error) {
+          const message = error && error.message ? ` (${error.message})` : "";
+          availabilityStatus.textContent = `${t("failed_save_city_schedule")}${message}`;
         }
       };
 
@@ -3147,13 +3155,18 @@ require_admin_ui();
             headers: { ...headersWithKey() },
             cache: "no-store",
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "load");
+          const payloadText = await response.text();
+          let data = {};
+          if (payloadText) {
+            data = JSON.parse(payloadText);
+          }
+          if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
           touringStops = normalizeTouringEntries(data.touring || []);
           renderTourSchedule(touringStops);
           syncCitySchedulesWithTouring();
-        } catch (_error) {
-          tourScheduleStatus.textContent = t("failed_load_tour_schedule");
+        } catch (error) {
+          const message = error && error.message ? ` (${error.message})` : "";
+          tourScheduleStatus.textContent = `${t("failed_load_tour_schedule")}${message}`;
         }
       };
 
@@ -3179,15 +3192,20 @@ require_admin_ui();
             },
             body: JSON.stringify({ touring: entries }),
           });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || "save");
+          const payloadText = await response.text();
+          let result = {};
+          if (payloadText) {
+            result = JSON.parse(payloadText);
+          }
+          if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
           touringStops = normalizeTouringEntries(result.touring || entries);
           renderTourSchedule(touringStops);
           syncCitySchedulesWithTouring();
           tourScheduleStatus.textContent = t("tour_schedule_saved");
           queueAutoSave(t("tour_dates_changed"));
-        } catch (_error) {
-          tourScheduleStatus.textContent = t("failed_save_tour_schedule");
+        } catch (error) {
+          const message = error && error.message ? ` (${error.message})` : "";
+          tourScheduleStatus.textContent = `${t("failed_save_tour_schedule")}${message}`;
         }
       };
 

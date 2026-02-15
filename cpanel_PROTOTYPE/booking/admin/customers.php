@@ -46,8 +46,8 @@ function normalize_admin_rate_record(array $record, int $now): array
     $first = (int) ($record['first'] ?? $now);
     $blockedUntil = (int) ($record['blocked_until'] ?? 0);
     $strikes = (int) ($record['strikes'] ?? 0);
-    if ($blockedUntil === -1) {
-        return ['count' => $count, 'first' => $first, 'blocked_until' => -1, 'strikes' => $strikes];
+    if ($blockedUntil < 0) {
+        $blockedUntil = 0;
     }
     if ($blockedUntil > $now) {
         return ['count' => $count, 'first' => $first, 'blocked_until' => $blockedUntil, 'strikes' => $strikes];
@@ -62,23 +62,19 @@ function record_admin_failure(array $state, string $ip, array $record, int $now)
 {
     $count = (int) ($record['count'] ?? 0) + 1;
     $first = (int) ($record['first'] ?? $now);
-    $blockedUntil = (int) ($record['blocked_until'] ?? 0);
+    $blockedUntil = max(0, (int) ($record['blocked_until'] ?? 0));
     $strikes = (int) ($record['strikes'] ?? 0);
-    if ($blockedUntil === -1) {
-        return;
-    }
     if (($now - $first) > ADMIN_RATE_LIMIT_WINDOW) {
         $count = 1;
         $first = $now;
         $blockedUntil = 0;
     }
     if ($count >= ADMIN_RATE_LIMIT_MAX) {
-        if ($strikes >= 1) {
-            $blockedUntil = -1;
-        } else {
-            $blockedUntil = $now + ADMIN_RATE_LIMIT_BLOCK;
-            $strikes = 1;
-        }
+        $strikes += 1;
+        $multiplier = max(1, min($strikes, 8));
+        $blockedUntil = $now + (ADMIN_RATE_LIMIT_BLOCK * $multiplier);
+        $count = 0;
+        $first = $now;
     }
     $state['ips'][$ip] = [
         'count' => $count,
@@ -145,7 +141,7 @@ function require_admin_ui(): void
     $state = load_admin_rate_state();
     $record = normalize_admin_rate_record($state['ips'][$ip] ?? [], $now);
     $blockedUntil = (int) ($record['blocked_until'] ?? 0);
-    if ($blockedUntil === -1 || $blockedUntil > $now) {
+    if ($blockedUntil > $now) {
         deny_rate_limit();
     }
     [$user, $pass] = get_basic_auth_credentials();
@@ -223,7 +219,7 @@ $count = count($customerList);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Customer Directory</title>
+    <title>BombaCLOUD! Client Directory</title>
     <style>
       :root {
         --bg: #fff5fb;
@@ -345,6 +341,10 @@ $count = count($customerList);
         font-size: 0.85rem;
       }
 
+      .hidden-count {
+        display: none;
+      }
+
       @media (max-width: 900px) {
         table,
         tbody,
@@ -365,8 +365,8 @@ $count = count($customerList);
   </head>
   <body>
     <header>
-      <h1>Customer Directory</h1>
-      <p class="subtitle"><span id="customerCount"><?php echo $count; ?></span> customers (latest request per contact).</p>
+      <h1>BombaCLOUD! Client Directory</h1>
+      <span id="customerCount" class="hidden-count"><?php echo $count; ?></span>
     </header>
     <main>
       <div class="card">
@@ -388,7 +388,7 @@ $count = count($customerList);
         </div>
         <table>
           <thead>
-            <tr data-customer-row="true">
+            <tr>
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
@@ -405,7 +405,7 @@ $count = count($customerList);
             </tr>
             <?php else : ?>
             <?php foreach ($customerList as $customer) : ?>
-            <tr>
+            <tr data-customer-row="true">
               <td><?php echo htmlspecialchars((string) ($customer['name'] ?? '')); ?></td>
               <td><?php echo htmlspecialchars((string) ($customer['email'] ?? '')); ?></td>
               <td><?php echo htmlspecialchars((string) ($customer['phone'] ?? '')); ?></td>
@@ -497,7 +497,7 @@ $count = count($customerList);
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || "delete");
-            const row = btn.closest("[data-customer-row]");
+            const row = btn.closest("tr");
             if (row) row.remove();
             if (customerCount) {
               const current = Number(customerCount.textContent || 0);

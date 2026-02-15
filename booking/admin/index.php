@@ -2735,12 +2735,40 @@ require_admin_ui();
         });
       };
 
+      const normalizeUiDate = (raw) => {
+        const value = String(raw || "").trim();
+        if (!value) return "";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+        let match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (match) {
+          const month = match[1].padStart(2, "0");
+          const day = match[2].padStart(2, "0");
+          const year = match[3];
+          return `${year}-${month}-${day}`;
+        }
+        match = value.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+        if (match) {
+          const month = match[1].padStart(2, "0");
+          const day = match[2].padStart(2, "0");
+          const year = match[3];
+          return `${year}-${month}-${day}`;
+        }
+        match = value.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+        if (match) {
+          const year = match[1];
+          const month = match[2].padStart(2, "0");
+          const day = match[3].padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        }
+        return value;
+      };
+
       const readTourScheduleFromUI = () => {
         if (!tourScheduleList) return [];
         return Array.from(tourScheduleList.querySelectorAll("[data-tour-row]"))
           .map((row) => {
-            const start = row.querySelector(".tour-start input")?.value || "";
-            const end = row.querySelector(".tour-end input")?.value || "";
+            const start = normalizeUiDate(row.querySelector(".tour-start input")?.value || "");
+            const end = normalizeUiDate(row.querySelector(".tour-end input")?.value || "");
             const city = row.querySelector(".tour-city input")?.value?.trim() || "";
             return { start, end, city };
           })

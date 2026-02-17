@@ -518,6 +518,19 @@ function send_plain_email(string $to, string $subjectLine, string $plainBody): b
     return mail($to, $subjectLine, $plainBody, implode("\r\n", $headers));
 }
 
+function append_customer_contact_footer(string $body): string
+{
+    $message = trim($body);
+    $phone = trim((string) CONTACT_SMS_WHATSAPP);
+    if ($phone === '') {
+        return $message;
+    }
+    if (stripos($message, $phone) !== false) {
+        return $message;
+    }
+    return rtrim($message) . "\n\nPhone: " . $phone . "\n";
+}
+
 function send_payment_email(string $to, string $body, ?string $subject = null): bool
 {
     if (!EMAIL_ENABLED) {
@@ -527,10 +540,11 @@ function send_payment_email(string $to, string $body, ?string $subject = null): 
         return false;
     }
     $subjectLine = $subject ?: EMAIL_SUBJECT;
-    if (send_multipart_email($to, $subjectLine, $body)) {
+    $customerBody = append_customer_contact_footer($body);
+    if (send_multipart_email($to, $subjectLine, $customerBody)) {
         return true;
     }
-    return send_plain_email($to, $subjectLine, $body);
+    return send_plain_email($to, $subjectLine, $customerBody);
 }
 
 function send_admin_email(string $body, ?string $subject = null): bool

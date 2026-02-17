@@ -30,8 +30,6 @@ jobs:
 
       - name: Deploy root files via FTP
         id: deploy_root_primary
-        if: always()
-        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -41,23 +39,8 @@ jobs:
           server-dir: /
           dangerous-clean-slate: false
 
-      - name: Deploy root files via FTP (fallback public_html)
-        id: deploy_root_fallback
-        if: always()
-        continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: deploy-root/
-          server-dir: /public_html/
-          dangerous-clean-slate: false
-
       - name: Deploy booking portal via FTP
         id: deploy_booking_primary
-        if: always()
-        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -67,35 +50,20 @@ jobs:
           server-dir: /booking/
           dangerous-clean-slate: false
 
-      - name: Deploy booking portal via FTP (fallback public_html)
-        id: deploy_booking_fallback
-        if: always()
-        continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: booking/
-          server-dir: /public_html/booking/
-          dangerous-clean-slate: false
-
       - name: Deploy summary
         if: always()
         run: |
           echo "Root primary conclusion: ${{ steps.deploy_root_primary.conclusion }}"
-          echo "Root fallback conclusion: ${{ steps.deploy_root_fallback.conclusion }}"
           echo "Booking primary conclusion: ${{ steps.deploy_booking_primary.conclusion }}"
-          echo "Booking fallback conclusion: ${{ steps.deploy_booking_fallback.conclusion }}"
 
-      - name: Fail if both root deploy attempts failed
-        if: ${{ always() && steps.deploy_root_primary.conclusion != 'success' && steps.deploy_root_fallback.conclusion != 'success' }}
+      - name: Fail if root deploy failed
+        if: ${{ always() && steps.deploy_root_primary.conclusion != 'success' }}
         run: |
-          echo "ERROR: both root deploy attempts failed."
+          echo "ERROR: root deploy failed."
           exit 1
 
-      - name: Fail if both booking deploy attempts failed
-        if: ${{ always() && steps.deploy_booking_primary.conclusion != 'success' && steps.deploy_booking_fallback.conclusion != 'success' }}
+      - name: Fail if booking deploy failed
+        if: ${{ always() && steps.deploy_booking_primary.conclusion != 'success' }}
         run: |
-          echo "ERROR: both booking deploy attempts failed."
+          echo "ERROR: booking deploy failed."
           exit 1

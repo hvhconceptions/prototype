@@ -1207,7 +1207,7 @@ require_admin_ui();
       <section data-admin-panel-group="schedule" id="calendarEditorSection">
         <h2>City calendar editor</h2>
         <p class="hint">After wizard Done, you can edit slots here and then switch to Clients.</p>
-        <div class="grid">
+        <div class="grid" id="calendarMetaControls" hidden>
           <div class="field">
             <label for="tourCity">Current tour city</label>
             <input id="tourCity" type="text" readonly />
@@ -2236,6 +2236,36 @@ require_admin_ui();
         });
       };
 
+      const getCalendarAnchorDate = () => {
+        if (calendarView === "day" && calendarDay?.value) {
+          return calendarDay.value;
+        }
+        if (calendarView === "month" && calendarMonth?.value) {
+          return `${calendarMonth.value}-01`;
+        }
+        if (calendarStart?.value) {
+          return calendarStart.value;
+        }
+        return getDateKey(new Date());
+      };
+
+      const getTourCityForDate = (dateKey) => {
+        if (!dateKey) return "";
+        const match = touringStops.find(
+          (entry) => entry && entry.start && entry.end && entry.city && entry.start <= dateKey && dateKey <= entry.end
+        );
+        return match ? String(match.city).trim() : "";
+      };
+
+      const syncTourCityFromCalendar = () => {
+        if (!tourCityInput) return "";
+        const dateKey = getCalendarAnchorDate();
+        const derivedCity = getTourCityForDate(dateKey);
+        const fallbackCity = citySchedules[0]?.city || "";
+        tourCityInput.value = derivedCity || fallbackCity;
+        return tourCityInput.value.trim();
+      };
+
       const formatDayLabel = (dateKey) => {
         const [year, month, day] = dateKey.split("-").map((value) => Number(value));
         const labelDate = new Date(Date.UTC(year, month - 1, day, 12, 0));
@@ -2324,6 +2354,7 @@ require_admin_ui();
         calendarFields.forEach((field) => {
           field.hidden = field.dataset.calendarField !== view;
         });
+        syncTourCityFromCalendar();
         renderCalendarView();
       };
 
@@ -2543,6 +2574,7 @@ require_admin_ui();
       };
 
       const renderCalendarView = () => {
+        syncTourCityFromCalendar();
         if (!calendarGrid) return;
         if (calendarView === "day") {
           renderDayCalendar();
@@ -2695,8 +2727,9 @@ require_admin_ui();
         applyCityTemplateBlocks({ announce: false });
         const cityPayload = readCitySchedulePayload();
         const firstCity = cityPayload[0] || null;
+        const activeTourCity = syncTourCityFromCalendar();
         const payload = {
-          tour_city: firstCity?.city || tourCityInput.value.trim(),
+          tour_city: activeTourCity || firstCity?.city || "",
           tour_timezone: DEFAULT_TIMEZONE,
           buffer_minutes: Number((firstCity?.buffer_minutes ?? bufferInput.value) || 0),
           availability_mode: "open",
@@ -3265,9 +3298,6 @@ require_admin_ui();
         });
         if (citySchedules.length) {
           const first = citySchedules[0];
-          if (tourCityInput) {
-            tourCityInput.value = first.city;
-          }
           if (tourTzSelect) {
             applyTimezoneValue(first.timezone);
           }
@@ -3275,6 +3305,7 @@ require_admin_ui();
             bufferInput.value = Number(first.buffer_minutes || 0);
           }
         }
+        syncTourCityFromCalendar();
         renderCityScheduleWizard();
         applyCityTemplateBlocks({ announce: false });
       };

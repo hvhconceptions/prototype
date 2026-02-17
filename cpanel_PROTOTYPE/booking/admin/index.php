@@ -676,11 +676,25 @@ require_admin_ui();
         overflow: hidden;
         text-align: left;
         padding-right: 44px;
+        padding-top: 14px;
       }
 
       .calendar-slot:hover {
         background: rgba(255, 0, 110, 0.08);
         transform: translateY(-1px);
+      }
+
+      .calendar-slot::before {
+        content: attr(data-date-short);
+        position: absolute;
+        right: 6px;
+        top: 2px;
+        font-size: 0.54rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: rgba(86, 18, 45, 0.26);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.68);
+        pointer-events: none;
       }
 
       .calendar-slot::after {
@@ -707,6 +721,11 @@ require_admin_ui();
         text-shadow: 0 1px 0 rgba(139, 0, 59, 0.34);
       }
 
+      .calendar-slot.blocked::before {
+        color: rgba(255, 255, 255, 0.46);
+        text-shadow: 0 1px 0 rgba(139, 0, 59, 0.34);
+      }
+
       .calendar-slot.recurring {
         background: #ffeef6;
         border-style: dashed;
@@ -724,6 +743,11 @@ require_admin_ui();
         text-shadow: 0 1px 0 rgba(255, 248, 233, 0.7);
       }
 
+      .calendar-slot.booking::before {
+        color: rgba(107, 58, 0, 0.36);
+        text-shadow: 0 1px 0 rgba(255, 248, 233, 0.7);
+      }
+
       .calendar-slot.booking.outcall {
         background: #dbe7ff;
         color: #23345a;
@@ -732,6 +756,11 @@ require_admin_ui();
 
       .calendar-slot.booking.outcall::after {
         color: rgba(35, 52, 90, 0.42);
+        text-shadow: 0 1px 0 rgba(240, 246, 255, 0.72);
+      }
+
+      .calendar-slot.booking.outcall::before {
+        color: rgba(35, 52, 90, 0.34);
         text-shadow: 0 1px 0 rgba(240, 246, 255, 0.72);
       }
 
@@ -2218,6 +2247,12 @@ require_admin_ui();
         }).format(labelDate);
       };
 
+      const formatSlotDateShort = (dateKey) => {
+        const parts = String(dateKey || "").split("-");
+        if (parts.length !== 3) return "";
+        return `${parts[1]}/${parts[2]}`;
+      };
+
       const getWeekdayIndex = (dateKey) => {
         const parts = dateKey.split("-").map((value) => Number(value));
         if (parts.length !== 3) return 0;
@@ -2323,6 +2358,7 @@ require_admin_ui();
             slotButton.className = "calendar-cell calendar-slot";
             slotButton.dataset.date = dateKey;
             slotButton.dataset.time = timeValue;
+            slotButton.dataset.dateShort = formatSlotDateShort(dateKey);
             const entry = getSlotEntry(dateKey, timeValue);
             if (entry) {
               if (entry.kind === "booking") {

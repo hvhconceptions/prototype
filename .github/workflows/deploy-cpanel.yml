@@ -29,6 +29,7 @@ jobs:
           cp .htaccess deploy-root/.htaccess
 
       - name: Deploy root files via FTP
+        id: deploy_root_primary
         if: always()
         continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -41,6 +42,7 @@ jobs:
           dangerous-clean-slate: false
 
       - name: Deploy root files via FTP (fallback public_html)
+        id: deploy_root_fallback
         if: always()
         continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -53,6 +55,7 @@ jobs:
           dangerous-clean-slate: false
 
       - name: Deploy booking portal via FTP
+        id: deploy_booking_primary
         if: always()
         continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -65,6 +68,7 @@ jobs:
           dangerous-clean-slate: false
 
       - name: Deploy booking portal via FTP (fallback public_html)
+        id: deploy_booking_fallback
         if: always()
         continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -75,3 +79,21 @@ jobs:
           local-dir: booking/
           server-dir: /public_html/booking/
           dangerous-clean-slate: false
+
+      - name: Verify deploy attempts
+        if: always()
+        run: |
+          echo "Root primary outcome: ${{ steps.deploy_root_primary.outcome }}"
+          echo "Root fallback outcome: ${{ steps.deploy_root_fallback.outcome }}"
+          echo "Booking primary outcome: ${{ steps.deploy_booking_primary.outcome }}"
+          echo "Booking fallback outcome: ${{ steps.deploy_booking_fallback.outcome }}"
+
+          if [[ "${{ steps.deploy_root_primary.outcome }}" != "success" && "${{ steps.deploy_root_fallback.outcome }}" != "success" ]]; then
+            echo "ERROR: both root deploy attempts failed."
+            exit 1
+          fi
+
+          if [[ "${{ steps.deploy_booking_primary.outcome }}" != "success" && "${{ steps.deploy_booking_fallback.outcome }}" != "success" ]]; then
+            echo "ERROR: both booking deploy attempts failed."
+            exit 1
+          fi

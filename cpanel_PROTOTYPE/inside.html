@@ -4377,7 +4377,6 @@
             id="rates-services"
             class="section-panel embed-panel menu-dropdown"
             aria-labelledby="rates-services-title"
-            hidden
           >
             <div class="section-header">
               <h2 id="rates-services-title">rates &amp; services</h2>
@@ -5427,6 +5426,15 @@
         if (limitedMenu) limitedMenu.hidden = true;
         if (fullMenu) fullMenu.hidden = false;
       }
+
+      (function keepRatesAfterTouringOpen() {
+        const touringSection = document.getElementById("touring");
+        const ratesSection = document.getElementById("rates-services");
+        if (!touringSection || !ratesSection) return;
+
+        ratesSection.removeAttribute("hidden");
+        touringSection.insertAdjacentElement("afterend", ratesSection);
+      })();
 
       (function setupMenuToggles() {
         const toggleButtons = Array.from(document.querySelectorAll("[data-toggle-section]"));

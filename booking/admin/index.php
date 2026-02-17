@@ -1840,6 +1840,9 @@ require_admin_ui();
       let recurringBlocks = [];
       let touringStops = [];
       let citySchedules = [];
+      let autoSaveTimer = null;
+      let autoSaveInFlight = false;
+      let autoSaveQueued = false;
       const SLOT_MINUTES = 30;
       const SLOT_TIMES = Array.from({ length: 48 }, (_, index) => {
         const total = index * SLOT_MINUTES;
@@ -2336,7 +2339,7 @@ require_admin_ui();
               }
               renderBlockedSlots();
               renderCalendarView();
-              queueAutoSave();
+              queueAutoSave(t("saving_city_schedule"), { persist: true });
             });
             calendarGrid.appendChild(slotButton);
           });
@@ -2506,7 +2509,7 @@ require_admin_ui();
             blockedSlots = blockedSlots.filter((_, i) => i !== idx);
             renderBlockedSlots();
             renderCalendarView();
-            queueAutoSave();
+            queueAutoSave(t("saving_city_schedule"), { persist: true });
           });
         });
       };
@@ -2558,7 +2561,7 @@ require_admin_ui();
             recurringBlocks = recurringBlocks.filter((_, i) => i !== idx);
             renderRecurringList();
             renderCalendarView();
-            queueAutoSave();
+            queueAutoSave(t("saving_city_schedule"), { persist: true });
           });
         });
       };
@@ -2658,8 +2661,32 @@ require_admin_ui();
         }
       };
 
-      const queueAutoSave = (message = t("unsaved_changes")) => {
+      const runAutoSave = async () => {
+        if (autoSaveInFlight) {
+          autoSaveQueued = true;
+          return;
+        }
+        autoSaveInFlight = true;
+        await saveAvailability();
+        autoSaveInFlight = false;
+        if (autoSaveQueued) {
+          autoSaveQueued = false;
+          await runAutoSave();
+        }
+      };
+
+      const queueAutoSave = (message = t("unsaved_changes"), options = {}) => {
         availabilityStatus.textContent = message;
+        const persist = !!options.persist;
+        if (!persist) return;
+        const delay = Number.isFinite(options.delay) ? Math.max(120, Number(options.delay)) : 350;
+        if (autoSaveTimer) {
+          window.clearTimeout(autoSaveTimer);
+        }
+        autoSaveTimer = window.setTimeout(() => {
+          autoSaveTimer = null;
+          runAutoSave();
+        }, delay);
       };
 
       const resolveMediaSrc = (value) => {
@@ -3713,7 +3740,7 @@ require_admin_ui();
         blockedReason.value = "";
         renderBlockedSlots();
         renderCalendarView();
-        queueAutoSave();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
       });
       blockFullDayBtn.addEventListener("click", () => {
         blockedStatus.textContent = "";
@@ -3731,7 +3758,7 @@ require_admin_ui();
         blockedStatus.textContent = "Full day blocked.";
         renderBlockedSlots();
         renderCalendarView();
-        queueAutoSave();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
       });
       blockFullRangeBtn.addEventListener("click", () => {
         blockedStatus.textContent = "";
@@ -3759,7 +3786,7 @@ require_admin_ui();
         blockedStatus.textContent = "Full-day range blocked.";
         renderBlockedSlots();
         renderCalendarView();
-        queueAutoSave();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
       });
       addRecurringBtn.addEventListener("click", () => {
         if (!recurringStatus) return;
@@ -3799,7 +3826,7 @@ require_admin_ui();
         recurringStatus.textContent = "Recurring block added.";
         renderRecurringList();
         renderCalendarView();
-        queueAutoSave();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
       });
 
       if (addTourRowBtn) {

@@ -1639,15 +1639,6 @@
           4: 2000,
           12: 3000,
         },
-        pse: {
-          0.5: 800,
-          1: 800,
-          1.5: 1100,
-          2: 1400,
-          3: 1600,
-          4: 2000,
-          12: 3000,
-        },
         social: {
           3: 1000,
         },
@@ -1844,8 +1835,7 @@
         if (hours >= LONG_SESSION_MIN && hours <= LONG_SESSION_MAX) {
           return LONG_SESSION_RATE;
         }
-        const expKey = normalizeExperience(experience);
-        const rates = RATE_TABLE[expKey] || RATE_TABLE.gfe;
+        const rates = RATE_TABLE.gfe;
         if (rates[hours]) return rates[hours];
         let lower = null;
         let upper = null;

@@ -144,29 +144,15 @@ function get_base_rate(float $hours, string $experience, string $rateKey): int
         return 3000;
     }
 
-    $rates = [
-        'gfe' => [
-            ['hours' => 0.5, 'amount' => 400],
-            ['hours' => 1.0, 'amount' => 700],
-            ['hours' => 1.5, 'amount' => 1000],
-            ['hours' => 2.0, 'amount' => 1300],
-            ['hours' => 3.0, 'amount' => 1600],
-            ['hours' => 4.0, 'amount' => 2000],
-            ['hours' => 12.0, 'amount' => 3000],
-        ],
-        'pse' => [
-            ['hours' => 0.5, 'amount' => 800],
-            ['hours' => 1.0, 'amount' => 800],
-            ['hours' => 1.5, 'amount' => 1100],
-            ['hours' => 2.0, 'amount' => 1400],
-            ['hours' => 3.0, 'amount' => 1600],
-            ['hours' => 4.0, 'amount' => 2000],
-            ['hours' => 12.0, 'amount' => 3000],
-        ],
+    $entries = [
+        ['hours' => 0.5, 'amount' => 400],
+        ['hours' => 1.0, 'amount' => 700],
+        ['hours' => 1.5, 'amount' => 1000],
+        ['hours' => 2.0, 'amount' => 1300],
+        ['hours' => 3.0, 'amount' => 1600],
+        ['hours' => 4.0, 'amount' => 2000],
+        ['hours' => 12.0, 'amount' => 3000],
     ];
-
-    $expKey = normalize_experience($experience);
-    $entries = $rates[$expKey] ?? $rates['gfe'];
     foreach ($entries as $entry) {
         if (abs($hours - $entry['hours']) < 0.001) {
             return (int) $entry['amount'];

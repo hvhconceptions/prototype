@@ -367,6 +367,60 @@
         overflow-wrap: anywhere;
       }
 
+      #bookingTypeField .radio-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      #bookingTypeField .radio-card {
+        position: relative;
+        padding: 0;
+        border: none;
+        background: transparent;
+      }
+
+      #bookingTypeField .radio-card input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+      }
+
+      #bookingTypeField .radio-card span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60px;
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 0, 110, 0.35);
+        background: #fff8fc;
+        color: #4a1630;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      #bookingTypeField .radio-card input:checked + span {
+        border-color: var(--hot);
+        background: linear-gradient(145deg, #ff1690, #ff007a);
+        color: #ffffff;
+        box-shadow: 0 10px 26px rgba(255, 0, 120, 0.28);
+        transform: translateY(-1px);
+      }
+
+      #bookingTypeField .radio-card input:focus-visible + span {
+        box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.26);
+      }
+
+      #bookingTypeField .hint {
+        margin-top: 10px;
+      }
+
       .checkbox-list {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -872,6 +926,17 @@
 
         .radio-card {
           width: 100%;
+        }
+
+        #bookingTypeField .radio-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        #bookingTypeField .radio-card span {
+          min-height: 56px;
+          padding: 10px 8px;
+          font-size: 0.95rem;
         }
 
         .deposit-currency {
@@ -2020,7 +2085,7 @@
             .map((entry) => ({
               start: String(entry?.start || "").trim(),
               end: String(entry?.end || "").trim(),
-              city: String(entry?.city || "").trim(),
+              city: sanitizeCityLabel(entry?.city),
             }))
             .filter(
               (entry) =>
@@ -2038,7 +2103,7 @@
           if (!Array.isArray(list)) return [];
           return list
             .map((entry) => ({
-              city: String(entry?.city || "").trim(),
+              city: sanitizeCityLabel(entry?.city),
               start: String(entry?.start || "").trim(),
               end: String(entry?.end || "").trim(),
               timezone: String(entry?.timezone || "").trim(),
@@ -2062,6 +2127,14 @@
           return match ? match.city : "";
         };
 
+      const sanitizeCityLabel = (value) => {
+        const rawCity = String(value || "").trim();
+        if (!rawCity) return "";
+        const normalizedAlias = rawCity.toLowerCase().replace(/ß/g, "b").replace(/\s+/g, " ").trim();
+        if (normalizedAlias === "b mode") return "Montreal";
+        return rawCity;
+      };
+
       const normalizeCityName = (value) =>
         String(value || "")
           .trim()
@@ -2071,7 +2144,7 @@
       const isFlyMeCity = (value) => normalizeCityName(value) === "fly me to you";
 
       const getFallbackTourCity = () => {
-        const fallbackCity = String(tourCity || "").trim();
+        const fallbackCity = sanitizeCityLabel(tourCity);
         if (!fallbackCity) return "";
         if (normalizeCityName(fallbackCity) === normalizeCityName("Touring city not set")) {
           return "";
@@ -2093,8 +2166,8 @@
         const flyMeLabel = "Fly me to you";
         const cityPool = [
           ...defaultCityOptions,
-          ...tourSchedule.map((entry) => String(entry?.city || "").trim()),
-          ...citySchedules.map((entry) => String(entry?.city || "").trim()),
+          ...tourSchedule.map((entry) => sanitizeCityLabel(entry?.city)),
+          ...citySchedules.map((entry) => sanitizeCityLabel(entry?.city)),
           getFallbackTourCity(),
         ];
         const seen = new Set();
@@ -2683,7 +2756,7 @@
             throw new Error("Availability not available");
           }
           const data = await response.json();
-          tourCity = data.tour_city || tourCity;
+          tourCity = sanitizeCityLabel(data.tour_city || tourCity);
           tourTz = data.tour_timezone || tourTz;
           bufferMinutes = Number(data.buffer_minutes) || bufferMinutes;
           selectedTourTimezone = tourTz;

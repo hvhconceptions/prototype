@@ -364,7 +364,27 @@
 
       .radio-card span {
         min-width: 0;
-        overflow-wrap: anywhere;
+        overflow-wrap: normal;
+        word-break: normal;
+        white-space: normal;
+      }
+
+      .followup-block .radio-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+        gap: 10px;
+      }
+
+      .followup-block .radio-card {
+        justify-content: flex-start;
+        min-height: 52px;
+        padding: 12px 14px;
+        background: #fff;
+      }
+
+      .followup-block .radio-card span {
+        font-weight: 600;
+        letter-spacing: 0.01em;
       }
 
       #bookingTypeField .radio-row {
@@ -926,6 +946,15 @@
 
         .radio-card {
           width: 100%;
+        }
+
+        .followup-block .radio-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .followup-block .radio-card {
+          min-height: 50px;
+          padding: 10px 12px;
         }
 
         #bookingTypeField .radio-row {

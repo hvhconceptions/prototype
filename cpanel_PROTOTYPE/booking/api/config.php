@@ -635,6 +635,56 @@ function fcm_base64url_encode(string $data): string
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
 
+function resolve_fcm_service_account_path(): string
+{
+    $candidates = [];
+
+    $configured = trim((string) FCM_SERVICE_ACCOUNT_JSON);
+    if ($configured !== '') {
+        $candidates[] = $configured;
+    }
+
+    $envPath = getenv('GOOGLE_APPLICATION_CREDENTIALS');
+    if (is_string($envPath) && trim($envPath) !== '') {
+        $candidates[] = trim($envPath);
+    }
+
+    $fileName = '';
+    foreach ($candidates as $candidate) {
+        $name = basename(str_replace('\\', '/', (string) $candidate));
+        if ($name !== '') {
+            $fileName = $name;
+            break;
+        }
+    }
+
+    if ($fileName !== '') {
+        $homeDir = dirname(dirname(dirname(__DIR__)));
+        $candidates[] = $homeDir . '/secure/' . $fileName;
+        $candidates[] = $homeDir . '/private/' . $fileName;
+        $candidates[] = $homeDir . '/public_html/secure/' . $fileName;
+        $candidates[] = DATA_DIR . '/' . $fileName;
+    }
+
+    $seen = [];
+    foreach ($candidates as $candidate) {
+        $path = str_replace('\\', '/', trim((string) $candidate));
+        if ($path === '') {
+            continue;
+        }
+        $key = strtolower($path);
+        if (isset($seen[$key])) {
+            continue;
+        }
+        $seen[$key] = true;
+        if (is_file($path)) {
+            return $path;
+        }
+    }
+
+    return '';
+}
+
 function get_fcm_service_account(): ?array
 {
     static $cached = null;
@@ -643,14 +693,8 @@ function get_fcm_service_account(): ?array
         return $cached;
     }
     $loaded = true;
-    $path = FCM_SERVICE_ACCOUNT_JSON;
+    $path = resolve_fcm_service_account_path();
     if ($path === '') {
-        $env = getenv('GOOGLE_APPLICATION_CREDENTIALS');
-        if ($env !== false) {
-            $path = (string) $env;
-        }
-    }
-    if ($path === '' || !is_file($path)) {
         $cached = null;
         return null;
     }

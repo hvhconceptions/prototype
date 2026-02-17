@@ -824,7 +824,7 @@
           const now = new Date();
           const month = now.getMonth();
           const day = now.getDate();
-          return month === 1 && day <= 18;
+          return month === 1 && day <= 16;
         };
 
         const applyTheme = (key) => {
@@ -839,12 +839,12 @@
             return null;
           }
         })();
-        if (isHolidayWindow()) {
+        if (saved) {
+          applyTheme(saved);
+        } else if (isHolidayWindow()) {
           applyTheme("christmas");
         } else if (isValentineWindow()) {
           applyTheme("pink");
-        } else if (saved) {
-          applyTheme(saved);
         }
         window.hvhApplyTheme = (key) => {
           applyTheme(key);

@@ -691,10 +691,10 @@
             return null;
           }
         })();
-        if (isHolidayWindow()) {
-          applyTheme("christmas");
-        } else if (saved) {
+        if (saved) {
           applyTheme(saved);
+        } else if (isHolidayWindow()) {
+          applyTheme("christmas");
         }
         window.hvhApplyTheme = (key) => {
           applyTheme(key);

@@ -260,13 +260,14 @@ require_admin_ui();
       header {
         max-width: 1100px;
         margin: 0 auto;
-        padding: 48px 24px 24px;
+        padding: 48px clamp(150px, 16vw, 220px) 24px 24px;
       }
 
       .header-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
+        flex-wrap: wrap;
         gap: 12px;
       }
 
@@ -952,6 +953,10 @@ require_admin_ui();
         .header-top {
           flex-direction: column;
           align-items: flex-start;
+        }
+
+        header {
+          padding-right: 24px;
         }
 
         .folder-button {

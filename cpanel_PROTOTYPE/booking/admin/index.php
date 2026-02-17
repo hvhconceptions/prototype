@@ -672,6 +672,10 @@ require_admin_ui();
         cursor: pointer;
         transition: background 0.15s ease, transform 0.15s ease;
         min-height: 26px;
+        position: relative;
+        overflow: hidden;
+        text-align: left;
+        padding-right: 44px;
       }
 
       .calendar-slot:hover {
@@ -679,10 +683,28 @@ require_admin_ui();
         transform: translateY(-1px);
       }
 
+      .calendar-slot::after {
+        content: attr(data-time);
+        position: absolute;
+        right: 6px;
+        bottom: 3px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: rgba(86, 18, 45, 0.32);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+        pointer-events: none;
+      }
+
       .calendar-slot.blocked {
         background: linear-gradient(135deg, rgba(255, 45, 147, 0.9), rgba(255, 0, 110, 0.9));
         color: #fff;
         border-color: rgba(255, 0, 110, 0.5);
+      }
+
+      .calendar-slot.blocked::after {
+        color: rgba(255, 255, 255, 0.56);
+        text-shadow: 0 1px 0 rgba(139, 0, 59, 0.34);
       }
 
       .calendar-slot.recurring {
@@ -697,10 +719,20 @@ require_admin_ui();
         font-weight: 600;
       }
 
+      .calendar-slot.booking::after {
+        color: rgba(107, 58, 0, 0.45);
+        text-shadow: 0 1px 0 rgba(255, 248, 233, 0.7);
+      }
+
       .calendar-slot.booking.outcall {
         background: #dbe7ff;
         color: #23345a;
         border-color: rgba(35, 52, 90, 0.25);
+      }
+
+      .calendar-slot.booking.outcall::after {
+        color: rgba(35, 52, 90, 0.42);
+        text-shadow: 0 1px 0 rgba(240, 246, 255, 0.72);
       }
 
       .calendar-slot.booking.paid {

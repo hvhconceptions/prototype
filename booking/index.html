@@ -1412,7 +1412,7 @@
           city_tba: "TBA",
           availability_selected_date: "Availability shown for the selected date.",
           availability_need_standard:
-            "Select a standard duration to view available times. 24+ hours is discussed on WhatsApp.",
+            "Select a standard duration to view available times. 24+ hours to be discussed.",
           availability_read_touring: "Read touring dates carefully, or arrange Fly me to you.",
           availability_past_date: "This date is in the past. Pick a future date.",
           availability_none_left: "No start times left for this date and duration.",
@@ -1527,7 +1527,7 @@
           city_tba: "A definir",
           availability_selected_date: "Disponibilites pour la date choisie.",
           availability_need_standard:
-            "Choisissez une duree standard pour voir les heures disponibles. Le 24h+ se discute sur WhatsApp.",
+            "Choisissez une duree standard pour voir les heures disponibles. Le 24h+ est a discuter.",
           availability_read_touring: "Lisez les dates de tournee, ou choisissez Fly me to you.",
           availability_past_date: "Cette date est passee. Choisissez une date future.",
           availability_none_left: "Aucune heure de depart restante pour cette date et duree.",
@@ -1668,6 +1668,7 @@
       let citySchedules = [];
       let selectedSlotButton = null;
       let wizardStepIndex = 0;
+      let durationOptionsRequestId = 0;
 
         let tourSchedule = [
           { start: "2026-02-08", end: "2026-02-14", city: "Montreal" },
@@ -2039,6 +2040,7 @@
       };
 
       const updateDurationOptions = async () => {
+        const requestId = ++durationOptionsRequestId;
         const currentCurrency = currencySelect.value || BASE_CURRENCY;
         const currentExperience = experienceSelect.value || "gfe";
         const previousValue = durationSelect.value;
@@ -2051,6 +2053,7 @@
         durationSelect.appendChild(placeholder);
 
         for (const entry of DURATION_OPTIONS) {
+          if (requestId !== durationOptionsRequestId) return;
           const option = document.createElement("option");
           option.value = entry.value;
           option.dataset.hours = String(entry.hours);
@@ -2062,11 +2065,13 @@
           } else {
             const baseRate = getBaseRate(entry.hours, currentExperience, entry.rateKey || "");
             const priceLabel = await formatRateLabel(baseRate, currentCurrency);
+            if (requestId !== durationOptionsRequestId) return;
             option.textContent = `${getDurationLabel(entry)} - ${priceLabel}`;
           }
           durationSelect.appendChild(option);
         }
 
+        if (requestId !== durationOptionsRequestId) return;
         if (
           previousValue &&
           Array.from(durationSelect.options).some((option) => option.value === previousValue)
@@ -2124,14 +2129,25 @@
         const getCityForDate = (dateKey) => {
           if (!dateKey) return "";
           const match = tourSchedule.find((entry) => dateKey >= entry.start && dateKey <= entry.end);
-          return match ? match.city : "";
+          return match ? sanitizeCityLabel(match.city) : "";
         };
 
       const sanitizeCityLabel = (value) => {
         const rawCity = String(value || "").trim();
         if (!rawCity) return "";
-        const normalizedAlias = rawCity.toLowerCase().replace(/ß/g, "b").replace(/\s+/g, " ").trim();
-        if (normalizedAlias === "b mode") return "Montreal";
+        const normalizedAlias = rawCity
+          .normalize("NFKD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/ß/gi, "ss")
+          .replace(/β/gi, "b")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (!normalizedAlias) return rawCity;
+        if (normalizedAlias === "b mode" || normalizedAlias === "ss mode" || normalizedAlias.endsWith(" mode")) {
+          return "Montreal";
+        }
         return rawCity;
       };
 
@@ -2235,7 +2251,7 @@
         if (tourTzEl) {
           tourTzEl.textContent = selectedTourTimezone;
         }
-        const displayCity = schedule?.city || getCityForDate(dateKey) || getFallbackTourCity();
+        const displayCity = sanitizeCityLabel(schedule?.city || getCityForDate(dateKey) || getFallbackTourCity());
         if (tourCityEl) {
           tourCityEl.textContent = displayCity;
         }
@@ -2423,7 +2439,7 @@
         }
 
         const cityContext = updateSelectedTourContext();
-        const dayCity = cityContext?.city || getCityForDate(dateKey) || getFallbackTourCity();
+        const dayCity = sanitizeCityLabel(cityContext?.city || getCityForDate(dateKey) || getFallbackTourCity());
         if (touringDayCityEl) touringDayCityEl.textContent = dayCity || t("city_tba");
         dayCalendar.dataset.city = dayCity || t("city_tba");
         availabilityNote.textContent = t("availability_selected_date");
@@ -2863,7 +2879,9 @@
         payload.deposit_percent = String(DEPOSIT_PERCENT);
         payload.deposit_confirm = formData.get("deposit_confirm") ? "1" : "";
         payload.tour_timezone = selectedTourTimezone || tourTz;
-        payload.tour_city = activeSchedule?.city || getCityForDate(preferredDate.value) || getFallbackTourCity();
+        payload.tour_city = sanitizeCityLabel(
+          activeSchedule?.city || getCityForDate(preferredDate.value) || getFallbackTourCity()
+        );
         payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
         payload.preferred_time = preferredTime.value || "";
 

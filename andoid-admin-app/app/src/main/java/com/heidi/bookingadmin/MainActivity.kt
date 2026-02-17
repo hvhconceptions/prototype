@@ -1,7 +1,6 @@
 ﻿package com.heidi.bookingadmin
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -13,7 +12,6 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
-import com.google.android.material.button.MaterialButton
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -35,14 +33,9 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.adminWebView)
         offlineMessage = findViewById(R.id.offlineMessage)
-        val openClients = findViewById<MaterialButton>(R.id.openClients)
 
         setupWebView()
-        webView.loadUrl(ADMIN_URL)
-
-        openClients.setOnClickListener {
-            startActivity(Intent(this, ClientListActivity::class.java))
-        }
+        loadAdminUrl(forceFresh = true)
 
         requestNotificationPermissionIfNeeded()
         registerFcmToken()
@@ -55,6 +48,9 @@ class MainActivity : AppCompatActivity() {
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
         settings.useWideViewPort = true
         settings.loadWithOverviewMode = true
+        settings.cacheMode = WebSettings.LOAD_NO_CACHE
+
+        webView.clearCache(true)
 
         webView.webViewClient = object : WebViewClient() {
             override fun onReceivedHttpAuthRequest(
@@ -123,6 +119,20 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadAdminUrl(forceFresh = true)
+    }
+
+    private fun loadAdminUrl(forceFresh: Boolean = false) {
+        val url = if (forceFresh) {
+            "$ADMIN_URL?v=${System.currentTimeMillis()}"
+        } else {
+            ADMIN_URL
+        }
+        webView.loadUrl(url)
     }
 
     companion object {

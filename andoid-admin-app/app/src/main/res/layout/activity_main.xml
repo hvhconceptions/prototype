@@ -16,15 +16,4 @@
     android:text="No connection. Pull to refresh or try again."
     android:visibility="gone" />
 
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/openClients"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="top|end"
-    android:layout_margin="16dp"
-    android:text="Clients"
-    android:textAllCaps="true"
-    android:letterSpacing="0.2"
-    android:backgroundTint="#ff006e"
-    android:textColor="#ffffff" />
 </FrameLayout>

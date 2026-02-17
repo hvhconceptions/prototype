@@ -3351,7 +3351,11 @@ require_admin_ui();
           renderTourSchedule(touringStops);
           syncCitySchedulesWithTouring();
           tourScheduleStatus.textContent = t("tour_schedule_saved");
-          queueAutoSave(t("tour_dates_changed"));
+          availabilityStatus.textContent = t("saving_city_schedule");
+          await saveAvailability();
+          if (cityScheduleStatus) {
+            cityScheduleStatus.textContent = t("city_schedules_saved");
+          }
         } catch (error) {
           const message = error && error.message ? ` (${error.message})` : "";
           tourScheduleStatus.textContent = `${t("failed_save_tour_schedule")}${message}`;

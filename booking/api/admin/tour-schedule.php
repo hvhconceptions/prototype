@@ -76,6 +76,29 @@ if (!$clean) {
     json_response(['error' => 'No valid entries'], 422);
 }
 
+usort($clean, static function (array $a, array $b): int {
+    $left = $a['start'] . '|' . $a['end'] . '|' . strtolower((string) $a['city']);
+    $right = $b['start'] . '|' . $b['end'] . '|' . strtolower((string) $b['city']);
+    return strcmp($left, $right);
+});
+
+for ($i = 1, $count = count($clean); $i < $count; $i++) {
+    $prev = $clean[$i - 1];
+    $curr = $clean[$i];
+    if ($curr['start'] <= $prev['end']) {
+        $message = sprintf(
+            'Overlapping tour dates: %s (%s to %s) overlaps %s (%s to %s)',
+            (string) $prev['city'],
+            (string) $prev['start'],
+            (string) $prev['end'],
+            (string) $curr['city'],
+            (string) $curr['start'],
+            (string) $curr['end']
+        );
+        json_response(['error' => $message], 422);
+    }
+}
+
 $content = read_site_content();
 $content['touring'] = array_values($clean);
 write_site_content($content);

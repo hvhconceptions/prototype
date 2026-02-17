@@ -2278,7 +2278,7 @@
         if (tourTzEl) {
           tourTzEl.textContent = selectedTourTimezone;
         }
-        const displayCity = sanitizeCityLabel(schedule?.city || getCityForDate(dateKey) || getFallbackTourCity());
+        const displayCity = sanitizeCityLabel(getCityForDate(dateKey) || schedule?.city || getFallbackTourCity());
         if (tourCityEl) {
           tourCityEl.textContent = displayCity;
         }
@@ -2466,7 +2466,7 @@
         }
 
         const cityContext = updateSelectedTourContext();
-        const dayCity = sanitizeCityLabel(cityContext?.city || getCityForDate(dateKey) || getFallbackTourCity());
+        const dayCity = sanitizeCityLabel(getCityForDate(dateKey) || cityContext?.city || getFallbackTourCity());
         if (touringDayCityEl) touringDayCityEl.textContent = dayCity || t("city_tba");
         dayCalendar.dataset.city = dayCity || t("city_tba");
         availabilityNote.textContent = t("availability_selected_date");
@@ -2907,7 +2907,7 @@
         payload.deposit_confirm = formData.get("deposit_confirm") ? "1" : "";
         payload.tour_timezone = selectedTourTimezone || tourTz;
         payload.tour_city = sanitizeCityLabel(
-          activeSchedule?.city || getCityForDate(preferredDate.value) || getFallbackTourCity()
+          getCityForDate(preferredDate.value) || activeSchedule?.city || getFallbackTourCity()
         );
         payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
         payload.preferred_time = preferredTime.value || "";

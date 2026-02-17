@@ -1146,7 +1146,7 @@ require_admin_ui();
             <label for="tourCity">Current tour city</label>
             <input id="tourCity" type="text" readonly />
           </div>
-          <div class="field">
+          <div class="field" id="tourTimezoneField" hidden>
             <label for="tourTimezone">Tour timezone</label>
             <select id="tourTimezone"></select>
           </div>
@@ -1276,10 +1276,10 @@ require_admin_ui();
       <section data-admin-panel-group="schedule">
         <h2 id="cityWizardTitle">City schedule wizard</h2>
         <p class="hint" id="cityWizardHint">
-          One card per touring city/date range. Fill question-by-question to auto-build each city schedule with timezone handling.
+          One card per touring city/date range. Fill question-by-question to auto-build each city schedule.
         </p>
         <div class="row city-toolbar">
-          <span class="hint" id="cityWizardTimezoneHint">Timezone is shown automatically for each city card.</span>
+          <span class="hint" id="cityWizardTimezoneHint"></span>
           <span class="status" id="availabilityStatus"></span>
         </div>
         <div class="editor-list" id="cityScheduleWizard"></div>
@@ -1326,6 +1326,7 @@ require_admin_ui();
 
     <script>
       const ADMIN_KEY = <?php echo json_encode(ADMIN_API_KEY); ?>;
+      const DEFAULT_TIMEZONE = "America/Toronto";
       const TIMEZONES = [
         "America/Toronto",
         "America/New_York",
@@ -1363,6 +1364,7 @@ require_admin_ui();
 
       const tourCityInput = document.getElementById("tourCity");
       const tourTzSelect = document.getElementById("tourTimezone");
+      const tourTimezoneField = document.getElementById("tourTimezoneField");
       const bufferInput = document.getElementById("bufferMinutes");
       const availabilityStatus = document.getElementById("availabilityStatus");
       const saveAvailabilityBtn = document.getElementById("saveAvailability");
@@ -1429,8 +1431,8 @@ require_admin_ui();
           save_tour_schedule: "Save tour schedule",
           city_wizard_title: "City schedule wizard",
           city_wizard_hint:
-            "One card per touring city/date range. Fill question-by-question to auto-build each city schedule with timezone handling.",
-          city_wizard_timezone_hint: "Timezone is shown automatically for each city card.",
+            "One card per touring city/date range. Fill question-by-question to auto-build each city schedule.",
+          city_wizard_timezone_hint: "",
           save_city_schedule: "Save city schedule",
           clear_template_blocks: "Clear template blocks",
           eye_candy_title: "Eye candy",
@@ -1503,7 +1505,7 @@ require_admin_ui();
           back: "Back",
           next: "Next",
           done: "Done",
-          timezone: "Timezone",
+          timezone: "",
           not_set: "Not set",
           step: "Step {current} of {total}",
           follow_up: "Follow-up",
@@ -1517,8 +1519,8 @@ require_admin_ui();
           experience: "Experience",
           duration: "Duration",
           preferred: "Preferred",
-          client_tz: "Client TZ",
-          tour_tz: "Tour TZ",
+          client_tz: "Client time",
+          tour_tz: "Tour time",
           deposit: "Deposit",
           payment_status: "Payment status",
           payment_method: "Payment method",
@@ -1552,7 +1554,7 @@ require_admin_ui();
           city_wizard_title: "Assistant planning par ville",
           city_wizard_hint:
             "Une carte par ville/periode de tournee. Remplissez question par question pour generer le planning automatiquement.",
-          city_wizard_timezone_hint: "Le fuseau horaire est affiche automatiquement pour chaque carte ville.",
+          city_wizard_timezone_hint: "",
           save_city_schedule: "Sauvegarder le planning ville",
           clear_template_blocks: "Effacer les blocs modele",
           eye_candy_title: "Eye candy",
@@ -1625,7 +1627,7 @@ require_admin_ui();
           back: "Retour",
           next: "Suivant",
           done: "Terminer",
-          timezone: "Fuseau",
+          timezone: "",
           not_set: "Non defini",
           step: "Etape {current} sur {total}",
           follow_up: "Suivi",
@@ -1639,8 +1641,8 @@ require_admin_ui();
           experience: "Experience",
           duration: "Duree",
           preferred: "Souhaite",
-          client_tz: "Fuseau client",
-          tour_tz: "Fuseau tournee",
+          client_tz: "Heure client",
+          tour_tz: "Heure tournee",
           deposit: "Acompte",
           payment_status: "Statut paiement",
           payment_method: "Methode paiement",
@@ -1805,6 +1807,30 @@ require_admin_ui();
         });
       };
 
+      const normalizeTimezone = (value) => {
+        const tz = String(value || "").trim();
+        if (tz && TIMEZONES.includes(tz)) {
+          return tz;
+        }
+        return DEFAULT_TIMEZONE;
+      };
+
+      const applyTimezoneValue = (value) => {
+        const tz = normalizeTimezone(value);
+        if (tourTzSelect) {
+          if (!Array.from(tourTzSelect.options).some((option) => option.value === tz)) {
+            const option = document.createElement("option");
+            option.value = tz;
+            option.textContent = tz.replace("_", " ");
+            tourTzSelect.appendChild(option);
+          }
+          tourTzSelect.value = tz;
+        }
+        return tz;
+      };
+
+      const getActiveTimezone = () => normalizeTimezone(tourTzSelect?.value);
+
       let blockedSlots = [];
       let recurringBlocks = [];
       let touringStops = [];
@@ -1863,13 +1889,7 @@ require_admin_ui();
       const makeScheduleId = (entry) =>
         `${String(entry?.start || "").trim()}|${String(entry?.end || "").trim()}|${normalizeCityName(entry?.city || "")}`;
 
-      const getDefaultTimezoneForCity = (city) => {
-        const mapped = CITY_TIMEZONE_MAP[normalizeCityName(city)];
-        if (mapped) {
-          return mapped;
-        }
-        return TIMEZONES[0];
-      };
+      const getDefaultTimezoneForCity = (_city) => DEFAULT_TIMEZONE;
 
       const isValidTime = (value) => /^\d{2}:\d{2}$/.test(String(value || ""));
 
@@ -2126,7 +2146,7 @@ require_admin_ui();
 
       const getDateKey = (date) => {
         const parts = new Intl.DateTimeFormat("en-CA", {
-          timeZone: tourTzSelect.value,
+          timeZone: getActiveTimezone(),
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
@@ -2151,7 +2171,7 @@ require_admin_ui();
         const [year, month, day] = dateKey.split("-").map((value) => Number(value));
         const labelDate = new Date(Date.UTC(year, month - 1, day, 12, 0));
         return new Intl.DateTimeFormat("en-US", {
-          timeZone: tourTzSelect.value,
+          timeZone: getActiveTimezone(),
           weekday: "short",
           month: "short",
           day: "numeric",
@@ -2163,7 +2183,7 @@ require_admin_ui();
         if (parts.length !== 3) return 0;
         const labelDate = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0));
         const label = new Intl.DateTimeFormat("en-US", {
-          timeZone: tourTzSelect.value,
+          timeZone: getActiveTimezone(),
           weekday: "short",
         }).format(labelDate);
         const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -2557,7 +2577,7 @@ require_admin_ui();
             throw new Error(data.error || `HTTP ${response.status}`);
           }
           tourCityInput.value = data.tour_city || "";
-          tourTzSelect.value = data.tour_timezone || TIMEZONES[0];
+          applyTimezoneValue(data.tour_timezone);
           bufferInput.value = data.buffer_minutes || 30;
           blockedSlots = normalizeBlockedSlots(data.blocked);
           recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
@@ -2601,7 +2621,7 @@ require_admin_ui();
         const firstCity = cityPayload[0] || null;
         const payload = {
           tour_city: firstCity?.city || tourCityInput.value.trim(),
-          tour_timezone: firstCity?.timezone || tourTzSelect.value,
+          tour_timezone: DEFAULT_TIMEZONE,
           buffer_minutes: Number((firstCity?.buffer_minutes ?? bufferInput.value) || 0),
           availability_mode: "open",
           blocked: blockedSlots,
@@ -2892,6 +2912,7 @@ require_admin_ui();
         dateLine.textContent = `${formatDateLabel(schedule.start)} ${t("date_to")} ${formatDateLabel(schedule.end)}`;
         const timezoneLine = document.createElement("div");
         timezoneLine.className = "city-wizard-zone";
+        timezoneLine.hidden = true;
         titleWrap.appendChild(title);
         titleWrap.appendChild(dateLine);
         titleWrap.appendChild(timezoneLine);
@@ -3016,7 +3037,7 @@ require_admin_ui();
           stepPanels.forEach((panel, index) => {
             panel.classList.toggle("city-wizard-hidden", index !== step);
           });
-          timezoneLine.textContent = `${t("timezone")}: ${current.timezone || t("not_set")}`;
+          timezoneLine.textContent = "";
           stepBadge.textContent = t("step", { current: step + 1, total: 5 });
           backBtn.disabled = step <= 0;
           nextBtn.textContent = step >= 4 ? t("done") : t("next");
@@ -3148,7 +3169,7 @@ require_admin_ui();
             tourCityInput.value = first.city;
           }
           if (tourTzSelect) {
-            tourTzSelect.value = first.timezone || TIMEZONES[0];
+            applyTimezoneValue(first.timezone);
           }
           if (bufferInput) {
             bufferInput.value = Number(first.buffer_minutes || 0);
@@ -3842,6 +3863,10 @@ require_admin_ui();
 
       setCalendarView("week");
       populateTimezones();
+      applyTimezoneValue(DEFAULT_TIMEZONE);
+      if (tourTimezoneField) {
+        tourTimezoneField.hidden = true;
+      }
       renderRecurringDayChoices();
       loadAvailability();
       loadTourSchedule();

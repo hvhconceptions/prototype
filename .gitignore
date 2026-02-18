@@ -1,5 +1,6 @@
 # Build outputs
 **/build/
+**/.gradle/
 *.apk
 
 # Local logs/artifacts

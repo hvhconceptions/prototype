@@ -4804,11 +4804,7 @@ require_admin_ui();
       }
       refreshBtn.addEventListener("click", loadRequests);
       statusFilter.addEventListener("change", loadRequests);
-      window.setInterval(() => {
-        if (document.visibilityState === "visible") {
-          loadRequests();
-        }
-      }, 15000);
+      // Keep requests stable while reviewing/editing. Use Refresh button when needed.
 
       const initialLanguage = getStoredLanguage() || detectBrowserLanguage();
       currentLanguage = initialLanguage;

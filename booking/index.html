@@ -1195,9 +1195,10 @@
             <div class="field">
               <label for="experience">Service</label>
               <select id="experience" name="experience" required>
-                <option value="" disabled>chose option</option>
-                <option value="gfe" selected>GFE</option>
-                <option value="pse">PSE</option>
+                <option value="" disabled selected>chose an option</option>
+                <option value="gfe">GFE</option>
+                <option value="pse">PSE (+100)</option>
+                <option value="filming">Filming (+500)</option>
               </select>
             </div>
             <div class="field span-2" id="bookingTypeField">
@@ -1239,7 +1240,7 @@
           <h2 id="panelPaymentTitle">Payment confirmation</h2>
           <div class="deposit-box" id="depositBox">
             <div class="deposit-total">Base rate: <span id="baseRateDisplay">Select duration</span></div>
-            <div class="deposit-total hidden" id="pseAddonRow">PSE add-on: <span id="pseAddonDisplay">--</span></div>
+            <div class="deposit-total hidden" id="serviceAddonRow">Service add-on: <span id="serviceAddonDisplay">--</span></div>
             <div class="deposit-total">Total: <span id="totalRateDisplay">Select duration</span></div>
             <div class="deposit-total">20% deposit: <strong id="depositRateDisplay">--</strong></div>
             <p class="hint" id="totalRateNote"></p>
@@ -1333,8 +1334,8 @@
       const depositBox = document.getElementById("depositBox");
       const baseRateDisplay = document.getElementById("baseRateDisplay");
       const totalRateDisplay = document.getElementById("totalRateDisplay");
-      const pseAddonRow = document.getElementById("pseAddonRow");
-      const pseAddonDisplay = document.getElementById("pseAddonDisplay");
+      const serviceAddonRow = document.getElementById("serviceAddonRow");
+      const serviceAddonDisplay = document.getElementById("serviceAddonDisplay");
       const depositRateDisplay = document.getElementById("depositRateDisplay");
       const totalRateNote = document.getElementById("totalRateNote");
       const depositRateNote = document.getElementById("depositRateNote");
@@ -1396,6 +1397,10 @@
           duration_hint: "Rates update with currency. Crypto shown in CAD.",
           discuss_whatsapp: "Discuss it with me on WhatsApp",
           label_service: "Service",
+          service_choose_option: "chose an option",
+          service_gfe: "GFE",
+          service_pse: "PSE (+100)",
+          service_filming: "Filming (+500)",
           label_location: "Location",
           incall: "Incall",
           outcall: "Outcall",
@@ -1407,7 +1412,9 @@
           selected_time: "Selected time",
           payment_title: "Payment confirmation",
           base_rate: "Base rate:",
+          service_addon: "Service add-on:",
           pse_addon: "PSE add-on:",
+          filming_addon: "Filming add-on:",
           total_rate: "Total:",
           deposit_rate: "20% deposit:",
           deposit_note: "Deposit is 20% of total.",
@@ -1511,6 +1518,10 @@
           duration_hint: "Les tarifs changent avec la devise. Crypto affichee en CAD.",
           discuss_whatsapp: "Discuter avec moi sur WhatsApp",
           label_service: "Service",
+          service_choose_option: "choisir une option",
+          service_gfe: "GFE",
+          service_pse: "PSE (+100)",
+          service_filming: "Filming (+500)",
           label_location: "Lieu",
           incall: "Incall",
           outcall: "Outcall",
@@ -1522,7 +1533,9 @@
           selected_time: "Heure choisie",
           payment_title: "Confirmation de paiement",
           base_rate: "Tarif de base:",
+          service_addon: "Supplement service:",
           pse_addon: "Supplement PSE:",
+          filming_addon: "Supplement filming:",
           total_rate: "Total:",
           deposit_rate: "Acompte 20%:",
           deposit_note: "L'acompte est de 20% du total.",
@@ -1713,6 +1726,7 @@
       const BASE_CURRENCY = "CAD";
       const DEPOSIT_PERCENT = 20;
       const PSE_BILL_ADDON = 100;
+      const FILMING_BILL_ADDON = 500;
       const FIAT_CURRENCIES = ["CAD", "USD", "EUR", "GBP"];
       const CRYPTO_CURRENCIES = ["USDC", "BTC", "LTC"];
       const FX_OVERRIDES = {
@@ -1918,7 +1932,26 @@
         }
       };
 
-      const normalizeExperience = (value) => (value === "gfe" ? "gfe" : "pse");
+      const normalizeExperience = (value) => {
+        if (value === "pse") return "pse";
+        if (value === "filming") return "filming";
+        return "gfe";
+      };
+
+      const getServiceAddonBase = (experience, baseRate) => {
+        if (!Number.isFinite(baseRate) || baseRate <= 0) return 0;
+        const normalized = normalizeExperience(experience);
+        if (normalized === "pse") return PSE_BILL_ADDON;
+        if (normalized === "filming") return FILMING_BILL_ADDON;
+        return 0;
+      };
+
+      const getServiceAddonLabel = (experience) => {
+        const normalized = normalizeExperience(experience);
+        if (normalized === "pse") return t("pse_addon");
+        if (normalized === "filming") return t("filming_addon");
+        return t("service_addon");
+      };
 
       const getBaseRate = (hours, experience, rateKey) => {
         if (!Number.isFinite(hours) || hours <= 0) return 0;
@@ -1994,8 +2027,11 @@
           baseRateDisplay.textContent = t("select_duration");
           totalRateDisplay.textContent = t("select_duration");
           depositRateDisplay.textContent = "--";
-          if (pseAddonRow) pseAddonRow.classList.add("hidden");
-          if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
+          if (serviceAddonRow) {
+            setDepositRowPrefix("#serviceAddonRow", t("service_addon"));
+            serviceAddonRow.classList.add("hidden");
+          }
+          if (serviceAddonDisplay) serviceAddonDisplay.textContent = "--";
           if (totalRateNote) totalRateNote.textContent = "";
           if (depositRateNote) depositRateNote.textContent = t("deposit_note");
           return;
@@ -2008,8 +2044,11 @@
           baseRateDisplay.textContent = t("discuss_whatsapp_short");
           totalRateDisplay.textContent = t("discuss_whatsapp_short");
           depositRateDisplay.textContent = "--";
-          if (pseAddonRow) pseAddonRow.classList.add("hidden");
-          if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
+          if (serviceAddonRow) {
+            setDepositRowPrefix("#serviceAddonRow", t("service_addon"));
+            serviceAddonRow.classList.add("hidden");
+          }
+          if (serviceAddonDisplay) serviceAddonDisplay.textContent = "--";
           if (totalRateNote) totalRateNote.textContent = "";
           if (depositRateNote) {
             depositRateNote.textContent = t("custom_24h_note");
@@ -2032,15 +2071,18 @@
           baseRateDisplay.textContent = t("select_duration");
           totalRateDisplay.textContent = t("select_duration");
           depositRateDisplay.textContent = "--";
-          if (pseAddonRow) pseAddonRow.classList.add("hidden");
-          if (pseAddonDisplay) pseAddonDisplay.textContent = "--";
+          if (serviceAddonRow) {
+            setDepositRowPrefix("#serviceAddonRow", t("service_addon"));
+            serviceAddonRow.classList.add("hidden");
+          }
+          if (serviceAddonDisplay) serviceAddonDisplay.textContent = "--";
           if (totalRateNote) totalRateNote.textContent = "";
           if (depositRateNote) depositRateNote.textContent = t("deposit_percent_note", { percent: DEPOSIT_PERCENT });
           return;
         }
         const baseRate = getBaseRate(hours, experience, rateKey);
-        const pseAddonBase = normalizeExperience(experience) === "pse" ? PSE_BILL_ADDON : 0;
-        const totalBase = baseRate + pseAddonBase;
+        const serviceAddonBase = getServiceAddonBase(experience, baseRate);
+        const totalBase = baseRate + serviceAddonBase;
         const depositBase = Math.round(totalBase * (DEPOSIT_PERCENT / 100));
         const baseLabel = await formatRateLabel(baseRate, currency);
         const totalLabel = await formatRateLabel(totalBase, currency);
@@ -2048,14 +2090,16 @@
         baseRateDisplay.textContent = baseLabel;
         totalRateDisplay.textContent = totalLabel;
         depositRateDisplay.textContent = depositLabel;
-        if (pseAddonRow && pseAddonDisplay) {
-          if (pseAddonBase > 0) {
-            const addonLabel = await formatRateLabel(pseAddonBase, currency);
-            pseAddonDisplay.textContent = addonLabel;
-            pseAddonRow.classList.remove("hidden");
+        if (serviceAddonRow && serviceAddonDisplay) {
+          if (serviceAddonBase > 0) {
+            const addonLabel = await formatRateLabel(serviceAddonBase, currency);
+            serviceAddonDisplay.textContent = addonLabel;
+            setDepositRowPrefix("#serviceAddonRow", getServiceAddonLabel(experience));
+            serviceAddonRow.classList.remove("hidden");
           } else {
-            pseAddonDisplay.textContent = "--";
-            pseAddonRow.classList.add("hidden");
+            serviceAddonDisplay.textContent = "--";
+            setDepositRowPrefix("#serviceAddonRow", t("service_addon"));
+            serviceAddonRow.classList.add("hidden");
           }
         }
         if (totalRateNote) {
@@ -3063,12 +3107,15 @@
         setOptionText("city", "", t("choose_option"));
         syncCityOptions();
         setOptionText("currency", "", t("choose_option"));
-        setOptionText("experience", "", t("choose_option"));
+        setOptionText("experience", "", t("service_choose_option"));
+        setOptionText("experience", "gfe", t("service_gfe"));
+        setOptionText("experience", "pse", t("service_pse"));
+        setOptionText("experience", "filming", t("service_filming"));
         setOptionText("payment_method", "", t("choose_option"));
         setOptionText("payment_method", "interac", t("etransfer_canada"));
 
         setDepositRowPrefix("#depositBox .deposit-total:nth-of-type(1)", t("base_rate"));
-        setDepositRowPrefix("#pseAddonRow", t("pse_addon"));
+        setDepositRowPrefix("#serviceAddonRow", t("service_addon"));
         setDepositRowPrefix("#depositBox .deposit-total:nth-of-type(3)", t("total_rate"));
         setDepositRowPrefix("#depositBox .deposit-total:nth-of-type(4)", t("deposit_rate"));
         const depositConsentText = document.getElementById("depositConsentText");

@@ -6,7 +6,10 @@ require __DIR__ . '/config.php';
 function normalize_experience(string $experience): string
 {
     $normalized = strtolower(trim($experience));
-    return $normalized === 'gfe' ? 'gfe' : 'pse';
+    if (in_array($normalized, ['gfe', 'pse', 'filming'], true)) {
+        return $normalized;
+    }
+    return 'gfe';
 }
 
 function format_experience_label(string $experience): string
@@ -18,7 +21,10 @@ function format_experience_label(string $experience): string
     if ($normalized === 'pse') {
         return 'PSE';
     }
-    return $normalized !== '' ? strtoupper($normalized) : 'PSE';
+    if ($normalized === 'filming') {
+        return 'Filming';
+    }
+    return $normalized !== '' ? strtoupper($normalized) : 'GFE';
 }
 
 function normalize_city_name(string $city): string
@@ -267,7 +273,10 @@ if (!in_array($paymentMethod, $allowedMethods, true)) {
 }
 
 $depositPercent = 20.0;
-$pseBillAddon = 100;
+$serviceAddons = [
+    'pse' => 100,
+    'filming' => 500,
+];
 $displayRate = 1.0;
 $fiatOverrides = [
     'USD' => 1.0,
@@ -291,13 +300,19 @@ if ($rateKey !== 'social') {
 }
 $experience = normalize_experience((string) ($payload['experience'] ?? ''));
 $baseRate = get_base_rate($hours, $experience, $rateKey);
-$pseAddonAmount = ($baseRate > 0 && $experience === 'pse') ? $pseBillAddon : 0;
-$totalRate = $baseRate + $pseAddonAmount;
+$serviceAddonAmount = ($baseRate > 0 && isset($serviceAddons[$experience])) ? (int) $serviceAddons[$experience] : 0;
+$totalRate = $baseRate + $serviceAddonAmount;
 $deposit = $totalRate > 0 ? (int) round(($totalRate * ($depositPercent / 100)) * $displayRate) : 0;
 $billingCurrency = $depositCurrency !== '' ? $depositCurrency : ($currency !== '' ? $currency : 'CAD');
 $displayTotalRate = (int) round($totalRate * $displayRate);
-$displayPseAddonAmount = (int) round($pseAddonAmount * $displayRate);
-$displayBaseRate = max(0, $displayTotalRate - $displayPseAddonAmount);
+$displayServiceAddonAmount = (int) round($serviceAddonAmount * $displayRate);
+$displayBaseRate = max(0, $displayTotalRate - $displayServiceAddonAmount);
+$serviceAddonLabel = '';
+if ($experience === 'pse') {
+    $serviceAddonLabel = 'PSE add-on';
+} elseif ($experience === 'filming') {
+    $serviceAddonLabel = 'Filming add-on';
+}
 
 $availability = read_json_file(DATA_DIR . '/availability.json', [
     'availability_mode' => 'open',
@@ -461,8 +476,8 @@ if ($requestEmail !== '') {
     $body .= "Base rate: " . $displayBaseRate . " " . $currencyLabel . "\n";
     $body .= "Service: " . $experienceLabel . "\n";
     $body .= "Duration: " . ($payload['duration_label'] ?? '') . "\n";
-    if ($displayPseAddonAmount > 0) {
-        $body .= "PSE add-on: +" . $displayPseAddonAmount . " " . $currencyLabel . "\n";
+    if ($displayServiceAddonAmount > 0) {
+        $body .= ($serviceAddonLabel !== '' ? $serviceAddonLabel : 'Service add-on') . ": +" . $displayServiceAddonAmount . " " . $currencyLabel . "\n";
     }
     $body .= "Total rate: " . $displayTotalRate . " " . $currencyLabel . "\n";
     if ($deposit > 0) {
@@ -498,7 +513,7 @@ $request = [
     'currency' => $currency,
     'booking_type' => (string) $payload['booking_type'],
     'outcall_address' => trim((string) ($payload['outcall_address'] ?? '')),
-    'experience' => (string) $payload['experience'],
+    'experience' => $experience,
     'duration_label' => (string) $payload['duration_label'],
     'duration_hours' => (string) $payload['duration_hours'],
     'preferred_date' => (string) $payload['preferred_date'],
@@ -519,7 +534,9 @@ $request = [
     'deposit_currency' => $depositCurrency,
     'deposit_percent' => (string) $depositPercent,
     'base_rate' => $baseRate,
-    'pse_addon' => $pseAddonAmount,
+    'pse_addon' => ($experience === 'pse') ? $serviceAddonAmount : 0,
+    'service_addon' => $serviceAddonAmount,
+    'service_addon_label' => $serviceAddonLabel,
     'total_rate' => $totalRate,
     'payment_link' => $paymentLink,
     'payment_email_sent_at' => $paymentEmailSentAt,
@@ -540,8 +557,8 @@ $adminBody .= "Service: " . $experienceLabel . "\n";
 $adminBody .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
 $adminBody .= "Preferred: " . ($request['preferred_date'] ?? '') . " " . ($request['preferred_time'] ?? '') . "\n";
 $adminBody .= "Base rate (CAD): " . $baseRate . "\n";
-if ($pseAddonAmount > 0) {
-    $adminBody .= "PSE add-on (CAD): +" . $pseAddonAmount . "\n";
+if ($serviceAddonAmount > 0) {
+    $adminBody .= ($serviceAddonLabel !== '' ? $serviceAddonLabel : 'Service add-on') . " (CAD): +" . $serviceAddonAmount . "\n";
 }
 $adminBody .= "Total rate (CAD): " . $totalRate . "\n";
 $adminBody .= "Payment method: " . format_payment_method($paymentMethod) . "\n";

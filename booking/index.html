@@ -2186,15 +2186,6 @@
 
       const isFlyMeCity = (value) => normalizeCityName(value) === "fly me to you";
 
-      const getFallbackTourCity = () => {
-        const fallbackCity = sanitizeCityLabel(tourCity);
-        if (!fallbackCity) return "";
-        if (normalizeCityName(fallbackCity) === normalizeCityName("Touring city not set")) {
-          return "";
-        }
-        return fallbackCity;
-      };
-
       const defaultCityOptions = citySelect
         ? Array.from(citySelect.options)
             .map((option) => String(option.value || "").trim())
@@ -2210,8 +2201,6 @@
         const cityPool = [
           ...defaultCityOptions,
           ...tourSchedule.map((entry) => sanitizeCityLabel(entry?.city)),
-          ...citySchedules.map((entry) => sanitizeCityLabel(entry?.city)),
-          getFallbackTourCity(),
         ];
         const seen = new Set();
         const uniqueCities = [];
@@ -2278,7 +2267,7 @@
         if (tourTzEl) {
           tourTzEl.textContent = selectedTourTimezone;
         }
-        const displayCity = sanitizeCityLabel(getCityForDate(dateKey) || schedule?.city || getFallbackTourCity());
+        const displayCity = sanitizeCityLabel(getCityForDate(dateKey));
         if (tourCityEl) {
           tourCityEl.textContent = displayCity;
         }
@@ -2466,7 +2455,7 @@
         }
 
         const cityContext = updateSelectedTourContext();
-        const dayCity = sanitizeCityLabel(getCityForDate(dateKey) || cityContext?.city || getFallbackTourCity());
+        const dayCity = sanitizeCityLabel(getCityForDate(dateKey));
         if (touringDayCityEl) touringDayCityEl.textContent = dayCity || t("city_tba");
         dayCalendar.dataset.city = dayCity || t("city_tba");
         availabilityNote.textContent = t("availability_selected_date");
@@ -2799,7 +2788,6 @@
             throw new Error("Availability not available");
           }
           const data = await response.json();
-          tourCity = sanitizeCityLabel(data.tour_city || tourCity);
           tourTz = data.tour_timezone || tourTz;
           bufferMinutes = Number(data.buffer_minutes) || bufferMinutes;
           selectedTourTimezone = tourTz;
@@ -2897,7 +2885,7 @@
 
         const formData = new FormData(form);
         const selected = durationSelect.selectedOptions[0];
-        const activeSchedule = updateSelectedTourContext();
+        updateSelectedTourContext();
         const payload = Object.fromEntries(formData.entries());
         payload.duration_label = selected?.dataset.label || "";
         payload.duration_hours = selected?.dataset.hours || "0";
@@ -2906,9 +2894,7 @@
         payload.deposit_percent = String(DEPOSIT_PERCENT);
         payload.deposit_confirm = formData.get("deposit_confirm") ? "1" : "";
         payload.tour_timezone = selectedTourTimezone || tourTz;
-        payload.tour_city = sanitizeCityLabel(
-          getCityForDate(preferredDate.value) || activeSchedule?.city || getFallbackTourCity()
-        );
+        payload.tour_city = sanitizeCityLabel(getCityForDate(preferredDate.value));
         payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
         payload.preferred_time = preferredTime.value || "";
 

@@ -59,11 +59,7 @@ function get_touring_city_for_date(string $dateKey): string
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateKey)) {
         return '';
     }
-    $siteContent = read_site_content();
-    $touring = $siteContent['touring'] ?? [];
-    if (!is_array($touring)) {
-        return '';
-    }
+    $touring = get_effective_touring_schedule();
     foreach ($touring as $entry) {
         if (!is_array($entry)) {
             continue;

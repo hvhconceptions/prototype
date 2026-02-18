@@ -37,10 +37,7 @@ function normalize_tour_type(string $value): string
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $content = read_site_content();
-    $touring = $content['touring'] ?? [];
-    if (!is_array($touring)) {
-        $touring = [];
-    }
+    $touring = get_effective_touring_schedule();
     json_response([
         'touring' => $touring,
         'updated_at' => $content['updated_at'] ?? gmdate('c'),

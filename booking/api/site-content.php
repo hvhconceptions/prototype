@@ -4,10 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/config.php';
 
 $content = read_site_content();
-$touring = $content['touring'] ?? [];
-if (!is_array($touring)) {
-    $touring = [];
-}
+$touring = get_effective_touring_schedule();
 
 json_response([
     'touring' => $touring,

@@ -257,6 +257,190 @@ function write_site_content(array $data): void
     write_json_file(SITE_CONTENT_FILE, $data);
 }
 
+function normalize_touring_city_label(string $value): string
+{
+    $city = trim(html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    if ($city === '') {
+        return '';
+    }
+
+    $normalized = strtolower($city);
+    $normalized = str_replace(['ß', 'β'], ['ss', 'b'], $normalized);
+    $normalized = preg_replace('/[^a-z0-9]+/i', ' ', $normalized);
+    $normalized = is_string($normalized) ? trim($normalized) : '';
+    if ($normalized === 'tba' || $normalized === 'to be announced') {
+        return '';
+    }
+    if ($normalized !== '' && preg_match('/(^| )((b|ss) mode)( |$)/', $normalized)) {
+        return 'Montreal';
+    }
+    return $city;
+}
+
+function normalize_touring_entries(array $touring): array
+{
+    $clean = [];
+    foreach ($touring as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $start = trim((string) ($entry['start'] ?? ''));
+        $end = trim((string) ($entry['end'] ?? ''));
+        $city = normalize_touring_city_label((string) ($entry['city'] ?? ''));
+        if ($city === '') {
+            continue;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+            continue;
+        }
+        if ($start > $end) {
+            continue;
+        }
+        $clean[] = [
+            'start' => $start,
+            'end' => $end,
+            'city' => $city,
+        ];
+    }
+    usort($clean, static function (array $a, array $b): int {
+        return strcmp($a['start'] . '|' . $a['end'] . '|' . strtolower($a['city']), $b['start'] . '|' . $b['end'] . '|' . strtolower($b['city']));
+    });
+    return $clean;
+}
+
+function parse_inside_month_token(string $token): int
+{
+    $token = strtolower(trim($token));
+    if ($token === '') {
+        return 0;
+    }
+    $token = substr($token, 0, 3);
+    $map = [
+        'jan' => 1,
+        'feb' => 2,
+        'mar' => 3,
+        'apr' => 4,
+        'may' => 5,
+        'jun' => 6,
+        'jul' => 7,
+        'aug' => 8,
+        'sep' => 9,
+        'oct' => 10,
+        'nov' => 11,
+        'dec' => 12,
+    ];
+    return $map[$token] ?? 0;
+}
+
+function parse_inside_touring_schedule(string $html): array
+{
+    if ($html === '') {
+        return [];
+    }
+
+    if (!preg_match_all('/<div[^>]*class="[^"]*\btouring-row\b[^"]*"[^>]*>(.*?)<\/div>/is', $html, $rowMatches)) {
+        return [];
+    }
+
+    $pending = [];
+    foreach ($rowMatches[1] as $rowHtml) {
+        if (!is_string($rowHtml)) {
+            continue;
+        }
+        if (!preg_match('/<span[^>]*class="[^"]*\btouring-city\b[^"]*"[^>]*>(.*?)<\/span>/is', $rowHtml, $cityMatch)) {
+            continue;
+        }
+        $city = normalize_touring_city_label((string) ($cityMatch[1] ?? ''));
+        if ($city === '') {
+            continue;
+        }
+
+        $dateText = html_entity_decode(strip_tags($rowHtml), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $dateText = strtolower(trim(preg_replace('/\s+/', ' ', $dateText) ?? ''));
+        if ($dateText === '') {
+            continue;
+        }
+
+        if (!preg_match('/(\d{1,2})\s*([a-z]{3,9})\s*-\s*(\d{1,2})\s*([a-z]{3,9})/i', $dateText, $range)) {
+            continue;
+        }
+
+        $startDay = (int) $range[1];
+        $startMonth = parse_inside_month_token((string) $range[2]);
+        $endDay = (int) $range[3];
+        $endMonth = parse_inside_month_token((string) $range[4]);
+        if ($startDay < 1 || $startDay > 31 || $endDay < 1 || $endDay > 31 || $startMonth < 1 || $endMonth < 1) {
+            continue;
+        }
+
+        $pending[] = [
+            'city' => $city,
+            'start_day' => $startDay,
+            'start_month' => $startMonth,
+            'end_day' => $endDay,
+            'end_month' => $endMonth,
+        ];
+    }
+
+    if (!$pending) {
+        return [];
+    }
+
+    $year = (int) gmdate('Y');
+    $previousStartMonth = null;
+    $clean = [];
+    foreach ($pending as $row) {
+        $startMonth = (int) $row['start_month'];
+        $endMonth = (int) $row['end_month'];
+        if ($previousStartMonth !== null && $startMonth < $previousStartMonth) {
+            $year += 1;
+        }
+        $previousStartMonth = $startMonth;
+        $startYear = $year;
+        $endYear = $endMonth < $startMonth ? ($startYear + 1) : $startYear;
+        $start = sprintf('%04d-%02d-%02d', $startYear, $startMonth, (int) $row['start_day']);
+        $end = sprintf('%04d-%02d-%02d', $endYear, $endMonth, (int) $row['end_day']);
+        if ($start > $end) {
+            continue;
+        }
+        $clean[] = [
+            'start' => $start,
+            'end' => $end,
+            'city' => (string) $row['city'],
+        ];
+    }
+
+    return normalize_touring_entries($clean);
+}
+
+function read_inside_touring_schedule(): array
+{
+    $insidePath = dirname(dirname(__DIR__)) . '/inside.html';
+    if (!is_file($insidePath)) {
+        return [];
+    }
+    $html = file_get_contents($insidePath);
+    if (!is_string($html) || $html === '') {
+        return [];
+    }
+    return parse_inside_touring_schedule($html);
+}
+
+function get_effective_touring_schedule(): array
+{
+    $insideSchedule = read_inside_touring_schedule();
+    if ($insideSchedule) {
+        return $insideSchedule;
+    }
+
+    $content = read_site_content();
+    $touring = $content['touring'] ?? [];
+    if (!is_array($touring)) {
+        return [];
+    }
+    return normalize_touring_entries($touring);
+}
+
 function get_default_gallery_items(): array
 {
     return [

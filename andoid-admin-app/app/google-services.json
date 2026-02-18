@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "702943140914",
-    "project_id": "prototypebooking",
-    "storage_bucket": "prototypebooking.firebasestorage.app"
+    "project_number": "162267493864",
+    "project_id": "heidi-van-bookly",
+    "storage_bucket": "heidi-van-bookly.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:702943140914:android:10244a0978f06951c1f02b",
+        "mobilesdk_app_id": "1:162267493864:android:dbdd3d0707db2d31a1205d",
         "android_client_info": {
           "package_name": "com.heidi.bookingadmin"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCKJpLG0DbKSNeuCcraC5ub79HJylrJwbM"
+          "current_key": "AIzaSyCkCgcqKjvdqkj9k7TE0oJXgH-YSLxbJyo"
         }
       ],
       "services": {

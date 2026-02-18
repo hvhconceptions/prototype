@@ -2255,7 +2255,7 @@ require_admin_ui();
         const breakDaysRaw = hasBreakDaysField ? entry.break_days : [];
         const bufferMinutes = Math.max(0, Math.min(240, Number(entry.buffer_minutes ?? 0) || 0));
         const readyStart = isValidTime(entry.ready_start) ? String(entry.ready_start) : "11:00";
-        const leaveDayEnd = isValidTime(entry.leave_day_end) ? String(entry.leave_day_end) : "18:00";
+        const leaveDayEnd = isValidTime(entry.leave_day_end) ? String(entry.leave_day_end) : "23:59";
         const hasSleep = !!entry.has_sleep;
         const sleepDays = hasSleep
           ? Array.from(
@@ -2361,7 +2361,7 @@ require_admin_ui();
         const sleepDaySet = new Set(Array.isArray(schedule.sleep_days) ? schedule.sleep_days : []);
         const breakDaySet = new Set(Array.isArray(schedule.break_days) ? schedule.break_days : []);
         const startTime = isValidTime(schedule.ready_start) ? schedule.ready_start : "11:00";
-        const leaveEnd = isValidTime(schedule.leave_day_end) ? schedule.leave_day_end : "18:00";
+        const leaveEnd = isValidTime(schedule.leave_day_end) ? schedule.leave_day_end : "23:59";
         dates.forEach((dateKey, index) => {
           pushTemplateRange(blocks, schedule, dateKey, "00:00", startTime, "Before ready time");
           if (index === dates.length - 1) {

@@ -192,6 +192,24 @@ function build_calendar_links(array $request): array
     ];
 }
 
+function append_calendar_links_lines(string &$body, array $calendarLinks): void
+{
+    if (empty($calendarLinks)) {
+        return;
+    }
+    $body .= "Add to calendar:\n";
+    if (!empty($calendarLinks['google'])) {
+        $body .= "- Google Calendar: " . $calendarLinks['google'] . "\n";
+    }
+    if (!empty($calendarLinks['outlook'])) {
+        $body .= "- Samsung / Microsoft Calendar: " . $calendarLinks['outlook'] . "\n";
+    }
+    if (!empty($calendarLinks['ics'])) {
+        $body .= "- Apple Calendar (ICS): " . $calendarLinks['ics'] . "\n";
+    }
+    $body .= "\n";
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['error' => 'Method not allowed'], 405);
 }
@@ -306,25 +324,34 @@ foreach ($requests as $index => &$request) {
             $body .= "Payment method: " . $methodLabel . "\n";
             $body .= "Deposit: " . $depositAmount . " " . $currencyLabel . "\n";
             $calendarLinks = build_calendar_links($request);
-            if (!empty($calendarLinks)) {
-                $body .= "Add to calendar:\n";
-                if (!empty($calendarLinks['google'])) {
-                    $body .= "Google: " . $calendarLinks['google'] . "\n";
-                }
-                if (!empty($calendarLinks['outlook'])) {
-                    $body .= "Microsoft: " . $calendarLinks['outlook'] . "\n";
-                }
-                if (!empty($calendarLinks['ics'])) {
-                    $body .= "iCloud (ICS): " . $calendarLinks['ics'] . "\n";
-                }
-                $body .= "\n";
-            }
+            append_calendar_links_lines($body, $calendarLinks);
             if ($paymentLink !== '') {
                 $body .= "Payment details: " . $paymentLink . "\n";
             }
             $body .= "\nOnce payment is in, the time is locked.\n";
             if (send_payment_email($requestEmail, $body)) {
                 $request['accepted_email_sent_at'] = gmdate('c');
+            }
+        }
+        if (($request['accepted_admin_notified_at'] ?? '') === '') {
+            $adminCurrency = $depositCurrency !== '' ? $depositCurrency : (PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'USD');
+            $adminMethod = format_payment_method($paymentMethod);
+            $adminBody = "Booking accepted\n\n";
+            $adminBody .= "Name: " . ($request['name'] ?? '') . "\n";
+            $adminBody .= "Email: " . ($request['email'] ?? '') . "\n";
+            $adminBody .= "Phone: " . ($request['phone'] ?? '') . "\n";
+            $adminBody .= "Date/time: " . ($request['preferred_date'] ?? '') . " " . ($request['preferred_time'] ?? '') . "\n";
+            $adminBody .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
+            $adminBody .= "Payment method: " . $adminMethod . "\n";
+            $adminBody .= "Deposit: " . $depositAmount . " " . $adminCurrency . "\n";
+            $calendarLinks = build_calendar_links($request);
+            append_calendar_links_lines($adminBody, $calendarLinks);
+            if ($paymentLink !== '') {
+                $adminBody .= "Payment details: " . $paymentLink . "\n";
+            }
+            $adminBody .= "Request id: " . ($request['id'] ?? '') . "\n";
+            if (send_admin_email($adminBody, 'Booking accepted')) {
+                $request['accepted_admin_notified_at'] = gmdate('c');
             }
         }
         append_history_entry($request, 'status', 'Status set to accepted');
@@ -341,19 +368,7 @@ foreach ($requests as $index => &$request) {
             $body .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
             $body .= "Deposit received: " . $depositAmount . " " . $currencyLabel . "\n\n";
             $calendarLinks = build_calendar_links($request);
-            if (!empty($calendarLinks)) {
-                $body .= "Add to calendar:\n";
-                if (!empty($calendarLinks['google'])) {
-                    $body .= "Google: " . $calendarLinks['google'] . "\n";
-                }
-                if (!empty($calendarLinks['outlook'])) {
-                    $body .= "Microsoft: " . $calendarLinks['outlook'] . "\n";
-                }
-                if (!empty($calendarLinks['ics'])) {
-                    $body .= "iCloud (ICS): " . $calendarLinks['ics'] . "\n";
-                }
-                $body .= "\n";
-            }
+            append_calendar_links_lines($body, $calendarLinks);
             $body .= "See you soon.\n";
             if (send_payment_email($requestEmail, $body, 'Payment received')) {
                 $request['paid_email_sent_at'] = gmdate('c');
@@ -369,18 +384,7 @@ foreach ($requests as $index => &$request) {
             $adminBody .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
             $adminBody .= "Deposit received: " . $depositAmount . " " . $adminCurrency . "\n";
             $calendarLinks = build_calendar_links($request);
-            if (!empty($calendarLinks)) {
-                $adminBody .= "Add to calendar:\n";
-                if (!empty($calendarLinks['google'])) {
-                    $adminBody .= "Google: " . $calendarLinks['google'] . "\n";
-                }
-                if (!empty($calendarLinks['outlook'])) {
-                    $adminBody .= "Microsoft: " . $calendarLinks['outlook'] . "\n";
-                }
-                if (!empty($calendarLinks['ics'])) {
-                    $adminBody .= "iCloud (ICS): " . $calendarLinks['ics'] . "\n";
-                }
-            }
+            append_calendar_links_lines($adminBody, $calendarLinks);
             $adminBody .= "Request id: " . ($request['id'] ?? '') . "\n";
             if (send_admin_email($adminBody, 'Payment received')) {
                 $request['paid_admin_notified_at'] = gmdate('c');

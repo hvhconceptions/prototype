@@ -585,6 +585,33 @@ function escape_html(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function email_link_label_for_url(string $url): string
+{
+    $lower = strtolower(trim($url));
+    if ($lower === '') {
+        return 'Open link';
+    }
+    if (strpos($lower, 'google.com/calendar/render') !== false) {
+        return 'Add to Google Calendar';
+    }
+    if (strpos($lower, 'outlook.live.com/calendar') !== false) {
+        return 'Add to Samsung / Microsoft Calendar';
+    }
+    if (strpos($lower, '/api/calendar.php') !== false) {
+        return 'Add to Apple Calendar (ICS)';
+    }
+    $path = parse_url($url, PHP_URL_PATH);
+    if (is_string($path) && strtolower(substr($path, -4)) === '.ics') {
+        return 'Add to Apple Calendar (ICS)';
+    }
+    $host = parse_url($url, PHP_URL_HOST);
+    if (is_string($host) && $host !== '') {
+        $host = preg_replace('/^www\./i', '', $host) ?: $host;
+        return 'Open link (' . $host . ')';
+    }
+    return 'Open link';
+}
+
 function linkify_text_for_email(string $plainText): string
 {
     $escaped = escape_html($plainText);
@@ -593,7 +620,8 @@ function linkify_text_for_email(string $plainText): string
         static function (array $matches): string {
             $url = $matches[1];
             $safeUrl = escape_html($url);
-            return '<a href="' . $safeUrl . '" target="_blank" rel="noopener noreferrer" style="color:#e0006d;text-decoration:underline;">' . $safeUrl . '</a>';
+            $label = escape_html(email_link_label_for_url($url));
+            return '<a href="' . $safeUrl . '" title="' . $safeUrl . '" target="_blank" rel="noopener noreferrer" style="color:#e0006d;text-decoration:underline;">' . $label . '</a>';
         },
         $escaped
     );

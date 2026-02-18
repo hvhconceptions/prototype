@@ -810,6 +810,25 @@ require_admin_ui();
         box-shadow: inset 0 0 0 2px rgba(26, 127, 79, 0.35);
       }
 
+      .calendar-slot.slot-grouped {
+        border-radius: 0;
+      }
+
+      .calendar-slot.slot-group-start {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+      }
+
+      .calendar-slot.slot-group-end {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+      }
+
+      .calendar-slot.slot-group-middle,
+      .calendar-slot.slot-group-end {
+        border-top-color: rgba(255, 255, 255, 0.35);
+      }
+
       .calendar-legend {
         display: flex;
         gap: 12px;
@@ -2518,6 +2537,110 @@ require_admin_ui();
         return map;
       };
 
+      const getAdjacentSlotTime = (timeValue, direction = 1) => {
+        const minutes = timeToMinutes(timeValue);
+        if (minutes === null) return null;
+        const nextMinutes = minutes + direction * SLOT_MINUTES;
+        if (nextMinutes < 0 || nextMinutes >= 24 * 60) return null;
+        return minutesToTime(nextMinutes);
+      };
+
+      const getSlotGroupKey = (slot) => {
+        if (!slot) return "";
+        const kind = String(slot.kind || "manual").trim();
+        const city = normalizeCityName(slot.city || "");
+        if (kind === "booking") {
+          return `booking|${slot.booking_id || slot.label || ""}|${slot.booking_type || ""}|${slot.booking_status || ""}|${city}`;
+        }
+        if (kind === "template") {
+          return `template|${slot.template_id || slot.reason || ""}|${city}`;
+        }
+        return `${kind}|${slot.reason || ""}|${city}`;
+      };
+
+      const getSlotGroupFlags = (dateKey, timeValue, entry) => {
+        if (!entry) return { hasPrevious: false, hasNext: false };
+        const groupKey = getSlotGroupKey(entry);
+        if (!groupKey) return { hasPrevious: false, hasNext: false };
+        const previousTime = getAdjacentSlotTime(timeValue, -1);
+        const nextTime = getAdjacentSlotTime(timeValue, 1);
+        const previousEntry = previousTime ? getSlotEntry(dateKey, previousTime) : null;
+        const nextEntry = nextTime ? getSlotEntry(dateKey, nextTime) : null;
+        return {
+          hasPrevious: !!previousEntry && getSlotGroupKey(previousEntry) === groupKey,
+          hasNext: !!nextEntry && getSlotGroupKey(nextEntry) === groupKey,
+        };
+      };
+
+      const normalizeRangeEndMinutes = (value) => {
+        if (value === null) return null;
+        if (value >= 1439) return 1440;
+        return value;
+      };
+
+      const formatRangeTime = (minutes) => {
+        if (!Number.isFinite(minutes)) return "";
+        if (minutes >= 24 * 60) return "24:00";
+        return minutesToTime(minutes);
+      };
+
+      const buildManualBlockGroups = () => {
+        const manualEntries = blockedSlots
+          .map((slot, index) => ({ slot, index }))
+          .filter(({ slot }) => slot && slot.kind === "manual")
+          .map(({ slot, index }) => {
+            const startMinutes = timeToMinutes(slot.start);
+            const endMinutes = normalizeRangeEndMinutes(timeToMinutes(slot.end));
+            if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+              return null;
+            }
+            return {
+              index,
+              date: slot.date,
+              reason: String(slot.reason || "").trim(),
+              reasonKey: String(slot.reason || "").trim().toLowerCase(),
+              city: String(slot.city || "").trim(),
+              cityKey: normalizeCityName(slot.city || ""),
+              startMinutes,
+              endMinutes,
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => {
+            const dateCmp = String(a.date).localeCompare(String(b.date));
+            if (dateCmp !== 0) return dateCmp;
+            return a.startMinutes - b.startMinutes;
+          });
+
+        const groups = [];
+        manualEntries.forEach((entry) => {
+          const current = groups[groups.length - 1];
+          if (
+            current &&
+            current.date === entry.date &&
+            current.cityKey === entry.cityKey &&
+            current.reasonKey === entry.reasonKey &&
+            entry.startMinutes <= current.endMinutes
+          ) {
+            current.endMinutes = Math.max(current.endMinutes, entry.endMinutes);
+            current.indexes.push(entry.index);
+            return;
+          }
+          groups.push({
+            date: entry.date,
+            reason: entry.reason,
+            reasonKey: entry.reasonKey,
+            city: entry.city,
+            cityKey: entry.cityKey,
+            startMinutes: entry.startMinutes,
+            endMinutes: entry.endMinutes,
+            indexes: [entry.index],
+          });
+        });
+
+        return groups;
+      };
+
       let calendarView = "week";
 
       const setCalendarView = (view) => {
@@ -2588,6 +2711,17 @@ require_admin_ui();
               slotButton.appendChild(cityDot);
             }
             if (entry) {
+              const grouping = getSlotGroupFlags(dateKey, timeValue, entry);
+              if (grouping.hasPrevious || grouping.hasNext) {
+                slotButton.classList.add("slot-grouped");
+                if (grouping.hasPrevious && grouping.hasNext) {
+                  slotButton.classList.add("slot-group-middle");
+                } else if (grouping.hasNext) {
+                  slotButton.classList.add("slot-group-start");
+                } else if (grouping.hasPrevious) {
+                  slotButton.classList.add("slot-group-end");
+                }
+              }
               if (entry.kind === "booking") {
                 slotButton.classList.add("booking");
                 if (entry.booking_type === "outcall") {
@@ -2626,11 +2760,28 @@ require_admin_ui();
               }
               const start = timeValue;
               const end = minutesToTime(timeToMinutes(timeValue) + SLOT_MINUTES);
-              const index = blockedSlots.findIndex(
-                (slot) => slot.date === dateKey && slot.start === start && slot.end === end && slot.kind !== "booking"
-              );
-              if (index >= 0) {
-                blockedSlots.splice(index, 1);
+              const clickedStart = timeToMinutes(start);
+              const clickedEnd = timeToMinutes(end);
+              const hasOverlap =
+                clickedStart !== null &&
+                clickedEnd !== null &&
+                blockedSlots.some((slot) => {
+                  if (!slot || slot.date !== dateKey) return false;
+                  if (slot.kind === "booking" || slot.kind === "template") return false;
+                  const slotStart = timeToMinutes(slot.start);
+                  const slotEnd = normalizeRangeEndMinutes(timeToMinutes(slot.end));
+                  if (slotStart === null || slotEnd === null) return false;
+                  return clickedStart < slotEnd && clickedEnd > slotStart;
+                });
+              if (hasOverlap && clickedStart !== null && clickedEnd !== null) {
+                blockedSlots = blockedSlots.filter((slot) => {
+                  if (!slot || slot.date !== dateKey) return true;
+                  if (slot.kind === "booking" || slot.kind === "template") return true;
+                  const slotStart = timeToMinutes(slot.start);
+                  const slotEnd = normalizeRangeEndMinutes(timeToMinutes(slot.end));
+                  if (slotStart === null || slotEnd === null) return true;
+                  return !(clickedStart < slotEnd && clickedEnd > slotStart);
+                });
               } else {
                 blockedSlots.push({ date: dateKey, start, end, reason: "", kind: "manual", city: slotCity });
               }
@@ -2807,24 +2958,26 @@ require_admin_ui();
 
       const renderBlockedSlots = () => {
         if (!blockedList) return;
-        const manualSlots = blockedSlots
-          .map((slot, index) => ({ slot, index }))
-          .filter(({ slot }) => slot && slot.kind === "manual");
-        if (!manualSlots.length) {
+        const manualGroups = buildManualBlockGroups();
+        if (!manualGroups.length) {
           blockedList.textContent = "No manual blocked slots yet.";
           return;
         }
-        blockedList.innerHTML = manualSlots
-          .map(({ slot, index }) => {
-            const reason = slot.reason ? ` - ${slot.reason}` : "";
-            return `<div data-index="${index}">${slot.date} ${slot.start}-${slot.end}${reason} <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button></div>`;
+        blockedList.innerHTML = manualGroups
+          .map((group, index) => {
+            const reason = group.reason ? ` - ${group.reason}` : "";
+            const city = group.city ? ` (${group.city})` : "";
+            return `<div data-index="${index}">${group.date} ${formatRangeTime(group.startMinutes)}-${formatRangeTime(group.endMinutes)}${city}${reason} <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button></div>`;
           })
           .join("");
         blockedList.querySelectorAll("button[data-remove]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const idx = Number(btn.dataset.remove);
             if (Number.isNaN(idx)) return;
-            blockedSlots = blockedSlots.filter((_, i) => i !== idx);
+            const group = manualGroups[idx];
+            if (!group) return;
+            const removalSet = new Set(group.indexes);
+            blockedSlots = blockedSlots.filter((_slot, i) => !removalSet.has(i));
             renderBlockedSlots();
             renderCalendarView();
             queueAutoSave(t("saving_city_schedule"), { persist: true });

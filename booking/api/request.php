@@ -151,6 +151,20 @@ function get_city_schedule_for_request(array $availability, string $city, string
     return [];
 }
 
+function is_template_generated_block_entry(array $entry): bool
+{
+    $kind = strtolower(trim((string) ($entry['kind'] ?? '')));
+    if ($kind === 'template') {
+        return true;
+    }
+    $bookingId = trim((string) ($entry['booking_id'] ?? ''));
+    if ($bookingId !== '') {
+        return false;
+    }
+    $reason = strtolower(trim((string) ($entry['reason'] ?? '')));
+    return in_array($reason, ['after leave-day end', 'sleep', 'break'], true);
+}
+
 function get_base_rate(float $hours, string $experience, string $rateKey): int
 {
     if ($hours <= 0) {
@@ -435,6 +449,9 @@ if ($hours > 0) {
                 }
                 foreach ($blockedSlots as $entry) {
                     if (!is_array($entry)) {
+                        continue;
+                    }
+                    if (is_template_generated_block_entry($entry)) {
                         continue;
                     }
                     if (($entry['date'] ?? '') !== $tourDateKey) {

@@ -2469,6 +2469,16 @@
         });
       };
 
+      const isTemplateGeneratedBlock = (entry) => {
+        if (!entry || typeof entry !== "object") return false;
+        const kind = String(entry.kind || "").trim().toLowerCase();
+        if (kind === "template") return true;
+        const hasBookingId = String(entry.booking_id || "").trim() !== "";
+        if (hasBookingId) return false;
+        const reason = String(entry.reason || "").trim().toLowerCase();
+        return reason === "after leave-day end" || reason === "sleep" || reason === "break";
+      };
+
       const isSlotBlocked = (dateKey, startMinutes, endMinutes) => {
         if (availabilityMode === "closed") return true;
         if (!Array.isArray(blockedSlots) || !blockedSlots.length) {
@@ -2482,6 +2492,7 @@
         }
         return blockedSlots.some((entry) => {
           if (!entry || entry.date !== dateKey) return false;
+          if (isTemplateGeneratedBlock(entry)) return false;
           const blockStart = timeToMinutes(entry.start);
           const blockEnd = timeToMinutes(entry.end);
           if (blockStart === null || blockEnd === null) return false;

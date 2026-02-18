@@ -978,7 +978,8 @@
           dec: 11,
         };
 
-        const buildDate = (year, monthIndex, day) => new Date(year, monthIndex, day, 12, 0, 0);
+        const startOfDay = (year, monthIndex, day) => new Date(year, monthIndex, day, 0, 0, 0, 0);
+        const endOfDay = (year, monthIndex, day) => new Date(year, monthIndex, day, 23, 59, 59, 999);
 
         const parseRange = (raw) => {
           if (!raw) return null;
@@ -990,8 +991,8 @@
             const endDay = Number(untilMatch[2]);
             const year = now.getFullYear();
             return {
-              start: buildDate(year, monthIndex, 1),
-              end: buildDate(year, monthIndex, endDay),
+              start: startOfDay(year, monthIndex, 1),
+              end: endOfDay(year, monthIndex, endDay),
             };
           }
 
@@ -1012,8 +1013,8 @@
             }
 
             return {
-              start: buildDate(startYear, startMonth, startDay),
-              end: buildDate(endYear, endMonth, endDay),
+              start: startOfDay(startYear, startMonth, startDay),
+              end: endOfDay(endYear, endMonth, endDay),
             };
           }
 
@@ -1023,8 +1024,10 @@
             const monthIndex = monthMap[singleMatch[2]];
             if (typeof monthIndex !== "number") return null;
             const year = now.getFullYear();
-            const start = buildDate(year, monthIndex, day);
-            return { start, end: start };
+            return {
+              start: startOfDay(year, monthIndex, day),
+              end: endOfDay(year, monthIndex, day),
+            };
           }
 
           return null;

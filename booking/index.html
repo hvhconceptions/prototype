@@ -1078,7 +1078,7 @@
                 inputmode="tel"
                 autocomplete="tel"
                 placeholder="+ (country code) 555 1234"
-                pattern="\\+?[0-9\\s()\\-]{6,}"
+                pattern="\\+[0-9\\s().\\-]{8,}"
                 required
               />
               <div class="followup-block">
@@ -1383,6 +1383,8 @@
           other_cities: "Other cities?",
           followup_phone_placeholder: "Optional: Toronto, Vancouver, Paris",
           label_email: "Email",
+          invalid_email: "Enter a valid email address.",
+          invalid_phone: "Use a valid phone number with country code, for example +14389993539.",
           followup_email_placeholder: "Optional: Montreal, London, Berlin",
           label_notes: "Requests, info, tell me about you if you wish :)",
           notes_placeholder: "Optional. Share requests or any helpful info.",
@@ -1504,6 +1506,8 @@
           other_cities: "Autres villes?",
           followup_phone_placeholder: "Optionnel: Toronto, Vancouver, Paris",
           label_email: "Email",
+          invalid_email: "Entrez une adresse email valide.",
+          invalid_phone: "Utilisez un numero valide avec indicatif pays, par exemple +14389993539.",
           followup_email_placeholder: "Optionnel: Montreal, Londres, Berlin",
           label_notes: "Demandes, infos, parlez-moi de vous si vous voulez :)",
           notes_placeholder: "Optionnel. Partagez vos demandes ou infos utiles.",
@@ -2397,6 +2401,37 @@
         return true;
       };
 
+      const validateEmailField = () => {
+        if (!emailInput) return true;
+        const value = String(emailInput.value || "").trim();
+        emailInput.setCustomValidity("");
+        if (!value) return true;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+        if (!emailPattern.test(value)) {
+          emailInput.setCustomValidity(t("invalid_email"));
+          return false;
+        }
+        return true;
+      };
+
+      const validatePhoneField = () => {
+        if (!phoneInput) return true;
+        const value = String(phoneInput.value || "").trim();
+        phoneInput.setCustomValidity("");
+        if (!value) return true;
+        const allowedPattern = /^\+[0-9\s().-]+$/;
+        if (!allowedPattern.test(value)) {
+          phoneInput.setCustomValidity(t("invalid_phone"));
+          return false;
+        }
+        const digits = value.replace(/\D/g, "");
+        if (digits.length < 8 || digits.length > 15 || digits.startsWith("0")) {
+          phoneInput.setCustomValidity(t("invalid_phone"));
+          return false;
+        }
+        return true;
+      };
+
       const timeToMinutes = (timeValue) => {
         const [hour, minute] = String(timeValue || "").split(":").map((value) => Number(value));
         if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
@@ -2685,8 +2720,16 @@
           validate: () => {
             const okName = nameInput?.reportValidity() ?? true;
             if (!okName) return false;
+            if (!validatePhoneField()) {
+              phoneInput?.reportValidity();
+              return false;
+            }
             const okPhone = phoneInput?.reportValidity() ?? true;
             if (!okPhone) return false;
+            if (!validateEmailField()) {
+              emailInput?.reportValidity();
+              return false;
+            }
             const okEmail = emailInput?.reportValidity() ?? true;
             return okEmail;
           },
@@ -2874,6 +2917,15 @@
         }
       });
 
+      if (phoneInput) {
+        phoneInput.addEventListener("input", validatePhoneField);
+        phoneInput.addEventListener("blur", validatePhoneField);
+      }
+      if (emailInput) {
+        emailInput.addEventListener("input", validateEmailField);
+        emailInput.addEventListener("blur", validateEmailField);
+      }
+
       if (wizardNext) {
         wizardNext.addEventListener("click", nextWizardStep);
       }
@@ -2906,6 +2958,14 @@
         }
         if (!validateSelectedTimeNotPast()) {
           preferredTime.reportValidity();
+          return;
+        }
+        if (!validatePhoneField()) {
+          phoneInput?.reportValidity();
+          return;
+        }
+        if (!validateEmailField()) {
+          emailInput?.reportValidity();
           return;
         }
 
@@ -2982,6 +3042,8 @@
           const emailValue = emailInput ? emailInput.value.trim() : "";
           showSuccessPopup(successText, paymentLink, emailValue);
           form.reset();
+          phoneInput?.setCustomValidity("");
+          emailInput?.setCustomValidity("");
           currencySelect.value = detectDefaultCurrency();
           await updateDurationOptions();
           toggleOutcall();

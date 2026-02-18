@@ -57,6 +57,8 @@ if ($format === 'csv') {
         'buffer_minutes',
         'notes',
         'contact_followup',
+        'contact_followup_phone',
+        'contact_followup_email',
         'contact_channel',
         'followup_cities',
         'payment_method',

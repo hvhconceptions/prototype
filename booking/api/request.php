@@ -34,6 +34,38 @@ function normalize_city_name(string $city): string
     return is_string($city) ? $city : '';
 }
 
+function is_valid_email_address(string $email): bool
+{
+    $value = trim($email);
+    if ($value === '' || strlen($value) > 254) {
+        return false;
+    }
+    if (preg_match('/\s/', $value)) {
+        return false;
+    }
+    return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+function is_valid_phone_international(string $phone): bool
+{
+    $value = trim($phone);
+    if ($value === '' || strpos($value, '+') !== 0) {
+        return false;
+    }
+    if (!preg_match('/^\+[0-9\s().-]+$/', $value)) {
+        return false;
+    }
+    $digits = preg_replace('/\D+/', '', $value);
+    if (!is_string($digits) || $digits === '') {
+        return false;
+    }
+    $len = strlen($digits);
+    if ($len < 8 || $len > 15) {
+        return false;
+    }
+    return $digits[0] !== '0';
+}
+
 function parse_city_list(string $raw): array
 {
     $parts = preg_split('/[,;\n\r]+/', $raw);
@@ -175,8 +207,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $payload = get_request_body();
-$requestEmail = (string) ($payload['email'] ?? '');
-$requestPhone = (string) ($payload['phone'] ?? '');
+$requestEmail = trim((string) ($payload['email'] ?? ''));
+$requestPhone = trim((string) ($payload['phone'] ?? ''));
 $clientIp = get_client_ip();
 if (is_blacklisted($requestEmail, $requestPhone, $clientIp)) {
     json_response(['error' => 'Blocked'], 403);
@@ -203,6 +235,17 @@ foreach ($required as $field) {
         $errors[$field] = 'Required';
     }
 }
+
+$emailValue = trim((string) ($payload['email'] ?? ''));
+$phoneValue = trim((string) ($payload['phone'] ?? ''));
+if ($emailValue !== '' && !is_valid_email_address($emailValue)) {
+    $errors['email'] = 'Invalid email';
+}
+if ($phoneValue !== '' && !is_valid_phone_international($phoneValue)) {
+    $errors['phone'] = 'Use international format: +countrycode number';
+}
+$payload['email'] = $emailValue;
+$payload['phone'] = $phoneValue;
 
 if (($payload['booking_type'] ?? '') === 'outcall' && empty($payload['outcall_address'])) {
     $errors['outcall_address'] = 'Required for outcall';
@@ -550,6 +593,9 @@ $adminBody = "New booking request\n\n";
 $adminBody .= "Name: " . ($request['name'] ?? '') . "\n";
 $adminBody .= "Email: " . ($request['email'] ?? '') . "\n";
 $adminBody .= "Phone: " . ($request['phone'] ?? '') . "\n";
+$adminBody .= "Future contact by phone: " . (($request['contact_followup_phone'] ?? 'no') === 'yes' ? 'yes' : 'no') . "\n";
+$adminBody .= "Future contact by email: " . (($request['contact_followup_email'] ?? 'no') === 'yes' ? 'yes' : 'no') . "\n";
+$adminBody .= "Future-contact cities: " . (is_array($request['followup_cities'] ?? null) ? implode(', ', $request['followup_cities']) : '') . "\n";
 $adminBody .= "City: " . ($request['city'] ?? '') . "\n";
 $adminBody .= "Currency: " . ($request['currency'] ?? '') . "\n";
 $adminBody .= "Type: " . ($request['booking_type'] ?? '') . "\n";

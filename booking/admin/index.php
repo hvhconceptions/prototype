@@ -632,6 +632,48 @@ require_admin_ui();
         margin-top: 12px;
       }
 
+      .request-edit-panel {
+        margin-top: 12px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+      }
+
+      .request-edit-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .request-edit-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .request-edit-field label {
+        font-size: 0.78rem;
+        color: #5f173a;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .request-edit-field input,
+      .request-edit-field select,
+      .request-edit-field textarea {
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+        font-family: inherit;
+      }
+
+      .request-edit-field textarea {
+        min-height: 78px;
+        resize: vertical;
+      }
+
       .hint {
         font-size: 0.8rem;
         color: #7a1c45;
@@ -826,7 +868,8 @@ require_admin_ui();
 
       .calendar-slot.slot-group-middle,
       .calendar-slot.slot-group-end {
-        border-top-color: rgba(255, 255, 255, 0.35);
+        margin-top: -4px;
+        border-top-color: transparent;
       }
 
       .calendar-legend {
@@ -1718,9 +1761,16 @@ require_admin_ui();
           follow_up: "Follow-up",
           no_city: "no city",
           follow_up_no: "no",
+          follow_up_phone: "Future contact (phone)",
+          follow_up_email: "Future contact (email)",
+          follow_up_cities: "Future-contact cities",
           email_label: "Email",
+          name_label: "Name",
           phone_label: "Phone",
           city_label: "City",
+          date_label: "Date",
+          time_label: "Time",
+          hours_label: "Duration hours",
           type_label: "Type",
           outcall_address: "Outcall address",
           experience: "Experience",
@@ -1745,6 +1795,13 @@ require_admin_ui();
           action_mark_paid: "Mark paid",
           action_decline: "Decline",
           action_cancel: "Cancel",
+          action_edit: "Edit",
+          save_changes: "Save changes",
+          invalid_email: "Invalid email address.",
+          invalid_phone: "Use phone with country code, for example +14389993539.",
+          required_fields: "Please fill all required fields.",
+          appointment_updated: "Appointment updated.",
+          failed_update_appointment: "Failed to update appointment.",
           action_google_calendar: "Add to Google Calendar",
           action_samsung_calendar: "Samsung Calendar (.ics)",
         },
@@ -1854,9 +1911,16 @@ require_admin_ui();
           follow_up: "Suivi",
           no_city: "aucune ville",
           follow_up_no: "non",
+          follow_up_phone: "Contact futur (telephone)",
+          follow_up_email: "Contact futur (email)",
+          follow_up_cities: "Villes contact futur",
           email_label: "Email",
+          name_label: "Nom",
           phone_label: "Telephone",
           city_label: "Ville",
+          date_label: "Date",
+          time_label: "Heure",
+          hours_label: "Heures de duree",
           type_label: "Type",
           outcall_address: "Adresse outcall",
           experience: "Experience",
@@ -1881,6 +1945,13 @@ require_admin_ui();
           action_mark_paid: "Marquer paye",
           action_decline: "Refuser",
           action_cancel: "Annuler",
+          action_edit: "Modifier",
+          save_changes: "Sauvegarder",
+          invalid_email: "Adresse email invalide.",
+          invalid_phone: "Utilisez un numero avec indicatif pays, ex: +14389993539.",
+          required_fields: "Veuillez remplir les champs obligatoires.",
+          appointment_updated: "Rendez-vous mis a jour.",
+          failed_update_appointment: "Echec mise a jour du rendez-vous.",
           action_google_calendar: "Ajouter a Google Calendar",
           action_samsung_calendar: "Samsung Calendar (.ics)",
         },
@@ -3930,6 +4001,232 @@ require_admin_ui();
         return value || "";
       };
 
+      const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(String(value || "").trim());
+
+      const isValidInternationalPhone = (value) => {
+        const raw = String(value || "").trim();
+        if (!raw.startsWith("+")) return false;
+        if (!/^\+[0-9\s().-]+$/.test(raw)) return false;
+        const digits = raw.replace(/\D/g, "");
+        if (digits.length < 8 || digits.length > 15) return false;
+        return !digits.startsWith("0");
+      };
+
+      const createEditField = (labelText, type, value = "", options = {}) => {
+        const wrap = document.createElement("div");
+        wrap.className = "request-edit-field";
+        if (options.full) {
+          wrap.style.gridColumn = "1 / -1";
+        }
+        const label = document.createElement("label");
+        label.textContent = labelText;
+        const input =
+          type === "textarea" ? document.createElement("textarea") : document.createElement(type === "select" ? "select" : "input");
+        if (type !== "textarea" && type !== "select") {
+          input.type = type;
+        }
+        input.value = String(value ?? "");
+        if (options.placeholder) {
+          input.placeholder = options.placeholder;
+        }
+        if (options.required) {
+          input.required = true;
+        }
+        if (options.min !== undefined) {
+          input.min = String(options.min);
+        }
+        if (options.max !== undefined) {
+          input.max = String(options.max);
+        }
+        if (options.step !== undefined) {
+          input.step = String(options.step);
+        }
+        if (Array.isArray(options.selectOptions) && input.tagName === "SELECT") {
+          options.selectOptions.forEach((entry) => {
+            const option = document.createElement("option");
+            option.value = entry.value;
+            option.textContent = entry.label;
+            input.appendChild(option);
+          });
+        }
+        wrap.appendChild(label);
+        wrap.appendChild(input);
+        return { wrap, input };
+      };
+
+      const createRequestEditPanel = (item) => {
+        const panel = document.createElement("div");
+        panel.className = "request-edit-panel hidden";
+
+        const grid = document.createElement("div");
+        grid.className = "request-edit-grid";
+
+        const nameField = createEditField(t("name_label"), "text", item.name || "", { required: true });
+        const emailField = createEditField(t("email_label"), "email", item.email || "", { required: true });
+        const phoneField = createEditField(t("phone_label"), "tel", item.phone || "", {
+          required: true,
+          placeholder: "+14389993539",
+        });
+        const cityField = createEditField(t("city_label"), "text", item.city || "", { required: true });
+        const typeField = createEditField(t("type_label"), "select", item.booking_type || "incall", {
+          required: true,
+          selectOptions: [
+            { value: "incall", label: "incall" },
+            { value: "outcall", label: "outcall" },
+          ],
+        });
+        typeField.input.value = String(item.booking_type || "incall").toLowerCase() === "outcall" ? "outcall" : "incall";
+
+        const outcallField = createEditField(t("outcall_address"), "text", item.outcall_address || "");
+        const dateField = createEditField(t("date_label"), "date", item.preferred_date || "", { required: true });
+        const timeField = createEditField(t("time_label"), "time", item.preferred_time || "", { required: true, step: 1800 });
+        const durationLabelField = createEditField(t("duration"), "text", item.duration_label || "", { required: true });
+        const durationHoursField = createEditField(t("hours_label"), "number", item.duration_hours || "", {
+          required: true,
+          min: 0.5,
+          max: 24,
+          step: 0.5,
+        });
+        const experienceField = createEditField(t("experience"), "select", item.experience || "gfe", {
+          required: true,
+          selectOptions: [
+            { value: "gfe", label: "GFE" },
+            { value: "pse", label: "PSE" },
+            { value: "filming", label: "Filming" },
+          ],
+        });
+        experienceField.input.value = ["gfe", "pse", "filming"].includes(String(item.experience || "").toLowerCase())
+          ? String(item.experience || "").toLowerCase()
+          : "gfe";
+
+        const notesField = createEditField(t("notes"), "textarea", item.notes || "", { full: true });
+
+        [
+          nameField,
+          emailField,
+          phoneField,
+          cityField,
+          typeField,
+          outcallField,
+          dateField,
+          timeField,
+          durationLabelField,
+          durationHoursField,
+          experienceField,
+          notesField,
+        ].forEach(({ wrap }) => grid.appendChild(wrap));
+
+        panel.appendChild(grid);
+
+        const row = document.createElement("div");
+        row.className = "actions";
+        const saveBtn = createActionButton(t("save_changes"), () => {}, "btn secondary");
+        const cancelBtn = createActionButton(t("action_cancel"), () => {}, "btn ghost");
+        const statusNode = document.createElement("span");
+        statusNode.className = "status";
+
+        const setOutcallVisibility = () => {
+          const isOutcall = typeField.input.value === "outcall";
+          outcallField.wrap.style.display = isOutcall ? "" : "none";
+        };
+
+        const buildPayload = () => ({
+          id: item.id,
+          name: nameField.input.value.trim(),
+          email: emailField.input.value.trim(),
+          phone: phoneField.input.value.trim(),
+          city: cityField.input.value.trim(),
+          booking_type: typeField.input.value,
+          outcall_address: outcallField.input.value.trim(),
+          experience: experienceField.input.value,
+          duration_label: durationLabelField.input.value.trim(),
+          duration_hours: String(durationHoursField.input.value || "").trim(),
+          preferred_date: dateField.input.value,
+          preferred_time: timeField.input.value,
+          notes: notesField.input.value.trim(),
+        });
+
+        saveBtn.addEventListener("click", async () => {
+          statusNode.textContent = "";
+          const payload = buildPayload();
+          if (
+            !payload.name ||
+            !payload.email ||
+            !payload.phone ||
+            !payload.city ||
+            !payload.preferred_date ||
+            !payload.preferred_time ||
+            !payload.duration_label ||
+            !payload.duration_hours
+          ) {
+            statusNode.textContent = t("required_fields");
+            return;
+          }
+          if (!isValidEmail(payload.email)) {
+            statusNode.textContent = t("invalid_email");
+            return;
+          }
+          if (!isValidInternationalPhone(payload.phone)) {
+            statusNode.textContent = t("invalid_phone");
+            return;
+          }
+          if (payload.booking_type === "outcall" && !payload.outcall_address) {
+            statusNode.textContent = t("required_fields");
+            return;
+          }
+          const hours = Number(payload.duration_hours);
+          if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
+            statusNode.textContent = t("required_fields");
+            return;
+          }
+
+          const key = getKey();
+          if (!key) {
+            statusNode.textContent = t("admin_key_required");
+            return;
+          }
+
+          saveBtn.disabled = true;
+          try {
+            const response = await fetch("../api/admin/update-request.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Key": key,
+              },
+              body: JSON.stringify(payload),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              const fieldError =
+                result?.fields && typeof result.fields === "object" ? Object.values(result.fields)[0] : result?.error;
+              throw new Error(fieldError || "update");
+            }
+            statusNode.textContent = t("appointment_updated");
+            await loadRequests();
+            await loadAvailability();
+          } catch (error) {
+            statusNode.textContent = `${t("failed_update_appointment")} ${error?.message ? `(${error.message})` : ""}`;
+          } finally {
+            saveBtn.disabled = false;
+          }
+        });
+
+        cancelBtn.addEventListener("click", () => {
+          panel.classList.add("hidden");
+        });
+
+        typeField.input.addEventListener("change", setOutcallVisibility);
+        setOutcallVisibility();
+
+        row.appendChild(saveBtn);
+        row.appendChild(cancelBtn);
+        row.appendChild(statusNode);
+        panel.appendChild(row);
+
+        return panel;
+      };
+
       const formatCalendarStamp = (dateValue, timeValue, addMinutes = 0) => {
         const [year, month, day] = String(dateValue || "").split("-").map((value) => Number(value));
         const [hour, minute] = String(timeValue || "").split(":").map((value) => Number(value));
@@ -4134,14 +4431,20 @@ require_admin_ui();
               } else if (percentLabel) {
                 depositLabel = percentLabel;
               }
-              const channelLabel =
-                String(item.contact_channel || "").toLowerCase() === "phone"
-                  ? t("phone_label").toLowerCase()
-                  : t("email_label").toLowerCase();
-              const followupInfo =
-                item.contact_followup === "yes"
-                  ? `${t("follow_up")}: ${channelLabel} (${followupCities || t("no_city")})`
-                  : `${t("follow_up")}: ${t("follow_up_no")}`;
+              const followupChannelList = String(item.contact_channel || "")
+                .toLowerCase()
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean);
+              const hasLegacyFollowup = String(item.contact_followup || "").toLowerCase() === "yes";
+              const followupPhoneEnabled =
+                String(item.contact_followup_phone || "").toLowerCase() === "yes" ||
+                (hasLegacyFollowup && followupChannelList.includes("phone"));
+              const followupEmailEnabled =
+                String(item.contact_followup_email || "").toLowerCase() === "yes" ||
+                (hasLegacyFollowup && followupChannelList.includes("email"));
+              const followupPhoneLabel = followupPhoneEnabled ? t("yes") : t("no");
+              const followupEmailLabel = followupEmailEnabled ? t("yes") : t("no");
               card.innerHTML = `
                 <div class="request-header">
                   <div><strong>${item.name || t("unknown")}</strong></div>
@@ -4166,13 +4469,16 @@ require_admin_ui();
                 ${formatLine(t("notes"), item.notes)}
                 <div class="meta"><strong>${t("decline_reason")}:</strong> <input class="decline-reason" type="text" placeholder="${t("reason")}" value="${item.decline_reason || ""}" /></div>
                 ${formatLine(t("blacklist_reason"), item.blacklist_reason)}
-                ${formatLine(t("follow_up"), followupInfo)}
+                ${formatLine(t("follow_up_phone"), followupPhoneLabel)}
+                ${formatLine(t("follow_up_email"), followupEmailLabel)}
+                ${formatLine(t("follow_up_cities"), followupCities || t("no_city"))}
                 ${formatLine(t("payment_details"), item.payment_link)}
                 ${formatLine(t("created"), item.created_at)}
                 ${formatLine(t("updated"), item.updated_at)}
                 ${formatLine(t("email_sent"), item.payment_email_sent_at)}
               `;
               const declineInput = card.querySelector(".decline-reason");
+              const editPanel = createRequestEditPanel(item);
               const actions = document.createElement("div");
               actions.className = "actions";
               if (status === "pending") {
@@ -4193,6 +4499,11 @@ require_admin_ui();
                 );
               }
               if (status !== "blacklisted") {
+                actions.appendChild(
+                  createActionButton(t("action_edit"), () => {
+                    editPanel.classList.toggle("hidden");
+                  }, "btn ghost")
+                );
                 actions.appendChild(
                   createActionButton(
                     t("action_decline"),
@@ -4221,6 +4532,7 @@ require_admin_ui();
                 );
               }
               card.appendChild(actions);
+              card.appendChild(editPanel);
               requestsList.appendChild(card);
             });
           if (!filtered.length) {

@@ -182,6 +182,34 @@ function build_booking_update_email_body(array $request, array $changes): string
     return implode("\n", $lines);
 }
 
+function build_booking_update_admin_email_body(array $request, array $changes): string
+{
+    $lines = [];
+    $lines[] = 'Admin notice: booking was edited.';
+    $lines[] = 'Reference: ' . (string) ($request['id'] ?? '');
+    $lines[] = 'Status: ' . (string) ($request['status'] ?? 'pending');
+    $lines[] = 'Payment: ' . (string) ($request['payment_status'] ?? 'unpaid');
+    $lines[] = '';
+    $lines[] = 'Changed fields:';
+    foreach ($changes as $field => $change) {
+        $before = booking_update_value_label((string) ($change['from'] ?? ''));
+        $after = booking_update_value_label((string) ($change['to'] ?? ''));
+        $lines[] = '- ' . booking_update_field_label((string) $field) . ': ' . $before . ' -> ' . $after;
+    }
+    $lines[] = '';
+    $lines[] = 'Current details:';
+    $lines[] = '- Name: ' . booking_update_value_label((string) ($request['name'] ?? ''));
+    $lines[] = '- Email: ' . booking_update_value_label((string) ($request['email'] ?? ''));
+    $lines[] = '- Phone: ' . booking_update_value_label((string) ($request['phone'] ?? ''));
+    $lines[] = '- Date: ' . booking_update_value_label((string) ($request['preferred_date'] ?? ''));
+    $lines[] = '- Time: ' . booking_update_value_label((string) ($request['preferred_time'] ?? ''));
+    $lines[] = '- City: ' . booking_update_value_label((string) ($request['city'] ?? ''));
+    $lines[] = '- Duration: ' . booking_update_value_label((string) ($request['duration_label'] ?? ''));
+    $lines[] = '- Service: ' . strtoupper((string) ($request['experience'] ?? 'gfe'));
+    $lines[] = '- Type: ' . booking_update_value_label((string) ($request['booking_type'] ?? 'incall'));
+    return implode("\n", $lines);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['error' => 'Method not allowed'], 405);
 }
@@ -299,6 +327,7 @@ if (!empty($changes)) {
 }
 $request['updated_at'] = gmdate('c');
 $editedEmailSentAt = '';
+$editedAdminEmailSentAt = '';
 if (!empty($changes)) {
     $requestEmail = trim((string) ($request['email'] ?? ''));
     if ($requestEmail !== '') {
@@ -307,6 +336,11 @@ if (!empty($changes)) {
             $editedEmailSentAt = gmdate('c');
             $request['edited_email_sent_at'] = $editedEmailSentAt;
         }
+    }
+    $adminEmailBody = build_booking_update_admin_email_body($request, $changes);
+    if (send_admin_email($adminEmailBody, 'Booking updated (admin)')) {
+        $editedAdminEmailSentAt = gmdate('c');
+        $request['edited_admin_email_sent_at'] = $editedAdminEmailSentAt;
     }
 }
 
@@ -342,4 +376,9 @@ $availability['blocked'] = $blocked;
 $availability['updated_at'] = gmdate('c');
 write_json_file(DATA_DIR . '/availability.json', $availability);
 
-json_response(['ok' => true, 'request' => $request, 'edited_email_sent' => $editedEmailSentAt !== '']);
+json_response([
+    'ok' => true,
+    'request' => $request,
+    'edited_email_sent' => $editedEmailSentAt !== '',
+    'edited_admin_email_sent' => $editedAdminEmailSentAt !== '',
+]);

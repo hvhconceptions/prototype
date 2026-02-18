@@ -26,6 +26,15 @@ function normalize_tour_date(string $value): string
     return '';
 }
 
+function normalize_tour_type(string $value): string
+{
+    $type = strtolower(trim($value));
+    if ($type === 'block') {
+        return 'block';
+    }
+    return 'tour';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $content = read_site_content();
     $touring = $content['touring'] ?? [];
@@ -56,6 +65,11 @@ foreach ($touring as $entry) {
     $start = normalize_tour_date((string) ($entry['start'] ?? ''));
     $end = normalize_tour_date((string) ($entry['end'] ?? ''));
     $city = trim((string) ($entry['city'] ?? ''));
+    $type = normalize_tour_type((string) ($entry['type'] ?? 'tour'));
+    $notes = trim((string) ($entry['notes'] ?? ''));
+    if (strlen($notes) > 300) {
+        $notes = substr($notes, 0, 300);
+    }
     if ($start === '' || $end === '' || $city === '') {
         continue;
     }
@@ -69,6 +83,8 @@ foreach ($touring as $entry) {
         'start' => $start,
         'end' => $end,
         'city' => $city,
+        'type' => $type,
+        'notes' => $notes,
     ];
 }
 
@@ -77,8 +93,8 @@ if (!$clean) {
 }
 
 usort($clean, static function (array $a, array $b): int {
-    $left = $a['start'] . '|' . $a['end'] . '|' . strtolower((string) $a['city']);
-    $right = $b['start'] . '|' . $b['end'] . '|' . strtolower((string) $b['city']);
+    $left = $a['start'] . '|' . $a['end'] . '|' . strtolower((string) $a['city']) . '|' . strtolower((string) ($a['type'] ?? 'tour'));
+    $right = $b['start'] . '|' . $b['end'] . '|' . strtolower((string) $b['city']) . '|' . strtolower((string) ($b['type'] ?? 'tour'));
     return strcmp($left, $right);
 });
 

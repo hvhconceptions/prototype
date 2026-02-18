@@ -5,6 +5,19 @@ require __DIR__ . '/../config.php';
 
 require_admin();
 
+function resolve_tour_timezone(string $value): DateTimeZone
+{
+    $tz = trim($value);
+    if ($tz === '') {
+        $tz = DEFAULT_TOUR_TZ;
+    }
+    try {
+        return new DateTimeZone($tz);
+    } catch (Exception $error) {
+        return new DateTimeZone(DEFAULT_TOUR_TZ);
+    }
+}
+
 function build_booking_blocks(array $request, string $status): array
 {
     $durationHours = isset($request['duration_hours']) ? (float) $request['duration_hours'] : 0.0;
@@ -18,7 +31,7 @@ function build_booking_blocks(array $request, string $status): array
     }
     $tourTz = (string) ($request['tour_timezone'] ?? DEFAULT_TOUR_TZ);
     try {
-        $tourZone = new DateTimeZone($tourTz !== '' ? $tourTz : DEFAULT_TOUR_TZ);
+        $tourZone = resolve_tour_timezone($tourTz);
         $tourStart = DateTimeImmutable::createFromFormat('Y-m-d H:i', $preferredDate . ' ' . $preferredTime, $tourZone);
         if ($tourStart === false) {
             return [];
@@ -40,6 +53,7 @@ function build_booking_blocks(array $request, string $status): array
                 'booking_status' => $status,
                 'booking_type' => (string) ($request['booking_type'] ?? ''),
                 'label' => $label,
+                'city' => trim((string) ($request['city'] ?? '')),
             ];
             $cursor = $next;
         }
@@ -80,7 +94,7 @@ function build_calendar_times(array $request): ?array
         return null;
     }
     try {
-        $tourZone = new DateTimeZone($tourTz !== '' ? $tourTz : DEFAULT_TOUR_TZ);
+        $tourZone = resolve_tour_timezone($tourTz);
         $startLocal = DateTimeImmutable::createFromFormat('Y-m-d H:i', $preferredDate . ' ' . $preferredTime, $tourZone);
         if ($startLocal === false) {
             return null;

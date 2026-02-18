@@ -468,6 +468,17 @@ require_admin_ui();
         align-self: end;
       }
 
+      .quick-add-grid {
+        display: grid;
+        grid-template-columns: 160px minmax(170px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+        gap: 12px;
+        align-items: end;
+      }
+
+      .quick-add-notes {
+        grid-column: 1 / -1;
+      }
+
       .editor-row.gallery {
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(140px, 180px) auto;
       }
@@ -710,6 +721,37 @@ require_admin_ui();
         pointer-events: none;
       }
 
+      .slot-city-dot {
+        position: absolute;
+        left: 6px;
+        top: 4px;
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--city-color, rgba(180, 154, 177, 0.4));
+        border: 1px solid rgba(86, 18, 45, 0.12);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55);
+        pointer-events: none;
+      }
+
+      .calendar-head-city {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .calendar-head-city::before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--city-color, rgba(180, 154, 177, 0.5));
+        border: 1px solid rgba(86, 18, 45, 0.14);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+      }
+
       .calendar-slot.blocked {
         background: linear-gradient(135deg, rgba(255, 45, 147, 0.9), rgba(255, 0, 110, 0.9));
         color: #fff;
@@ -866,6 +908,21 @@ require_admin_ui();
         color: #fff;
       }
 
+      .month-city-dots {
+        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .month-city-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(86, 18, 45, 0.14);
+        background: var(--city-color, rgba(180, 154, 177, 0.4));
+      }
+
       .legend-dot {
         width: 12px;
         height: 12px;
@@ -892,6 +949,11 @@ require_admin_ui();
       .legend-dot.paid {
         background: #e6f6ed;
         border-color: rgba(26, 127, 79, 0.35);
+      }
+
+      .legend-dot.city {
+        background: rgba(180, 154, 177, 0.45);
+        border: 1px solid rgba(86, 18, 45, 0.18);
       }
 
       .city-wizard-card {
@@ -1037,6 +1099,10 @@ require_admin_ui();
 
         .tour-row .tour-remove {
           justify-self: start;
+        }
+
+        .quick-add-grid {
+          grid-template-columns: 1fr;
         }
 
         .city-wizard-row {
@@ -1249,6 +1315,7 @@ require_admin_ui();
           <span class="legend-dot booking"></span> Booking
           <span class="legend-dot outcall"></span> Outcall
           <span class="legend-dot paid"></span> Paid
+          <span class="legend-dot city"></span> City marker
         </div>
 
         <div class="grid">
@@ -1327,6 +1394,40 @@ require_admin_ui();
           Clients
         </button>
       </div>
+
+      <section data-admin-panel-group="schedule">
+        <h2 id="quickAddTitle">Quick add</h2>
+        <p class="hint" id="quickAddHint">One add panel for future tour dates, plus optional full-day calendar blocks.</p>
+        <div class="quick-add-grid">
+          <div class="field">
+            <label for="quickAddType" id="quickAddTypeLabel">Type</label>
+            <select id="quickAddType">
+              <option value="tour">Tour date (website + admin)</option>
+              <option value="block">Block days (admin only)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="quickAddCity" id="quickAddCityLabel">City</label>
+            <input id="quickAddCity" type="text" placeholder="Toronto" />
+          </div>
+          <div class="field">
+            <label for="quickAddStart" id="quickAddStartLabel">Start date</label>
+            <input id="quickAddStart" type="date" />
+          </div>
+          <div class="field">
+            <label for="quickAddEnd" id="quickAddEndLabel">End date</label>
+            <input id="quickAddEnd" type="date" />
+          </div>
+          <div class="field quick-add-notes">
+            <label for="quickAddNotes" id="quickAddNotesLabel">Notes</label>
+            <input id="quickAddNotes" type="text" placeholder="Optional note" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="quickAddSubmit" type="button">Add</button>
+          <span class="status" id="quickAddStatus"></span>
+        </div>
+      </section>
 
       <section data-admin-panel-group="schedule">
         <h2 id="tourScheduleTitle">Tour schedule</h2>
@@ -1465,6 +1566,13 @@ require_admin_ui();
       const statusFilter = document.getElementById("statusFilter");
       const requestsList = document.getElementById("requestsList");
       const requestsStatus = document.getElementById("requestsStatus");
+      const quickAddType = document.getElementById("quickAddType");
+      const quickAddCity = document.getElementById("quickAddCity");
+      const quickAddStart = document.getElementById("quickAddStart");
+      const quickAddEnd = document.getElementById("quickAddEnd");
+      const quickAddNotes = document.getElementById("quickAddNotes");
+      const quickAddSubmitBtn = document.getElementById("quickAddSubmit");
+      const quickAddStatus = document.getElementById("quickAddStatus");
       const tourScheduleList = document.getElementById("tourScheduleList");
       const tourScheduleStatus = document.getElementById("tourScheduleStatus");
       const addTourRowBtn = document.getElementById("addTourRow");
@@ -1506,6 +1614,20 @@ require_admin_ui();
           add_eye_candy: "Add eye candy",
           save_eye_candy: "Save eye candy",
           requests_title: "Requests",
+          quick_add_title: "Quick add",
+          quick_add_hint: "One add panel for future tour dates, plus optional full-day calendar blocks.",
+          quick_add_type: "Type",
+          quick_add_city: "City",
+          quick_add_start: "Start date",
+          quick_add_end: "End date",
+          quick_add_notes: "Notes",
+          quick_add_notes_placeholder: "Optional note",
+          quick_add_submit: "Add",
+          quick_add_type_tour: "Tour date (website + admin)",
+          quick_add_type_block: "Block days (admin only)",
+          quick_add_missing_fields: "Type, city, start, and end are required.",
+          quick_add_invalid_range: "End date must be after or equal to start date.",
+          quick_add_blocked_saved: "Block range saved to calendar.",
           start_date: "Start date",
           end_date: "End date",
           city_field: "City",
@@ -1628,6 +1750,20 @@ require_admin_ui();
           add_eye_candy: "Ajouter eye candy",
           save_eye_candy: "Sauvegarder eye candy",
           requests_title: "Demandes",
+          quick_add_title: "Ajout rapide",
+          quick_add_hint: "Un seul panneau pour ajouter les dates de tournee, ou bloquer rapidement des jours.",
+          quick_add_type: "Type",
+          quick_add_city: "Ville",
+          quick_add_start: "Date de debut",
+          quick_add_end: "Date de fin",
+          quick_add_notes: "Notes",
+          quick_add_notes_placeholder: "Note optionnelle",
+          quick_add_submit: "Ajouter",
+          quick_add_type_tour: "Date tournee (site + admin)",
+          quick_add_type_block: "Bloquer des jours (admin)",
+          quick_add_missing_fields: "Type, ville, debut et fin sont obligatoires.",
+          quick_add_invalid_range: "La date de fin doit etre apres ou egale au debut.",
+          quick_add_blocked_saved: "Plage bloquee sauvegardee dans le calendrier.",
           start_date: "Date de debut",
           end_date: "Date de fin",
           city_field: "Ville",
@@ -1798,6 +1934,14 @@ require_admin_ui();
         setTextById("adminSubtitle", t("admin_subtitle"));
         setTextById("tourScheduleTitle", t("tour_schedule_title"));
         setTextById("tourScheduleHint", t("tour_schedule_hint"));
+        setTextById("quickAddTitle", t("quick_add_title"));
+        setTextById("quickAddHint", t("quick_add_hint"));
+        setTextById("quickAddTypeLabel", t("quick_add_type"));
+        setTextById("quickAddCityLabel", t("quick_add_city"));
+        setTextById("quickAddStartLabel", t("quick_add_start"));
+        setTextById("quickAddEndLabel", t("quick_add_end"));
+        setTextById("quickAddNotesLabel", t("quick_add_notes"));
+        setTextById("quickAddSubmit", t("quick_add_submit"));
         setTextById("addTourRow", t("add_stop"));
         setTextById("saveTourSchedule", t("save_tour_schedule"));
         setTextById("cityWizardTitle", t("city_wizard_title"));
@@ -1827,6 +1971,13 @@ require_admin_ui();
           const option = document.querySelector(`#statusFilter option[value="${value}"]`);
           if (option) option.textContent = label;
         });
+        const quickTypeTourOption = document.querySelector('#quickAddType option[value="tour"]');
+        if (quickTypeTourOption) quickTypeTourOption.textContent = t("quick_add_type_tour");
+        const quickTypeBlockOption = document.querySelector('#quickAddType option[value="block"]');
+        if (quickTypeBlockOption) quickTypeBlockOption.textContent = t("quick_add_type_block");
+        if (quickAddNotes) {
+          quickAddNotes.placeholder = t("quick_add_notes_placeholder");
+        }
 
         languageButtons.forEach((button) => {
           button.setAttribute("aria-pressed", button.dataset.languageChoice === currentLanguage ? "true" : "false");
@@ -1949,11 +2100,33 @@ require_admin_ui();
         paris: "Europe/Paris",
       };
 
+      const CITY_MARKER_COLORS = [
+        [255, 136, 189],
+        [255, 176, 133],
+        [149, 186, 255],
+        [176, 220, 188],
+        [206, 170, 245],
+        [255, 215, 136],
+        [132, 214, 226],
+        [234, 171, 198],
+      ];
+
       const normalizeCityName = (value) =>
         String(value || "")
           .trim()
           .toLowerCase()
           .replace(/\s+/g, " ");
+
+      const getCityMarkerColor = (city, alpha = 0.42) => {
+        const key = normalizeCityName(city);
+        if (!key) return `rgba(180, 154, 177, ${alpha})`;
+        let hash = 0;
+        for (let i = 0; i < key.length; i += 1) {
+          hash = (hash * 31 + key.charCodeAt(i)) % 2147483647;
+        }
+        const [r, g, b] = CITY_MARKER_COLORS[hash % CITY_MARKER_COLORS.length];
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      };
 
       const makeScheduleId = (entry) =>
         `${String(entry?.start || "").trim()}|${String(entry?.end || "").trim()}|${normalizeCityName(entry?.city || "")}`;
@@ -2163,7 +2336,7 @@ require_admin_ui();
         }
       };
 
-      const blockFullDayForDate = (dateKey, reason) => {
+      const blockFullDayForDate = (dateKey, reason, city = "") => {
         blockedSlots = blockedSlots.filter(
           (slot) => !slot || slot.date !== dateKey || (slot.kind !== "manual" && slot.kind !== "template")
         );
@@ -2177,6 +2350,7 @@ require_admin_ui();
             end: endTime,
             reason,
             kind: "manual",
+            city,
           });
         }
       };
@@ -2360,6 +2534,9 @@ require_admin_ui();
 
       const renderTimeGrid = (dates) => {
         const bookingStartMap = buildBookingStartMap();
+        const dateCityMap = Object.fromEntries(
+          dates.map((dateKey) => [dateKey, getTourCityForDate(dateKey)])
+        );
         calendarGrid.innerHTML = "";
         calendarGrid.classList.remove("month");
         calendarGrid.style.gridTemplateColumns = `90px repeat(${dates.length}, minmax(90px, 1fr))`;
@@ -2373,7 +2550,17 @@ require_admin_ui();
           const cell = document.createElement("div");
           cell.className = "calendar-cell calendar-head";
           cell.dataset.date = dateKey;
-          cell.textContent = formatDayLabel(dateKey);
+          const city = dateCityMap[dateKey] || "";
+          if (city) {
+            const title = document.createElement("span");
+            title.className = "calendar-head-city";
+            title.style.setProperty("--city-color", getCityMarkerColor(city, 0.56));
+            title.textContent = formatDayLabel(dateKey);
+            cell.title = city;
+            cell.appendChild(title);
+          } else {
+            cell.textContent = formatDayLabel(dateKey);
+          }
           calendarGrid.appendChild(cell);
         });
 
@@ -2390,7 +2577,16 @@ require_admin_ui();
             slotButton.dataset.date = dateKey;
             slotButton.dataset.time = timeValue;
             slotButton.dataset.dateShort = formatSlotDateShort(dateKey);
+            const dateCity = dateCityMap[dateKey] || "";
             const entry = getSlotEntry(dateKey, timeValue);
+            const slotCity = String(entry?.city || dateCity || "").trim();
+            if (slotCity) {
+              slotButton.dataset.city = slotCity;
+              const cityDot = document.createElement("span");
+              cityDot.className = "slot-city-dot";
+              cityDot.style.setProperty("--city-color", getCityMarkerColor(slotCity, 0.48));
+              slotButton.appendChild(cityDot);
+            }
             if (entry) {
               if (entry.kind === "booking") {
                 slotButton.classList.add("booking");
@@ -2406,7 +2602,8 @@ require_admin_ui();
                   slotButton.textContent = entry.label || "Booked";
                 }
                 const titleLabel = entry.label ? `${entry.label} - ` : "";
-                slotButton.title = `${titleLabel}${entry.booking_type || "incall"} (${entry.booking_status || "paid"})`;
+                const citySuffix = slotCity ? ` - ${slotCity}` : "";
+                slotButton.title = `${titleLabel}${entry.booking_type || "incall"} (${entry.booking_status || "paid"})${citySuffix}`;
                 slotButton.disabled = true;
               } else if (entry.kind === "template") {
                 slotButton.classList.add("blocked");
@@ -2415,7 +2612,8 @@ require_admin_ui();
                 slotButton.title = (entry.reason || "Template block") + citySuffix;
               } else {
                 slotButton.classList.add("blocked");
-                slotButton.title = entry.reason || "Blocked";
+                const citySuffix = slotCity ? ` (${slotCity})` : "";
+                slotButton.title = (entry.reason || "Blocked") + citySuffix;
               }
             } else if (isRecurringSlot(dateKey, timeValue)) {
               slotButton.classList.add("blocked");
@@ -2434,7 +2632,7 @@ require_admin_ui();
               if (index >= 0) {
                 blockedSlots.splice(index, 1);
               } else {
-                blockedSlots.push({ date: dateKey, start, end, reason: "", kind: "manual" });
+                blockedSlots.push({ date: dateKey, start, end, reason: "", kind: "manual", city: slotCity });
               }
               renderBlockedSlots();
               renderCalendarView();
@@ -2475,9 +2673,14 @@ require_admin_ui();
       const getDaySummary = (dateKey) => {
         const bookingIds = new Set();
         const paidIds = new Set();
+        const cities = new Set();
         let hasManual = false;
         blockedSlots.forEach((slot) => {
           if (!slot || slot.date !== dateKey) return;
+          const city = String(slot.city || "").trim();
+          if (city) {
+            cities.add(city);
+          }
           if (slot.kind === "booking") {
             const key = slot.booking_id || `${slot.label}-${slot.start}`;
             bookingIds.add(key);
@@ -2503,6 +2706,7 @@ require_admin_ui();
           paid: paidIds.size,
           manual: hasManual,
           recurring: hasRecurring,
+          cities: Array.from(cities),
         };
       };
 
@@ -2562,6 +2766,20 @@ require_admin_ui();
           }
           if (badgeWrap.childElementCount > 0) {
             cell.appendChild(badgeWrap);
+          }
+          const city = getTourCityForDate(dateKey);
+          const cityDots = Array.from(new Set([city, ...(summary.cities || [])].filter(Boolean))).slice(0, 3);
+          if (cityDots.length) {
+            const cityDotWrap = document.createElement("div");
+            cityDotWrap.className = "month-city-dots";
+            cityDots.forEach((name) => {
+              const dot = document.createElement("span");
+              dot.className = "month-city-dot";
+              dot.style.setProperty("--city-color", getCityMarkerColor(name, 0.5));
+              dot.title = name;
+              cityDotWrap.appendChild(dot);
+            });
+            cell.appendChild(cityDotWrap);
           }
           cell.addEventListener("click", () => {
             if (calendarDay) {
@@ -2817,6 +3035,12 @@ require_admin_ui();
         const row = document.createElement("div");
         row.className = "editor-row tour-row";
         row.dataset.tourRow = "1";
+        row.dataset.tourType = String(entry.type || "tour")
+          .trim()
+          .toLowerCase() === "block"
+          ? "block"
+          : "tour";
+        row.dataset.tourNotes = String(entry.notes || "").trim();
         const startField = createField(t("start_date"), "date", entry.start || "");
         startField.wrapper.classList.add("tour-start");
         const endField = createField(t("end_date"), "date", entry.end || "");
@@ -2923,7 +3147,13 @@ require_admin_ui();
             const start = normalizeUiDate(row.querySelector(".tour-start input")?.value || "");
             const end = normalizeUiDate(row.querySelector(".tour-end input")?.value || "");
             const city = row.querySelector(".tour-city input")?.value?.trim() || "";
-            return { start, end, city };
+            const type = String(row.dataset.tourType || "tour")
+              .trim()
+              .toLowerCase() === "block"
+              ? "block"
+              : "tour";
+            const notes = String(row.dataset.tourNotes || "").trim();
+            return { start, end, city, type, notes };
           })
           .filter((entry) => entry.start && entry.end && entry.city);
       };
@@ -2934,6 +3164,12 @@ require_admin_ui();
             start: String(entry?.start || "").trim(),
             end: String(entry?.end || "").trim(),
             city: String(entry?.city || "").trim(),
+            type: String(entry?.type || "tour")
+              .trim()
+              .toLowerCase() === "block"
+              ? "block"
+              : "tour",
+            notes: String(entry?.notes || "").trim(),
           }))
           .filter(
             (entry) =>
@@ -3350,18 +3586,23 @@ require_admin_ui();
         }
       };
 
-      const saveTourSchedule = async () => {
-        if (!tourScheduleStatus) return;
-        tourScheduleStatus.textContent = "";
+      const saveTouringEntries = async (entries, statusNode = tourScheduleStatus) => {
+        if (statusNode) {
+          statusNode.textContent = "";
+        }
         const key = getKey();
         if (!key) {
-          tourScheduleStatus.textContent = t("admin_key_required");
-          return;
+          if (statusNode) {
+            statusNode.textContent = t("admin_key_required");
+          }
+          return false;
         }
-        const entries = readTourScheduleFromUI();
-        if (!entries.length) {
-          tourScheduleStatus.textContent = t("add_entry_min");
-          return;
+        const list = normalizeTouringEntries(entries);
+        if (!list.length) {
+          if (statusNode) {
+            statusNode.textContent = t("add_entry_min");
+          }
+          return false;
         }
         try {
           const response = await fetch("../api/admin/tour-schedule.php", {
@@ -3370,7 +3611,7 @@ require_admin_ui();
               "Content-Type": "application/json",
               "X-Admin-Key": key,
             },
-            body: JSON.stringify({ touring: entries }),
+            body: JSON.stringify({ touring: list }),
           });
           const payloadText = await response.text();
           let result = {};
@@ -3378,18 +3619,83 @@ require_admin_ui();
             result = JSON.parse(payloadText);
           }
           if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
-          touringStops = normalizeTouringEntries(result.touring || entries);
+          touringStops = normalizeTouringEntries(result.touring || list);
           renderTourSchedule(touringStops);
           syncCitySchedulesWithTouring();
-          tourScheduleStatus.textContent = t("tour_schedule_saved");
+          if (statusNode) {
+            statusNode.textContent = t("tour_schedule_saved");
+          }
           availabilityStatus.textContent = t("saving_city_schedule");
           await saveAvailability();
           if (cityScheduleStatus) {
             cityScheduleStatus.textContent = t("city_schedules_saved");
           }
+          return true;
         } catch (error) {
           const message = error && error.message ? ` (${error.message})` : "";
-          tourScheduleStatus.textContent = `${t("failed_save_tour_schedule")}${message}`;
+          if (statusNode) {
+            statusNode.textContent = `${t("failed_save_tour_schedule")}${message}`;
+          }
+          return false;
+        }
+      };
+
+      const saveTourSchedule = async () => {
+        const entries = readTourScheduleFromUI();
+        await saveTouringEntries(entries, tourScheduleStatus);
+      };
+
+      const clearQuickAddFields = () => {
+        if (quickAddType) quickAddType.value = "tour";
+        if (quickAddCity) quickAddCity.value = "";
+        if (quickAddStart) quickAddStart.value = "";
+        if (quickAddEnd) quickAddEnd.value = "";
+        if (quickAddNotes) quickAddNotes.value = "";
+      };
+
+      const addQuickEntry = async () => {
+        if (!quickAddStatus) return;
+        quickAddStatus.textContent = "";
+        const type = String(quickAddType?.value || "").trim().toLowerCase();
+        const city = String(quickAddCity?.value || "").trim();
+        const start = normalizeUiDate(quickAddStart?.value || "");
+        const end = normalizeUiDate(quickAddEnd?.value || "");
+        const notes = String(quickAddNotes?.value || "").trim();
+        if (!type || !city || !start || !end) {
+          quickAddStatus.textContent = t("quick_add_missing_fields");
+          return;
+        }
+        if (start > end) {
+          quickAddStatus.textContent = t("quick_add_invalid_range");
+          return;
+        }
+        if (type === "block") {
+          const startDate = parseDateKey(start);
+          const endDate = parseDateKey(end);
+          if (!startDate || !endDate || startDate > endDate) {
+            quickAddStatus.textContent = t("quick_add_invalid_range");
+            return;
+          }
+          const reason = notes || `Quick block (${city})`;
+          const cursor = new Date(startDate.getTime());
+          while (cursor <= endDate) {
+            blockFullDayForDate(toDateKey(cursor), reason, city);
+            cursor.setUTCDate(cursor.getUTCDate() + 1);
+          }
+          renderBlockedSlots();
+          renderCalendarView();
+          await saveAvailability();
+          quickAddStatus.textContent = t("quick_add_blocked_saved");
+          clearQuickAddFields();
+          return;
+        }
+        const current = readTourScheduleFromUI();
+        const ok = await saveTouringEntries(
+          [...current, { type: "tour", city, start, end, notes }],
+          quickAddStatus
+        );
+        if (ok) {
+          clearQuickAddFields();
         }
       };
 
@@ -3936,6 +4242,24 @@ require_admin_ui();
         addTourRowBtn.addEventListener("click", () => {
           if (!tourScheduleList) return;
           tourScheduleList.appendChild(createTourRow());
+        });
+      }
+      if (quickAddSubmitBtn) {
+        quickAddSubmitBtn.addEventListener("click", addQuickEntry);
+      }
+      if (quickAddStart && quickAddEnd) {
+        quickAddStart.addEventListener("change", () => {
+          if (!quickAddEnd.value) {
+            quickAddEnd.value = quickAddStart.value;
+          }
+        });
+      }
+      if (quickAddNotes) {
+        quickAddNotes.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addQuickEntry();
+          }
         });
       }
       if (saveTourScheduleBtn) {

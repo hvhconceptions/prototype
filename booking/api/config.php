@@ -201,7 +201,7 @@ function get_default_site_content(): array
             ['start' => '2026-02-08', 'end' => '2026-02-14', 'city' => 'Montreal'],
             ['start' => '2026-02-15', 'end' => '2026-02-18', 'city' => 'Toronto'],
             ['start' => '2026-02-19', 'end' => '2026-02-21', 'city' => 'Vancouver'],
-            ['start' => '2026-02-22', 'end' => '2026-03-04', 'city' => 'β mode'],
+            ['start' => '2026-02-22', 'end' => '2026-03-04', 'city' => 'Montreal'],
             ['start' => '2026-03-05', 'end' => '2026-03-09', 'city' => 'London (UK)'],
             ['start' => '2026-03-10', 'end' => '2026-03-13', 'city' => 'Berlin'],
             ['start' => '2026-03-14', 'end' => '2026-03-19', 'city' => 'Paris'],

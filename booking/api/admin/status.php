@@ -5,6 +5,21 @@ require __DIR__ . '/../config.php';
 
 require_admin();
 
+function append_history_entry(array &$request, string $action, string $summary): void
+{
+    $history = $request['history'] ?? [];
+    if (!is_array($history)) {
+        $history = [];
+    }
+    $history[] = [
+        'at' => gmdate('c'),
+        'action' => $action,
+        'source' => 'admin_status',
+        'summary' => $summary,
+    ];
+    $request['history'] = $history;
+}
+
 function resolve_tour_timezone(string $value): DateTimeZone
 {
     $tz = trim($value);
@@ -227,6 +242,7 @@ foreach ($requests as $index => &$request) {
         $request['status'] = 'declined';
         $request['decline_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
+        append_history_entry($request, 'status', 'Status set to declined' . ($reason !== '' ? " ({$reason})" : ''));
         $requestEmail = (string) ($request['email'] ?? '');
         if ($requestEmail !== '' && ($request['declined_email_sent_at'] ?? '') === '') {
             $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
@@ -253,6 +269,7 @@ foreach ($requests as $index => &$request) {
         $request['status'] = 'blacklisted';
         $request['blacklist_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
+        append_history_entry($request, 'status', 'Status set to blacklisted' . ($reason !== '' ? " ({$reason})" : ''));
         add_blacklist_entry([
             'email' => $request['email'] ?? '',
             'phone' => $request['phone'] ?? '',
@@ -310,10 +327,12 @@ foreach ($requests as $index => &$request) {
                 $request['accepted_email_sent_at'] = gmdate('c');
             }
         }
+        append_history_entry($request, 'status', 'Status set to accepted');
     } elseif ($status === 'paid') {
         // A paid request is always considered an accepted booking for availability blocking.
         $request['status'] = 'accepted';
         $request['payment_status'] = 'paid';
+        append_history_entry($request, 'status', 'Marked as paid');
         if ($requestEmail !== '' && ($request['paid_email_sent_at'] ?? '') === '') {
             $currencyLabel = $depositCurrency !== '' ? $depositCurrency : (PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'USD');
             $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
@@ -370,8 +389,10 @@ foreach ($requests as $index => &$request) {
     } elseif ($paymentLink !== '') {
         $request['status'] = $status;
         $request['payment_link'] = $paymentLink;
+        append_history_entry($request, 'status', "Status set to {$status}");
     } else {
         $request['status'] = $status;
+        append_history_entry($request, 'status', "Status set to {$status}");
     }
 
     $request['updated_at'] = gmdate('c');

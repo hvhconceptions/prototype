@@ -104,6 +104,25 @@ function build_booking_blocks(array $request, string $status): array
     }
 }
 
+function append_history_entry(array &$request, string $summary, array $changes = []): void
+{
+    $history = $request['history'] ?? [];
+    if (!is_array($history)) {
+        $history = [];
+    }
+    $entry = [
+        'at' => gmdate('c'),
+        'action' => 'edited',
+        'source' => 'admin_edit',
+        'summary' => $summary,
+    ];
+    if (!empty($changes)) {
+        $entry['changes'] = $changes;
+    }
+    $history[] = $entry;
+    $request['history'] = $history;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['error' => 'Method not allowed'], 405);
 }
@@ -136,6 +155,7 @@ if ($targetIndex === null) {
 }
 
 $request = $requests[$targetIndex];
+$original = $request;
 $allowedBookingTypes = ['incall', 'outcall'];
 
 $request['name'] = trim((string) ($payload['name'] ?? ($request['name'] ?? '')));
@@ -193,6 +213,31 @@ if ((string) $request['booking_type'] !== 'outcall') {
 }
 
 $request['duration_hours'] = rtrim(rtrim(number_format($durationHours, 2, '.', ''), '0'), '.');
+$trackedFields = [
+    'name',
+    'email',
+    'phone',
+    'city',
+    'booking_type',
+    'outcall_address',
+    'experience',
+    'duration_label',
+    'duration_hours',
+    'preferred_date',
+    'preferred_time',
+    'notes',
+];
+$changes = [];
+foreach ($trackedFields as $field) {
+    $before = trim((string) ($original[$field] ?? ''));
+    $after = trim((string) ($request[$field] ?? ''));
+    if ($before !== $after) {
+        $changes[$field] = ['from' => $before, 'to' => $after];
+    }
+}
+if (!empty($changes)) {
+    append_history_entry($request, 'Appointment details edited', $changes);
+}
 $request['updated_at'] = gmdate('c');
 
 $requests[$targetIndex] = $request;
@@ -228,4 +273,3 @@ $availability['updated_at'] = gmdate('c');
 write_json_file(DATA_DIR . '/availability.json', $availability);
 
 json_response(['ok' => true, 'request' => $request]);
-

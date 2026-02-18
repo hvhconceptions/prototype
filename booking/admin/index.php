@@ -1789,6 +1789,8 @@ require_admin_ui();
           created: "Created",
           updated: "Updated",
           email_sent: "Email sent",
+          edit_history: "Edit history",
+          no_history: "No history yet",
           unknown: "Unknown",
           action_accept: "Accept",
           action_blacklist: "Blacklist",
@@ -1939,6 +1941,8 @@ require_admin_ui();
           created: "Cree",
           updated: "Mis a jour",
           email_sent: "Email envoye",
+          edit_history: "Historique",
+          no_history: "Aucun historique",
           unknown: "Inconnu",
           action_accept: "Accepter",
           action_blacklist: "Liste noire",
@@ -3990,6 +3994,31 @@ require_admin_ui();
 
       const formatArray = (list) => (Array.isArray(list) ? list.filter(Boolean).join(", ") : "");
 
+      const escapeHtml = (value) =>
+        String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+
+      const formatHistory = (history) => {
+        if (!Array.isArray(history) || !history.length) {
+          return `<div class="meta"><strong>${t("edit_history")}:</strong> ${t("no_history")}</div>`;
+        }
+        const items = history
+          .slice()
+          .reverse()
+          .map((entry) => {
+            const at = entry?.at ? String(entry.at) : "";
+            const summary = String(entry?.summary || entry?.action || "update");
+            const source = entry?.source ? ` [${String(entry.source)}]` : "";
+            return `<li>${escapeHtml(at)} - ${escapeHtml(summary)}${escapeHtml(source)}</li>`;
+          })
+          .join("");
+        return `<div class="meta"><strong>${t("edit_history")}:</strong><ul style="margin:6px 0 0 16px; padding:0;">${items}</ul></div>`;
+      };
+
       const formatPaymentMethod = (value) => {
         const normalized = String(value || "").toLowerCase();
         if (normalized === "etransfer" || normalized === "interac") return "Interac e-Transfer";
@@ -4476,6 +4505,7 @@ require_admin_ui();
                 ${formatLine(t("created"), item.created_at)}
                 ${formatLine(t("updated"), item.updated_at)}
                 ${formatLine(t("email_sent"), item.payment_email_sent_at)}
+                ${formatHistory(item.history)}
               `;
               const declineInput = card.querySelector(".decline-reason");
               const editPanel = createRequestEditPanel(item);

@@ -583,6 +583,14 @@ $request = [
     'total_rate' => $totalRate,
     'payment_link' => $paymentLink,
     'payment_email_sent_at' => $paymentEmailSentAt,
+    'history' => [
+        [
+            'at' => gmdate('c'),
+            'action' => 'created',
+            'source' => 'booking_form',
+            'summary' => 'Request created',
+        ],
+    ],
 ];
 
 $requests[] = $request;

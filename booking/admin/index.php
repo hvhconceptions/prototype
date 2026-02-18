@@ -872,6 +872,13 @@ require_admin_ui();
         border-top-color: transparent;
       }
 
+      .calendar-slot.slot-group-middle::before,
+      .calendar-slot.slot-group-middle::after,
+      .calendar-slot.slot-group-end::before,
+      .calendar-slot.slot-group-end::after {
+        opacity: 0;
+      }
+
       .calendar-legend {
         display: flex;
         gap: 12px;
@@ -2592,11 +2599,26 @@ require_admin_ui();
         return entry;
       };
 
+      const getBookingGroupId = (slot) => {
+        if (!slot) return "";
+        const bookingId = String(slot.booking_id || "").trim();
+        if (bookingId) {
+          return `id:${bookingId}`;
+        }
+        const date = String(slot.date || "").trim();
+        const label = String(slot.label || "").trim().toLowerCase();
+        const bookingType = String(slot.booking_type || "").trim().toLowerCase();
+        if (!date || !label) {
+          return "";
+        }
+        return `legacy:${date}|${label}|${bookingType}`;
+      };
+
       const buildBookingStartMap = () => {
         const map = {};
         blockedSlots.forEach((slot) => {
           if (!slot || slot.kind !== "booking") return;
-          const key = slot.booking_id || slot.label || "";
+          const key = getBookingGroupId(slot);
           if (!key) return;
           const value = `${slot.date} ${slot.start}`;
           if (!map[key] || value < map[key]) {
@@ -2619,7 +2641,8 @@ require_admin_ui();
         const kind = String(slot.kind || "manual").trim();
         const city = normalizeCityName(slot.city || "");
         if (kind === "booking") {
-          return `booking|${slot.booking_id || slot.label || ""}|${slot.booking_type || ""}|${slot.booking_status || ""}|${city}`;
+          const bookingKey = getBookingGroupId(slot);
+          return bookingKey ? `booking|${bookingKey}` : `booking|${slot.label || ""}`;
         }
         if (kind === "template") {
           return `template|${slot.template_id || slot.reason || ""}|${city}`;
@@ -2799,7 +2822,7 @@ require_admin_ui();
                 if (entry.booking_status === "paid") {
                   slotButton.classList.add("paid");
                 }
-                const key = entry.booking_id || entry.label || "";
+                const key = getBookingGroupId(entry);
                 const startKey = key ? bookingStartMap[key] : "";
                 if (key && startKey === `${entry.date} ${entry.start}`) {
                   slotButton.textContent = entry.label || "Booked";

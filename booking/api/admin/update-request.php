@@ -123,6 +123,65 @@ function append_history_entry(array &$request, string $summary, array $changes =
     $request['history'] = $history;
 }
 
+function booking_update_field_label(string $field): string
+{
+    $labels = [
+        'name' => 'Name',
+        'email' => 'Email',
+        'phone' => 'Phone',
+        'city' => 'City',
+        'booking_type' => 'Booking type',
+        'outcall_address' => 'Outcall address',
+        'experience' => 'Service',
+        'duration_label' => 'Duration',
+        'duration_hours' => 'Duration (hours)',
+        'preferred_date' => 'Date',
+        'preferred_time' => 'Time',
+        'notes' => 'Notes',
+    ];
+    return $labels[$field] ?? $field;
+}
+
+function booking_update_value_label(string $value): string
+{
+    $clean = trim($value);
+    return $clean === '' ? '(empty)' : $clean;
+}
+
+function build_booking_update_email_body(array $request, array $changes): string
+{
+    $lines = [];
+    $lines[] = 'Your booking details were updated.';
+    $lines[] = 'Reference: ' . (string) ($request['id'] ?? '');
+    $lines[] = '';
+    $lines[] = 'Updated fields:';
+    foreach ($changes as $field => $change) {
+        $before = booking_update_value_label((string) ($change['from'] ?? ''));
+        $after = booking_update_value_label((string) ($change['to'] ?? ''));
+        $lines[] = '- ' . booking_update_field_label((string) $field) . ': ' . $before . ' -> ' . $after;
+    }
+    $lines[] = '';
+    $lines[] = 'Current booking details:';
+    $lines[] = '- Name: ' . booking_update_value_label((string) ($request['name'] ?? ''));
+    $lines[] = '- Date: ' . booking_update_value_label((string) ($request['preferred_date'] ?? ''));
+    $lines[] = '- Time: ' . booking_update_value_label((string) ($request['preferred_time'] ?? ''));
+    $lines[] = '- City: ' . booking_update_value_label((string) ($request['city'] ?? ''));
+    $lines[] = '- Duration: ' . booking_update_value_label((string) ($request['duration_label'] ?? ''));
+    $lines[] = '- Service: ' . strtoupper((string) ($request['experience'] ?? 'gfe'));
+    $lines[] = '- Type: ' . booking_update_value_label((string) ($request['booking_type'] ?? 'incall'));
+    $outcallAddress = trim((string) ($request['outcall_address'] ?? ''));
+    if ($outcallAddress !== '') {
+        $lines[] = '- Outcall address: ' . $outcallAddress;
+    }
+    $notes = trim((string) ($request['notes'] ?? ''));
+    if ($notes !== '') {
+        $lines[] = '- Notes: ' . $notes;
+    }
+    $lines[] = '';
+    $lines[] = 'If anything looks wrong, reply to this email.';
+    return implode("\n", $lines);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['error' => 'Method not allowed'], 405);
 }
@@ -239,6 +298,17 @@ if (!empty($changes)) {
     append_history_entry($request, 'Appointment details edited', $changes);
 }
 $request['updated_at'] = gmdate('c');
+$editedEmailSentAt = '';
+if (!empty($changes)) {
+    $requestEmail = trim((string) ($request['email'] ?? ''));
+    if ($requestEmail !== '') {
+        $emailBody = build_booking_update_email_body($request, $changes);
+        if (send_payment_email($requestEmail, $emailBody, 'Booking updated')) {
+            $editedEmailSentAt = gmdate('c');
+            $request['edited_email_sent_at'] = $editedEmailSentAt;
+        }
+    }
+}
 
 $requests[$targetIndex] = $request;
 $store['requests'] = $requests;
@@ -272,4 +342,4 @@ $availability['blocked'] = $blocked;
 $availability['updated_at'] = gmdate('c');
 write_json_file(DATA_DIR . '/availability.json', $availability);
 
-json_response(['ok' => true, 'request' => $request]);
+json_response(['ok' => true, 'request' => $request, 'edited_email_sent' => $editedEmailSentAt !== '']);

@@ -2360,10 +2360,8 @@ require_admin_ui();
         }
         const sleepDaySet = new Set(Array.isArray(schedule.sleep_days) ? schedule.sleep_days : []);
         const breakDaySet = new Set(Array.isArray(schedule.break_days) ? schedule.break_days : []);
-        const startTime = isValidTime(schedule.ready_start) ? schedule.ready_start : "00:00";
         const leaveEnd = isValidTime(schedule.leave_day_end) ? schedule.leave_day_end : "23:59";
         dates.forEach((dateKey, index) => {
-          pushTemplateRange(blocks, schedule, dateKey, "00:00", startTime, "Before ready time");
           if (index === dates.length - 1) {
             pushTemplateRange(blocks, schedule, dateKey, leaveEnd, "23:59", "After leave-day end");
           }

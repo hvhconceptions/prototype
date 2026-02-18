@@ -630,6 +630,40 @@ function get_push_token_strings(): array
     return array_values(array_unique($list));
 }
 
+function remove_push_tokens(array $tokensToRemove): void
+{
+    if (!$tokensToRemove) {
+        return;
+    }
+    $removeSet = [];
+    foreach ($tokensToRemove as $token) {
+        $trimmed = trim((string) $token);
+        if ($trimmed !== '') {
+            $removeSet[$trimmed] = true;
+        }
+    }
+    if (!$removeSet) {
+        return;
+    }
+    $store = read_push_tokens();
+    $tokens = $store['tokens'] ?? [];
+    if (!is_array($tokens)) {
+        return;
+    }
+    $kept = [];
+    foreach ($tokens as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $token = trim((string) ($entry['token'] ?? ''));
+        if ($token === '' || isset($removeSet[$token])) {
+            continue;
+        }
+        $kept[] = $entry;
+    }
+    save_push_tokens($kept);
+}
+
 function fcm_base64url_encode(string $data): string
 {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -829,19 +863,25 @@ function get_fcm_access_token(): ?string
     return $token;
 }
 
-function send_fcm_v1_message(array $message): bool
+function send_fcm_v1_message(array $message): array
 {
+    $result = [
+        'ok' => false,
+        'status' => 0,
+        'body' => '',
+        'invalid_token' => false,
+    ];
     $projectId = get_fcm_project_id();
     if ($projectId === '') {
-        return false;
+        return $result;
     }
     $accessToken = get_fcm_access_token();
     if ($accessToken === null) {
-        return false;
+        return $result;
     }
     $json = json_encode(['message' => $message]);
     if ($json === false) {
-        return false;
+        return $result;
     }
     $headers = [
         'Authorization: Bearer ' . $accessToken,
@@ -852,7 +892,21 @@ function send_fcm_v1_message(array $message): bool
         $headers,
         $json
     );
-    return $status >= 200 && $status < 300 && $body !== '';
+    $result['status'] = $status;
+    $result['body'] = $body;
+    $result['ok'] = $status >= 200 && $status < 300 && $body !== '';
+    if (!$result['ok'] && $body !== '') {
+        $lower = strtolower($body);
+        if (
+            strpos($lower, 'unregistered') !== false ||
+            strpos($lower, 'registration token is not valid') !== false ||
+            strpos($lower, 'invalid registration token') !== false ||
+            strpos($lower, 'not a valid fcm registration token') !== false
+        ) {
+            $result['invalid_token'] = true;
+        }
+    }
+    return $result;
 }
 
 function send_fcm_payload(array $payload): bool
@@ -879,6 +933,7 @@ function send_push_to_tokens(array $tokens, string $title, string $body, array $
     }
     $ok = false;
     if (get_fcm_project_id() !== '' && get_fcm_service_account() !== null) {
+        $invalidTokens = [];
         foreach ($tokens as $token) {
             $message = [
                 'token' => $token,
@@ -888,9 +943,16 @@ function send_push_to_tokens(array $tokens, string $title, string $body, array $
                 ],
                 'data' => $data,
             ];
-            if (send_fcm_v1_message($message)) {
+            $result = send_fcm_v1_message($message);
+            if (!empty($result['invalid_token'])) {
+                $invalidTokens[] = $token;
+            }
+            if (!empty($result['ok'])) {
                 $ok = true;
             }
+        }
+        if ($invalidTokens) {
+            remove_push_tokens($invalidTokens);
         }
         return $ok;
     }

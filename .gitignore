@@ -1,0 +1,14 @@
+# Build outputs
+**/build/
+*.apk
+
+# Local logs/artifacts
+gha-*-logs.zip
+tmp_live_*.html
+
+# Sensitive Firebase keys (server-side service account files)
+*-firebase-adminsdk-*.json
+/google-services.json
+
+# Local backup configs
+google-services.backup-*.json

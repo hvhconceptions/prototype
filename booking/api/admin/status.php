@@ -224,7 +224,7 @@ if ($id === '' || $status === '') {
     json_response(['error' => 'Missing id or status'], 422);
 }
 
-$allowed = ['pending', 'accepted', 'declined', 'paid', 'cancelled', 'blacklisted'];
+$allowed = ['pending', 'maybe', 'accepted', 'declined', 'paid', 'cancelled', 'blacklisted'];
 if (!in_array($status, $allowed, true)) {
     json_response(['error' => 'Invalid status'], 422);
 }
@@ -298,6 +298,17 @@ foreach ($requests as $index => &$request) {
         ]);
         $found = true;
         break;
+    }
+
+    if ($status === 'maybe') {
+        $request['status'] = 'maybe';
+        $request['payment_status'] = '';
+        if ($reason !== '') {
+            $request['maybe_reason'] = $reason;
+        } else {
+            unset($request['maybe_reason']);
+        }
+        append_history_entry($request, 'status', 'Status set to maybe' . ($reason !== '' ? " ({$reason})" : ''));
     }
 
     $depositAmount = isset($request['deposit_amount']) ? (int) $request['deposit_amount'] : 0;
@@ -390,11 +401,11 @@ foreach ($requests as $index => &$request) {
                 $request['paid_admin_notified_at'] = gmdate('c');
             }
         }
-    } elseif ($paymentLink !== '') {
+    } elseif ($status !== 'maybe' && $paymentLink !== '') {
         $request['status'] = $status;
         $request['payment_link'] = $paymentLink;
         append_history_entry($request, 'status', "Status set to {$status}");
-    } else {
+    } elseif ($status !== 'maybe') {
         $request['status'] = $status;
         append_history_entry($request, 'status', "Status set to {$status}");
     }

@@ -602,6 +602,12 @@ require_admin_ui();
         background: #fff3e3;
       }
 
+      .badge.maybe {
+        color: #6a3ab8;
+        border-color: rgba(106, 58, 184, 0.34);
+        background: #efe7ff;
+      }
+
       .badge.declined,
       .badge.cancelled {
         color: #a33434;
@@ -852,6 +858,31 @@ require_admin_ui();
         box-shadow: inset 0 0 0 2px rgba(26, 127, 79, 0.35);
       }
 
+      .calendar-slot.maybe {
+        box-shadow: inset 0 0 0 1px rgba(106, 58, 184, 0.28);
+      }
+
+      .slot-maybe-count {
+        position: absolute;
+        left: 4px;
+        bottom: 2px;
+        min-width: 16px;
+        height: 14px;
+        border-radius: 999px;
+        padding: 0 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #fff;
+        background: linear-gradient(135deg, #7e4cff, #5f2dc6);
+        border: 1px solid rgba(54, 17, 124, 0.35);
+        pointer-events: none;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+      }
+
       .calendar-slot.slot-grouped {
         border-radius: 0;
       }
@@ -971,6 +1002,11 @@ require_admin_ui();
         border-color: rgba(26, 127, 79, 0.35);
       }
 
+      .month-badge.maybe {
+        background: #efe7ff;
+        border-color: rgba(106, 58, 184, 0.34);
+      }
+
       .month-badge.blocked {
         background: linear-gradient(135deg, #ff2d93, #ff006e);
         border-color: rgba(255, 0, 110, 0.6);
@@ -1018,6 +1054,11 @@ require_admin_ui();
       .legend-dot.paid {
         background: #e6f6ed;
         border-color: rgba(26, 127, 79, 0.35);
+      }
+
+      .legend-dot.maybe {
+        background: #efe7ff;
+        border-color: rgba(106, 58, 184, 0.34);
       }
 
       .legend-dot.city {
@@ -1380,11 +1421,12 @@ require_admin_ui();
           <div class="calendar-grid" id="calendarGrid"></div>
         </div>
         <div class="calendar-legend">
-          <span class="legend-dot blocked"></span> Blocked
-          <span class="legend-dot booking"></span> Booking
-          <span class="legend-dot outcall"></span> Outcall
-          <span class="legend-dot paid"></span> Paid
-          <span class="legend-dot city"></span> City marker
+          <span class="legend-dot blocked"></span> <span id="legendBlockedLabel">Blocked</span>
+          <span class="legend-dot booking"></span> <span id="legendBookingLabel">Booking</span>
+          <span class="legend-dot outcall"></span> <span id="legendOutcallLabel">Outcall</span>
+          <span class="legend-dot paid"></span> <span id="legendPaidLabel">Paid</span>
+          <span class="legend-dot maybe"></span> <span id="legendMaybeLabel">Maybe</span>
+          <span class="legend-dot city"></span> <span id="legendCityLabel">City marker</span>
         </div>
 
         <div class="grid">
@@ -1544,6 +1586,7 @@ require_admin_ui();
           <select id="statusFilter">
             <option value="all">All</option>
             <option value="pending" selected>Pending</option>
+            <option value="maybe">Maybe</option>
             <option value="accepted">Accepted</option>
             <option value="paid">Paid</option>
             <option value="blacklisted">Blacklisted</option>
@@ -1708,6 +1751,7 @@ require_admin_ui();
           refresh: "Refresh",
           all: "All",
           pending: "Pending",
+          maybe: "Maybe",
           accepted: "Accepted",
           paid: "Paid",
           blacklisted: "Blacklisted",
@@ -1800,6 +1844,7 @@ require_admin_ui();
           no_history: "No history yet",
           unknown: "Unknown",
           action_accept: "Accept",
+          action_maybe: "Maybe",
           action_blacklist: "Blacklist",
           action_mark_paid: "Mark paid",
           action_decline: "Decline",
@@ -1813,6 +1858,12 @@ require_admin_ui();
           failed_update_appointment: "Failed to update appointment.",
           action_google_calendar: "Add to Google Calendar",
           action_samsung_calendar: "Samsung Calendar (.ics)",
+          legend_blocked: "Blocked",
+          legend_booking: "Booking",
+          legend_outcall: "Outcall",
+          legend_paid: "Paid",
+          legend_maybe: "Maybe",
+          legend_city: "City marker",
         },
         fr: {
           admin_title: "BombaCLOUD!",
@@ -1860,6 +1911,7 @@ require_admin_ui();
           refresh: "Actualiser",
           all: "Tous",
           pending: "En attente",
+          maybe: "Peut-etre",
           accepted: "Acceptee",
           paid: "Payee",
           blacklisted: "Liste noire",
@@ -1952,6 +2004,7 @@ require_admin_ui();
           no_history: "Aucun historique",
           unknown: "Inconnu",
           action_accept: "Accepter",
+          action_maybe: "Peut-etre",
           action_blacklist: "Liste noire",
           action_mark_paid: "Marquer paye",
           action_decline: "Refuser",
@@ -1965,6 +2018,12 @@ require_admin_ui();
           failed_update_appointment: "Echec mise a jour du rendez-vous.",
           action_google_calendar: "Ajouter a Google Calendar",
           action_samsung_calendar: "Samsung Calendar (.ics)",
+          legend_blocked: "Bloque",
+          legend_booking: "Reservation",
+          legend_outcall: "Outcall",
+          legend_paid: "Paye",
+          legend_maybe: "Peut-etre",
+          legend_city: "Repere ville",
         },
       };
       const formatTemplate = (template, vars = {}) =>
@@ -2056,12 +2115,19 @@ require_admin_ui();
         setTextById("saveGallery", t("save_eye_candy"));
         setTextById("requestsSectionTitle", t("requests_title"));
         setTextById("refreshRequests", t("refresh"));
+        setTextById("legendBlockedLabel", t("legend_blocked"));
+        setTextById("legendBookingLabel", t("legend_booking"));
+        setTextById("legendOutcallLabel", t("legend_outcall"));
+        setTextById("legendPaidLabel", t("legend_paid"));
+        setTextById("legendMaybeLabel", t("legend_maybe"));
+        setTextById("legendCityLabel", t("legend_city"));
         const customersLink = document.querySelector('a[href="customers.php"]');
         if (customersLink) customersLink.textContent = t("costumer_directory");
 
         const statusLabels = {
           all: t("all"),
           pending: t("pending"),
+          maybe: t("maybe"),
           accepted: t("accepted"),
           paid: t("paid"),
           blacklisted: t("blacklisted"),
@@ -2150,6 +2216,7 @@ require_admin_ui();
       const getActiveTimezone = () => normalizeTimezone(tourTzSelect?.value);
 
       let blockedSlots = [];
+      let maybeSlots = [];
       let recurringBlocks = [];
       let touringStops = [];
       let citySchedules = [];
@@ -2599,6 +2666,18 @@ require_admin_ui();
         return entry;
       };
 
+      const getMaybeEntries = (dateKey, timeValue) => {
+        const targetMinutes = timeToMinutes(timeValue);
+        if (targetMinutes === null) return [];
+        return maybeSlots.filter((slot) => {
+          if (!slot || slot.date !== dateKey) return false;
+          const startMinutes = timeToMinutes(slot.start);
+          const endMinutes = timeToMinutes(slot.end);
+          if (startMinutes === null || endMinutes === null) return false;
+          return targetMinutes >= startMinutes && targetMinutes < endMinutes;
+        });
+      };
+
       const getBookingGroupId = (slot) => {
         if (!slot) return "";
         const bookingId = String(slot.booking_id || "").trim();
@@ -2794,7 +2873,9 @@ require_admin_ui();
             slotButton.dataset.dateShort = formatSlotDateShort(dateKey);
             const dateCity = dateCityMap[dateKey] || "";
             const entry = getSlotEntry(dateKey, timeValue);
-            const slotCity = String(entry?.city || dateCity || "").trim();
+            const maybeEntries = getMaybeEntries(dateKey, timeValue);
+            const maybePrimary = maybeEntries[0] || null;
+            const slotCity = String(entry?.city || maybePrimary?.city || dateCity || "").trim();
             if (slotCity) {
               slotButton.dataset.city = slotCity;
               const cityDot = document.createElement("span");
@@ -2845,6 +2926,21 @@ require_admin_ui();
               slotButton.classList.add("blocked");
               slotButton.classList.add("recurring");
               slotButton.title = "Recurring block";
+            }
+            if (maybeEntries.length) {
+              slotButton.classList.add("maybe");
+              const maybeBadge = document.createElement("span");
+              maybeBadge.className = "slot-maybe-count";
+              maybeBadge.textContent = maybeEntries.length > 1 ? `?${maybeEntries.length}` : "?";
+              slotButton.appendChild(maybeBadge);
+              const maybeNames = maybeEntries
+                .map((slot) => String(slot.label || "").trim())
+                .filter(Boolean)
+                .slice(0, 4)
+                .join(", ");
+              const moreCount = maybeEntries.length > 4 ? ` +${maybeEntries.length - 4}` : "";
+              const maybeTitle = `Maybe: ${maybeNames || t("unknown")}${moreCount}`;
+              slotButton.title = slotButton.title ? `${slotButton.title} | ${maybeTitle}` : maybeTitle;
             }
             slotButton.addEventListener("click", () => {
               if (entry && (entry.kind === "booking" || entry.kind === "template")) {
@@ -2916,6 +3012,7 @@ require_admin_ui();
       const getDaySummary = (dateKey) => {
         const bookingIds = new Set();
         const paidIds = new Set();
+        const maybeIds = new Set();
         const cities = new Set();
         let hasManual = false;
         blockedSlots.forEach((slot) => {
@@ -2934,6 +3031,17 @@ require_admin_ui();
           }
           hasManual = true;
         });
+        maybeSlots.forEach((slot) => {
+          if (!slot || slot.date !== dateKey) return;
+          const key = String(slot.id || slot.label || `${slot.date}-${slot.start}`).trim();
+          if (key) {
+            maybeIds.add(key);
+          }
+          const city = String(slot.city || "").trim();
+          if (city) {
+            cities.add(city);
+          }
+        });
         const weekdayIndex = getWeekdayIndex(dateKey);
         const hasRecurring = recurringBlocks.some((block) => {
           if (!block) return false;
@@ -2947,6 +3055,7 @@ require_admin_ui();
         return {
           bookings: bookingIds.size,
           paid: paidIds.size,
+          maybe: maybeIds.size,
           manual: hasManual,
           recurring: hasRecurring,
           cities: Array.from(cities),
@@ -2999,6 +3108,12 @@ require_admin_ui();
             const badge = document.createElement("span");
             badge.className = "month-badge paid";
             badge.textContent = `Paid ${summary.paid}`;
+            badgeWrap.appendChild(badge);
+          }
+          if (summary.maybe > 0) {
+            const badge = document.createElement("span");
+            badge.className = "month-badge maybe";
+            badge.textContent = `${t("maybe")} ${summary.maybe}`;
             badgeWrap.appendChild(badge);
           }
           if (summary.manual || summary.recurring) {
@@ -4366,6 +4481,37 @@ require_admin_ui();
         return { status, paymentStatus };
       };
 
+      const buildMaybeSlotsFromRequests = (requests) => {
+        const slots = [];
+        (Array.isArray(requests) ? requests : []).forEach((item) => {
+          const { status, paymentStatus } = normalizeStatus(item);
+          if (status !== "maybe" || paymentStatus === "paid") return;
+          const date = String(item?.preferred_date || "").trim();
+          const start = String(item?.preferred_time || "").trim();
+          const durationHours = Number(item?.duration_hours || 0);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(start)) return;
+          if (!Number.isFinite(durationHours) || durationHours <= 0) return;
+          const startMinutes = timeToMinutes(start);
+          if (startMinutes === null) return;
+          const totalMinutes = Math.max(SLOT_MINUTES, Math.round(durationHours * 60));
+          const endMinutes = Math.min(24 * 60, startMinutes + totalMinutes);
+          if (endMinutes <= startMinutes) return;
+          const label = String(item?.name || "").trim();
+          const city = String(item?.city || "").trim();
+          for (let minutes = startMinutes; minutes < endMinutes; minutes += SLOT_MINUTES) {
+            slots.push({
+              date,
+              start: minutesToTime(minutes),
+              end: minutesToTime(Math.min(minutes + SLOT_MINUTES, endMinutes)),
+              id: String(item?.id || "").trim(),
+              label: label || t("unknown"),
+              city,
+            });
+          }
+        });
+        return slots;
+      };
+
       const updateStatus = async (id, status, reason = "") => {
         const key = getKey();
         if (!key) {
@@ -4432,9 +4578,11 @@ require_admin_ui();
       const loadRequests = async () => {
         requestsStatus.textContent = "";
         requestsList.innerHTML = "";
+        maybeSlots = [];
         const key = getKey();
         if (!key) {
           requestsStatus.textContent = t("admin_key_required");
+          renderCalendarView();
           return;
         }
         try {
@@ -4444,6 +4592,8 @@ require_admin_ui();
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "load");
           const requests = Array.isArray(data.requests) ? data.requests : [];
+          maybeSlots = buildMaybeSlotsFromRequests(requests);
+          renderCalendarView();
           const filterValue = statusFilter.value;
           const filtered = requests.filter((item) => {
             const { status, paymentStatus } = normalizeStatus(item);
@@ -4534,6 +4684,13 @@ require_admin_ui();
                 );
                 actions.appendChild(
                   createActionButton(
+                    t("action_maybe"),
+                    () => updateStatus(item.id, "maybe", declineInput ? declineInput.value.trim() : ""),
+                    "btn secondary"
+                  )
+                );
+                actions.appendChild(
+                  createActionButton(
                     t("action_blacklist"),
                     () => updateStatus(item.id, "blacklisted", declineInput ? declineInput.value.trim() : ""),
                     "btn secondary"
@@ -4546,6 +4703,15 @@ require_admin_ui();
                 );
               }
               if (status !== "blacklisted") {
+                if (status !== "pending" && status !== "maybe" && paymentStatus !== "paid") {
+                  actions.appendChild(
+                    createActionButton(
+                      t("action_maybe"),
+                      () => updateStatus(item.id, "maybe", declineInput ? declineInput.value.trim() : ""),
+                      "btn ghost"
+                    )
+                  );
+                }
                 actions.appendChild(
                   createActionButton(t("action_edit"), () => {
                     editPanel.classList.toggle("hidden");
@@ -4586,6 +4752,8 @@ require_admin_ui();
             requestsList.innerHTML = `<p class="hint">${t("no_requests_found")}</p>`;
           }
         } catch (_error) {
+          maybeSlots = [];
+          renderCalendarView();
           requestsStatus.textContent = t("failed_load_requests");
         }
       };

@@ -20,6 +20,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessaging
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -52,6 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         requestNotificationPermissionIfNeeded()
         registerFcmToken()
+        syncUpcomingReminders()
 
         if (intent?.getBooleanExtra(EXTRA_OPEN_NOTIFICATIONS, false) == true) {
             openNotificationsFeed()
@@ -162,6 +167,80 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun syncUpcomingReminders() {
+        Thread {
+            try {
+                val entries = fetchUpcomingBookings()
+                for (entry in entries) {
+                    AppointmentReminderScheduler.scheduleFromBooking(
+                        context = this,
+                        requestId = entry.id,
+                        name = entry.name,
+                        city = entry.city,
+                        preferredDate = entry.preferredDate,
+                        preferredTime = entry.preferredTime
+                    )
+                }
+            } catch (_: Exception) {
+            }
+        }.start()
+    }
+
+    private fun fetchUpcomingBookings(): List<ReminderBooking> {
+        val url = URL(REQUESTS_ENDPOINT)
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10000
+            readTimeout = 15000
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("X-Admin-Key", ADMIN_API_KEY)
+        }
+        return try {
+            val code = connection.responseCode
+            if (code !in 200..299) {
+                emptyList()
+            } else {
+                val body = connection.inputStream.use { stream ->
+                    BufferedReader(InputStreamReader(stream)).use { it.readText() }
+                }
+                parseReminderBookings(body)
+            }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun parseReminderBookings(rawJson: String): List<ReminderBooking> {
+        val json = JSONObject(rawJson)
+        val requests = json.optJSONArray("requests") ?: JSONArray()
+        val list = mutableListOf<ReminderBooking>()
+        for (i in 0 until requests.length()) {
+            val item = requests.optJSONObject(i) ?: continue
+            val status = item.optString("status", "").trim().lowercase()
+            val paymentStatus = item.optString("payment_status", "").trim().lowercase()
+            val isConfirmed = status == "accepted" || status == "paid" || paymentStatus == "paid"
+            if (!isConfirmed) continue
+
+            val preferredDate = item.optString("preferred_date", "").trim()
+            val preferredTime = item.optString("preferred_time", "").trim()
+            if (preferredDate.isBlank() || preferredTime.isBlank()) continue
+
+            val id = item.optString("id", "").trim()
+            val name = item.optString("name", "").trim()
+            val city = item.optString("city", "").trim()
+            list.add(
+                ReminderBooking(
+                    id = id,
+                    name = name,
+                    city = city,
+                    preferredDate = preferredDate,
+                    preferredTime = preferredTime
+                )
+            )
+        }
+        return list
+    }
+
     override fun onBackPressed() {
         if (webView.canGoBack()) {
             webView.goBack()
@@ -217,7 +296,17 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_OPEN_NOTIFICATIONS = "open_notifications"
         private const val ADMIN_URL = "https://heidivanhorny.com/booking/admin/"
         private const val TOKEN_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/push-token.php"
+        private const val REQUESTS_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/requests.php"
+        private const val ADMIN_API_KEY = "Simo.666$$$"
         private const val ADMIN_USER = "capitainecommando"
         private const val ADMIN_PASS = "Simo.666$$$"
     }
+
+    private data class ReminderBooking(
+        val id: String,
+        val name: String,
+        val city: String,
+        val preferredDate: String,
+        val preferredTime: String
+    )
 }

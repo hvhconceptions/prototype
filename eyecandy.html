@@ -180,6 +180,36 @@
         padding-bottom: 6px;
       }
 
+      .album-grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: clamp(10px, 2vw, 16px);
+      }
+
+      .album-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--card);
+        display: grid;
+      }
+
+      .album-card img {
+        width: 100%;
+        aspect-ratio: 1 / 1.2;
+        object-fit: cover;
+      }
+
+      .album-caption {
+        margin: 0;
+        padding: 8px 10px 10px;
+        color: var(--text-muted);
+        font-size: 12px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+      }
+
       .dot {
         width: 10px;
         height: 10px;
@@ -355,10 +385,11 @@
         <button class="nav-btn nav-next" id="nextBtn" type="button">next</button>
       </div>
       <div class="dots" id="carouselDots" aria-label="Gallery navigation"></div>
+      <div class="album-grid" id="albumGrid" hidden></div>
     </main>
 
     <script>
-      const photos = [
+      const defaultPhotos = [
         { src: "/photos/heidi1.jpg", alt: "Heidi photo 1" },
         { src: "/photos/heidi2.jpg", alt: "Heidi photo 2" },
         { src: "/photos/heidi3.jpg", alt: "Heidi photo 3" },
@@ -372,19 +403,27 @@
         { src: "/photos/heidi13.JPG", alt: "Heidi photo 13" },
         { src: "/photos/heidi14.jpg", alt: "Heidi photo 14" },
       ];
+      const GALLERY_ENDPOINT = "/booking/api/gallery.php";
 
       const track = document.getElementById("carouselTrack");
       const dots = document.getElementById("carouselDots");
       const prevBtn = document.getElementById("prevBtn");
       const nextBtn = document.getElementById("nextBtn");
       const carousel = document.getElementById("carousel");
+      const albumGrid = document.getElementById("albumGrid");
+
       if (window.parent !== window) {
         document.body.classList.add("embedded");
       }
+
+      let photos = defaultPhotos.slice();
+      let displayMode = "next";
+      let carouselSeconds = 5;
       let index = 0;
       let dragStartX = 0;
       let dragDelta = 0;
       let isDragging = false;
+      let autoPlayTimer = null;
 
       const sendHeight = () => {
         if (window.parent === window) return;
@@ -426,22 +465,38 @@
         }
       };
 
-      const storedTheme = normalizeTheme(readStoredTheme());
-      if (storedTheme === "pink" || storedTheme === "christmas" || storedTheme === "default") {
-        applyTheme(storedTheme);
-      } else {
-        applyTheme(getThemeFromCalendar());
-      }
+      const resolvePhotoSrc = (value) => {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+        if (/^https?:\/\//i.test(raw) || raw.startsWith("/")) {
+          return raw;
+        }
+        return `/${raw.replace(/^\/+/, "")}`;
+      };
 
-      window.addEventListener("message", (event) => {
-        if (event.origin !== window.location.origin) return;
-        const payload = event.data;
-        if (!payload || payload.type !== "hvh:theme") return;
-        applyTheme(normalizeTheme(payload.theme));
-        sendHeight();
-      });
+      const normalizeMode = (mode) => {
+        const value = String(mode || "").trim().toLowerCase();
+        if (value === "album" || value === "carousel") return value;
+        return "next";
+      };
 
-      const render = () => {
+      const normalizeSeconds = (value) => {
+        const parsed = Number(value || 5);
+        if (!Number.isFinite(parsed)) return 5;
+        return Math.min(30, Math.max(2, Math.round(parsed)));
+      };
+
+      const normalizePhotoItems = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items
+          .map((item) => ({
+            src: resolvePhotoSrc(item?.src || ""),
+            alt: String(item?.alt || "").trim(),
+          }))
+          .filter((item) => item.src);
+      };
+
+      const renderCarousel = () => {
         track.innerHTML = "";
         dots.innerHTML = "";
         photos.forEach((photo, i) => {
@@ -449,7 +504,7 @@
           slide.className = "carousel-slide";
           const img = document.createElement("img");
           img.src = photo.src;
-          img.alt = photo.alt;
+          img.alt = photo.alt || `Photo ${i + 1}`;
           img.loading = i === 0 ? "eager" : "lazy";
           img.addEventListener("load", sendHeight);
           slide.appendChild(img);
@@ -469,6 +524,42 @@
         });
       };
 
+      const renderAlbum = () => {
+        albumGrid.innerHTML = "";
+        photos.forEach((photo, i) => {
+          const card = document.createElement("figure");
+          card.className = "album-card";
+          const img = document.createElement("img");
+          img.src = photo.src;
+          img.alt = photo.alt || `Photo ${i + 1}`;
+          img.loading = i < 4 ? "eager" : "lazy";
+          img.addEventListener("load", sendHeight);
+          card.appendChild(img);
+          if (photo.alt) {
+            const caption = document.createElement("figcaption");
+            caption.className = "album-caption";
+            caption.textContent = photo.alt;
+            card.appendChild(caption);
+          }
+          albumGrid.appendChild(card);
+        });
+      };
+
+      const stopAutoPlay = () => {
+        if (!autoPlayTimer) return;
+        window.clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+      };
+
+      const startAutoPlay = () => {
+        stopAutoPlay();
+        if (displayMode !== "carousel" || photos.length <= 1) return;
+        autoPlayTimer = window.setInterval(() => {
+          index = (index + 1) % photos.length;
+          update();
+        }, carouselSeconds * 1000);
+      };
+
       const clampIndex = () => {
         if (index < 0) index = 0;
         if (index > photos.length - 1) index = photos.length - 1;
@@ -484,15 +575,43 @@
         const disableNav = photos.length <= 1;
         prevBtn.disabled = disableNav || index === 0;
         nextBtn.disabled = disableNav || index === photos.length - 1;
+        sendHeight();
+      };
+
+      const applyDisplayMode = () => {
+        const isAlbum = displayMode === "album";
+        carousel.hidden = isAlbum;
+        dots.hidden = isAlbum;
+        albumGrid.hidden = !isAlbum;
+
+        if (isAlbum) {
+          stopAutoPlay();
+          renderAlbum();
+        } else {
+          renderCarousel();
+          update();
+          if (displayMode === "carousel") {
+            startAutoPlay();
+          } else {
+            stopAutoPlay();
+          }
+        }
+        sendHeight();
       };
 
       const goPrev = () => {
+        if (displayMode === "album") return;
         index -= 1;
         update();
       };
 
-      const goNext = () => {
-        index += 1;
+      const goNext = (wrap = false) => {
+        if (displayMode === "album") return;
+        if (wrap) {
+          index = (index + 1) % Math.max(photos.length, 1);
+        } else {
+          index += 1;
+        }
         update();
       };
 
@@ -508,12 +627,13 @@
       nextBtn.addEventListener("pointerdown", (event) => event.stopPropagation());
 
       document.addEventListener("keydown", (event) => {
+        if (displayMode === "album") return;
         if (event.key === "ArrowLeft") goPrev();
         if (event.key === "ArrowRight") goNext();
       });
 
       const handlePointerDown = (event) => {
-        if (photos.length <= 1) return;
+        if (displayMode === "album" || photos.length <= 1) return;
         if (event.target.closest(".nav-btn") || event.target.closest(".dot")) return;
         isDragging = true;
         dragStartX = event.clientX;
@@ -543,13 +663,46 @@
         update();
       };
 
+      const loadGalleryConfig = async () => {
+        try {
+          const response = await fetch(GALLERY_ENDPOINT, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          const incoming = normalizePhotoItems(data?.items);
+          if (incoming.length) {
+            photos = incoming;
+          }
+          displayMode = normalizeMode(data?.display_mode);
+          carouselSeconds = normalizeSeconds(data?.carousel_seconds);
+        } catch (_error) {
+          photos = defaultPhotos.slice();
+          displayMode = "next";
+          carouselSeconds = 5;
+        }
+        applyDisplayMode();
+      };
+
+      const storedTheme = normalizeTheme(readStoredTheme());
+      if (storedTheme === "pink" || storedTheme === "christmas" || storedTheme === "default") {
+        applyTheme(storedTheme);
+      } else {
+        applyTheme(getThemeFromCalendar());
+      }
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin) return;
+        const payload = event.data;
+        if (!payload || payload.type !== "hvh:theme") return;
+        applyTheme(normalizeTheme(payload.theme));
+        sendHeight();
+      });
+
       carousel.addEventListener("pointerdown", handlePointerDown);
       carousel.addEventListener("pointermove", handlePointerMove);
       carousel.addEventListener("pointerup", handlePointerUp);
       carousel.addEventListener("pointercancel", handlePointerUp);
 
-      render();
-      update();
+      loadGalleryConfig();
       if (document.readyState === "complete") {
         sendHeight();
       } else {

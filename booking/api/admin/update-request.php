@@ -59,6 +59,135 @@ function resolve_tour_timezone(string $value): DateTimeZone
     }
 }
 
+function get_base_url(): string
+{
+    $scheme = 'https';
+    $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+    if ($forwardedProto !== '') {
+        $scheme = explode(',', $forwardedProto)[0];
+    } elseif (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        $scheme = 'https';
+    } else {
+        $scheme = 'http';
+    }
+    $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? ($_SERVER['HTTP_HOST'] ?? '');
+    if ($host === '') {
+        return '';
+    }
+    return $scheme . '://' . $host;
+}
+
+function build_calendar_times(array $request): ?array
+{
+    $preferredDate = (string) ($request['preferred_date'] ?? '');
+    $preferredTime = (string) ($request['preferred_time'] ?? '');
+    if ($preferredDate === '' || $preferredTime === '') {
+        return null;
+    }
+    $tourTz = (string) ($request['tour_timezone'] ?? DEFAULT_TOUR_TZ);
+    $durationHours = isset($request['duration_hours']) ? (float) $request['duration_hours'] : 0.0;
+    if ($durationHours <= 0) {
+        return null;
+    }
+    try {
+        $tourZone = resolve_tour_timezone($tourTz);
+        $startLocal = DateTimeImmutable::createFromFormat('Y-m-d H:i', $preferredDate . ' ' . $preferredTime, $tourZone);
+        if ($startLocal === false) {
+            return null;
+        }
+        $endLocal = $startLocal->modify('+' . (int) round($durationHours * 60) . ' minutes');
+        $utc = new DateTimeZone('UTC');
+        $startUtc = $startLocal->setTimezone($utc);
+        $endUtc = $endLocal->setTimezone($utc);
+        return [
+            'startIso' => $startUtc->format('Y-m-d\\TH:i:s\\Z'),
+            'endIso' => $endUtc->format('Y-m-d\\TH:i:s\\Z'),
+            'startCompact' => $startUtc->format('Ymd\\THis\\Z'),
+            'endCompact' => $endUtc->format('Ymd\\THis\\Z'),
+        ];
+    } catch (Exception $error) {
+        return null;
+    }
+}
+
+function build_calendar_links(array $request): array
+{
+    $times = build_calendar_times($request);
+    if ($times === null) {
+        return [];
+    }
+    $title = 'Heidi Van Horny Booking';
+    $id = (string) ($request['id'] ?? '');
+    $city = trim((string) ($request['city'] ?? ''));
+    $bookingType = trim((string) ($request['booking_type'] ?? ''));
+    $address = trim((string) ($request['outcall_address'] ?? ''));
+    $locationParts = [];
+    if ($city !== '') {
+        $locationParts[] = $city;
+    }
+    if ($bookingType !== '') {
+        $locationParts[] = ucfirst($bookingType);
+    }
+    if ($address !== '') {
+        $locationParts[] = $address;
+    }
+    $location = implode(' - ', $locationParts);
+    $details = 'Booking updated.';
+    if ($id !== '') {
+        $details .= " Reference: {$id}.";
+    }
+
+    $google = 'https://www.google.com/calendar/render?action=TEMPLATE'
+        . '&text=' . rawurlencode($title)
+        . '&dates=' . rawurlencode($times['startCompact'] . '/' . $times['endCompact'])
+        . '&details=' . rawurlencode($details);
+    if ($location !== '') {
+        $google .= '&location=' . rawurlencode($location);
+    }
+
+    $outlook = 'https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose'
+        . '&rru=addevent'
+        . '&subject=' . rawurlencode($title)
+        . '&startdt=' . rawurlencode($times['startIso'])
+        . '&enddt=' . rawurlencode($times['endIso'])
+        . '&body=' . rawurlencode($details);
+    if ($location !== '') {
+        $outlook .= '&location=' . rawurlencode($location);
+    }
+
+    $base = get_base_url();
+    $scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    $basePath = dirname(dirname($scriptPath));
+    if ($basePath === '.') {
+        $basePath = '';
+    }
+    $ics = $base !== '' ? $base . $basePath . '/api/calendar.php?id=' . rawurlencode($id) : '';
+
+    return [
+        'google' => $google,
+        'outlook' => $outlook,
+        'ics' => $ics,
+    ];
+}
+
+function append_calendar_links_lines(array &$lines, array $calendarLinks): void
+{
+    if (empty($calendarLinks)) {
+        return;
+    }
+    $lines[] = '';
+    $lines[] = 'Add to calendar:';
+    if (!empty($calendarLinks['google'])) {
+        $lines[] = '- Google Calendar: ' . $calendarLinks['google'];
+    }
+    if (!empty($calendarLinks['outlook'])) {
+        $lines[] = '- Samsung / Microsoft Calendar: ' . $calendarLinks['outlook'];
+    }
+    if (!empty($calendarLinks['ics'])) {
+        $lines[] = '- iCloud / Apple Calendar (ICS): ' . $calendarLinks['ics'];
+    }
+}
+
 function build_booking_blocks(array $request, string $status): array
 {
     $durationHours = isset($request['duration_hours']) ? (float) $request['duration_hours'] : 0.0;
@@ -177,6 +306,7 @@ function build_booking_update_email_body(array $request, array $changes): string
     if ($notes !== '') {
         $lines[] = '- Notes: ' . $notes;
     }
+    append_calendar_links_lines($lines, build_calendar_links($request));
     $lines[] = '';
     $lines[] = 'If anything looks wrong, reply to this email.';
     return implode("\n", $lines);
@@ -207,6 +337,7 @@ function build_booking_update_admin_email_body(array $request, array $changes): 
     $lines[] = '- Duration: ' . booking_update_value_label((string) ($request['duration_label'] ?? ''));
     $lines[] = '- Service: ' . strtoupper((string) ($request['experience'] ?? 'gfe'));
     $lines[] = '- Type: ' . booking_update_value_label((string) ($request['booking_type'] ?? 'incall'));
+    append_calendar_links_lines($lines, build_calendar_links($request));
     return implode("\n", $lines);
 }
 

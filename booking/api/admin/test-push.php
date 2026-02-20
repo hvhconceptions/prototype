@@ -29,11 +29,47 @@ if (!$tokens) {
     json_response(['error' => 'No push tokens found'], 404);
 }
 
-$ok = send_push_to_tokens($tokens, $title !== '' ? $title : 'Test push', $body, $data);
+$pushTitle = $title !== '' ? $title : 'Test push';
+$details = [];
+$ok = false;
+
+if ($hasV1) {
+    foreach ($tokens as $item) {
+        $message = [
+            'token' => $item,
+            'notification' => [
+                'title' => $pushTitle,
+                'body' => $body,
+            ],
+            'android' => [
+                'priority' => 'HIGH',
+                'notification' => [
+                    'channel_id' => 'booking_alerts',
+                    'sound' => 'default',
+                ],
+            ],
+            'data' => $data,
+        ];
+        $result = send_fcm_v1_message($message);
+        if (!empty($result['ok'])) {
+            $ok = true;
+        }
+        $details[] = [
+            'token_suffix' => substr($item, -12),
+            'ok' => !empty($result['ok']),
+            'status' => (int) ($result['status'] ?? 0),
+            'invalid_token' => !empty($result['invalid_token']),
+            'error' => (string) ($result['error'] ?? ''),
+        ];
+    }
+} else {
+    $ok = send_push_to_tokens($tokens, $pushTitle, $body, $data);
+}
 
 json_response([
     'ok' => $ok,
     'sent' => $ok ? count($tokens) : 0,
     'tokens' => count($tokens),
     'mode' => $hasV1 ? 'v1' : 'legacy',
+    'details' => $details,
 ]);

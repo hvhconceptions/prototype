@@ -461,14 +461,93 @@ function get_default_gallery_items(): array
     ];
 }
 
-function read_gallery_data(): array
+function normalize_gallery_mode(string $mode): string
 {
-    return read_json_file(GALLERY_FILE, ['items' => get_default_gallery_items(), 'updated_at' => gmdate('c')]);
+    $normalized = strtolower(trim($mode));
+    if ($normalized === 'album') {
+        return 'album';
+    }
+    if ($normalized === 'carousel') {
+        return 'carousel';
+    }
+    return 'next';
 }
 
-function write_gallery_data(array $items): void
+function normalize_gallery_seconds($value): int
 {
-    write_json_file(GALLERY_FILE, ['items' => $items, 'updated_at' => gmdate('c')]);
+    $seconds = (int) $value;
+    if ($seconds < 2) {
+        return 2;
+    }
+    if ($seconds > 30) {
+        return 30;
+    }
+    return $seconds;
+}
+
+function normalize_gallery_items(array $items): array
+{
+    $clean = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $src = trim((string) ($item['src'] ?? ''));
+        if ($src === '') {
+            continue;
+        }
+        $clean[] = [
+            'src' => $src,
+            'alt' => trim((string) ($item['alt'] ?? '')),
+        ];
+    }
+    return $clean ?: get_default_gallery_items();
+}
+
+function normalize_gallery_payload(array $raw): array
+{
+    $items = $raw['items'] ?? [];
+    if (!is_array($items)) {
+        $items = [];
+    }
+    return [
+        'items' => normalize_gallery_items($items),
+        'display_mode' => normalize_gallery_mode((string) ($raw['display_mode'] ?? 'next')),
+        'carousel_seconds' => normalize_gallery_seconds($raw['carousel_seconds'] ?? 5),
+        'updated_at' => (string) ($raw['updated_at'] ?? gmdate('c')),
+    ];
+}
+
+function read_gallery_data(): array
+{
+    $default = [
+        'items' => get_default_gallery_items(),
+        'display_mode' => 'next',
+        'carousel_seconds' => 5,
+        'updated_at' => gmdate('c'),
+    ];
+    $raw = read_json_file(GALLERY_FILE, $default);
+    return normalize_gallery_payload($raw);
+}
+
+function write_gallery_data(array $data): void
+{
+    // Backward compatibility: allow write_gallery_data($itemsOnly)
+    $isList = true;
+    $expectedIndex = 0;
+    foreach ($data as $key => $_value) {
+        if ($key !== $expectedIndex) {
+            $isList = false;
+            break;
+        }
+        $expectedIndex++;
+    }
+    if ($isList) {
+        $data = ['items' => $data];
+    }
+    $payload = normalize_gallery_payload($data);
+    $payload['updated_at'] = gmdate('c');
+    write_json_file(GALLERY_FILE, $payload);
 }
 
 function require_admin(): void
@@ -598,11 +677,11 @@ function email_link_label_for_url(string $url): string
         return 'Add to Samsung / Microsoft Calendar';
     }
     if (strpos($lower, '/api/calendar.php') !== false) {
-        return 'Add to Apple Calendar (ICS)';
+        return 'Add to iCloud / Apple Calendar';
     }
     $path = parse_url($url, PHP_URL_PATH);
     if (is_string($path) && strtolower(substr($path, -4)) === '.ics') {
-        return 'Add to Apple Calendar (ICS)';
+        return 'Add to iCloud / Apple Calendar';
     }
     $host = parse_url($url, PHP_URL_HOST);
     if (is_string($host) && $host !== '') {

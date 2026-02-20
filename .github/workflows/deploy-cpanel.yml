@@ -7,8 +7,8 @@ on:
       - main
     paths:
       - "booking/**"
-      - "index.html"
-      - "inside.html"
+      - "*.html"
+      - "!tmp_*.html"
       - ".htaccess"
       - ".github/workflows/deploy-cpanel.yml"
   workflow_dispatch:
@@ -24,8 +24,11 @@ jobs:
       - name: Prepare root deploy bundle
         run: |
           mkdir -p deploy-root
-          cp index.html deploy-root/index.html
-          cp inside.html deploy-root/inside.html
+          for file in index.html inside.html eyecandy.html rates-menu.html spoil-me.html game-over.html touring.html photos.html 404.html; do
+            if [ -f "$file" ]; then
+              cp "$file" "deploy-root/$file"
+            fi
+          done
           cp .htaccess deploy-root/.htaccess
 
       - name: Deploy root files via FTP

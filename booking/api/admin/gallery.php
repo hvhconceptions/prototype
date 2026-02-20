@@ -7,12 +7,10 @@ require_admin();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $gallery = read_gallery_data();
-    $items = $gallery['items'] ?? [];
-    if (!is_array($items)) {
-        $items = [];
-    }
     json_response([
-        'items' => $items,
+        'items' => $gallery['items'] ?? [],
+        'display_mode' => $gallery['display_mode'] ?? 'next',
+        'carousel_seconds' => (int) ($gallery['carousel_seconds'] ?? 5),
         'updated_at' => $gallery['updated_at'] ?? gmdate('c'),
     ]);
 }
@@ -26,6 +24,8 @@ $items = $payload['items'] ?? [];
 if (!is_array($items)) {
     json_response(['error' => 'Invalid items'], 422);
 }
+$displayMode = (string) ($payload['display_mode'] ?? 'next');
+$carouselSeconds = $payload['carousel_seconds'] ?? 5;
 
 $clean = [];
 foreach ($items as $item) {
@@ -47,6 +47,17 @@ if (!$clean) {
     json_response(['error' => 'No valid items'], 422);
 }
 
-write_gallery_data(array_values($clean));
+write_gallery_data([
+    'items' => array_values($clean),
+    'display_mode' => $displayMode,
+    'carousel_seconds' => $carouselSeconds,
+]);
 
-json_response(['ok' => true, 'items' => $clean]);
+$saved = read_gallery_data();
+
+json_response([
+    'ok' => true,
+    'items' => $saved['items'] ?? $clean,
+    'display_mode' => $saved['display_mode'] ?? 'next',
+    'carousel_seconds' => (int) ($saved['carousel_seconds'] ?? 5),
+]);

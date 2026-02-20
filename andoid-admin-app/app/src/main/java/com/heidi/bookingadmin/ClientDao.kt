@@ -13,8 +13,11 @@ interface ClientDao {
     @Query("SELECT * FROM clients ORDER BY createdAt DESC")
     fun getAll(): List<ClientEntity>
 
-    @Query("DELETE FROM clients WHERE email = :email")
-    fun deleteByEmail(email: String)
+    @Query("SELECT * FROM clients ORDER BY createdAt DESC LIMIT :limit")
+    fun getRecent(limit: Int): List<ClientEntity>
+
+    @Query("DELETE FROM clients WHERE id = :id")
+    fun deleteById(id: String)
 
     @Query("DELETE FROM clients")
     fun clear()

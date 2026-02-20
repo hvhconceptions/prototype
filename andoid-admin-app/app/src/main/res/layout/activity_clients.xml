@@ -3,16 +3,47 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   android:orientation="vertical"
-  android:padding="16dp">
+  android:padding="16dp"
+  android:background="#fff8fc">
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingBottom="10dp">
+
+    <TextView
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:text="Notifications"
+      android:textColor="#ff2d93"
+      android:textSize="22sp"
+      android:textStyle="bold" />
+
+    <TextView
+      android:id="@+id/clearAllNotifications"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:background="#ff007f"
+      android:paddingStart="12dp"
+      android:paddingTop="7dp"
+      android:paddingEnd="12dp"
+      android:paddingBottom="7dp"
+      android:text="Clear all"
+      android:textAllCaps="true"
+      android:textColor="#ffffff"
+      android:textSize="12sp" />
+  </LinearLayout>
 
   <TextView
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="Clients"
-    android:textStyle="bold"
-    android:textSize="20sp"
-    android:textColor="#ff2d93"
-    android:paddingBottom="12dp" />
+    android:paddingBottom="12dp"
+    android:text="New booking entries show up here."
+    android:textColor="#8a2a53"
+    android:textSize="13sp" />
 
   <androidx.recyclerview.widget.RecyclerView
     android:id="@+id/clientsList"
@@ -24,7 +55,7 @@
     android:id="@+id/emptyClients"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="No clients stored yet."
+    android:text="No notifications yet."
     android:textColor="#7a1c45"
     android:gravity="center"
     android:padding="12dp" />

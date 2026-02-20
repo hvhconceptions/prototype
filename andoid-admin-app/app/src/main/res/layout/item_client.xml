@@ -3,9 +3,10 @@
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:orientation="vertical"
-  android:padding="12dp"
-  android:background="#fff5fb"
-  android:layout_marginBottom="10dp">
+  android:layout_marginBottom="10dp"
+  android:background="#ffffff"
+  android:elevation="2dp"
+  android:padding="12dp">
 
   <LinearLayout
     android:layout_width="match_parent"
@@ -26,14 +27,14 @@
       android:id="@+id/clientDelete"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="Delete"
+      android:text="Dismiss"
       android:textAllCaps="true"
       android:textColor="#ffffff"
       android:paddingStart="12dp"
       android:paddingEnd="12dp"
       android:paddingTop="6dp"
       android:paddingBottom="6dp"
-      android:background="#ff006e" />
+      android:background="#ff2d93" />
   </LinearLayout>
 
   <TextView

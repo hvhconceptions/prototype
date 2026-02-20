@@ -197,18 +197,15 @@ require_admin_ui();
       }
 
       .age-language {
-        position: fixed;
-        top: clamp(14px, 4vw, 24px);
-        right: clamp(14px, 4vw, 24px);
-        left: auto;
-        display: inline-flex;
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         padding: 0;
         border: none;
         background: transparent;
         box-shadow: none;
-        z-index: 130;
       }
 
       .age-language .language-button {
@@ -269,6 +266,226 @@ require_admin_ui();
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 12px;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-menu-btn {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.35);
+        background: #fff;
+        color: #7a1c45;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(255, 0, 110, 0.12);
+      }
+
+      .icon-menu-btn:focus-visible,
+      .icon-menu-btn:hover {
+        border-color: rgba(255, 0, 110, 0.55);
+        outline: none;
+      }
+
+      .icon-menu-btn .line-stack {
+        display: grid;
+        gap: 4px;
+      }
+
+      .icon-menu-btn .line-stack span {
+        width: 16px;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+        display: block;
+      }
+
+      .notif-badge {
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: var(--hot);
+        color: #fff;
+        font-size: 11px;
+        line-height: 18px;
+        text-align: center;
+        padding: 0 5px;
+        margin-left: 6px;
+      }
+
+      .notif-panel {
+        position: absolute;
+        top: 56px;
+        right: 0;
+        width: min(360px, calc(100vw - 32px));
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 20px 40px rgba(255, 0, 110, 0.16);
+        padding: 10px;
+        z-index: 60;
+      }
+
+      .notif-title {
+        margin: 0 0 8px;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        color: #7a1c45;
+        text-transform: uppercase;
+      }
+
+      .notif-list {
+        display: grid;
+        gap: 8px;
+        max-height: 300px;
+        overflow: auto;
+      }
+
+      .notif-item {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff7fc;
+        padding: 8px 10px;
+        cursor: pointer;
+        color: #5c1738;
+      }
+
+      .notif-item:hover,
+      .notif-item:focus-visible {
+        background: #ffeef8;
+        outline: none;
+      }
+
+      .notif-empty {
+        margin: 0;
+        color: #7b4b61;
+        font-size: 0.86rem;
+      }
+
+      .header-anchor {
+        position: relative;
+      }
+
+      .admin-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(19, 4, 12, 0.36);
+        z-index: 150;
+      }
+
+      .admin-menu-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: min(520px, 94vw);
+        background: #fff;
+        border-left: 1px solid var(--line);
+        box-shadow: -24px 0 48px rgba(255, 0, 110, 0.2);
+        z-index: 160;
+        overflow: auto;
+        transform: translateX(100%);
+        transition: transform 0.2s ease;
+        padding: 16px;
+      }
+
+      .admin-menu-drawer.open {
+        transform: translateX(0);
+      }
+
+      .admin-menu-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .admin-menu-title {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--hot);
+      }
+
+      .menu-group {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #fff9fd;
+      }
+
+      .menu-group h3 {
+        margin: 0 0 10px;
+        font-size: 0.84rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #7a1c45;
+      }
+
+      .menu-inline-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .menu-day-choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .menu-day-choices label {
+        margin: 0;
+        font-size: 0.78rem;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 8px;
+      }
+
+      .menu-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .menu-list-row {
+        display: grid;
+        grid-template-columns: 1fr minmax(88px, 120px) auto;
+        gap: 8px;
+      }
+
+      .menu-list-row input {
+        min-width: 0;
+      }
+
+      .menu-list-row .btn {
+        padding: 8px 10px;
+      }
+
+      .menu-avatar-preview {
+        width: 74px;
+        height: 74px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        object-fit: cover;
+        background: #fff;
+        display: block;
+      }
+
+      .legacy-admin-section {
+        display: none;
       }
 
       h1 {
@@ -468,6 +685,17 @@ require_admin_ui();
         align-self: end;
       }
 
+      .quick-add-grid {
+        display: grid;
+        grid-template-columns: 160px minmax(170px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr);
+        gap: 12px;
+        align-items: end;
+      }
+
+      .quick-add-notes {
+        grid-column: 1 / -1;
+      }
+
       .editor-row.gallery {
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(140px, 180px) auto;
       }
@@ -591,6 +819,12 @@ require_admin_ui();
         background: #fff3e3;
       }
 
+      .badge.maybe {
+        color: #6a3ab8;
+        border-color: rgba(106, 58, 184, 0.34);
+        background: #efe7ff;
+      }
+
       .badge.declined,
       .badge.cancelled {
         color: #a33434;
@@ -619,6 +853,48 @@ require_admin_ui();
         flex-wrap: wrap;
         gap: 8px;
         margin-top: 12px;
+      }
+
+      .request-edit-panel {
+        margin-top: 12px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+      }
+
+      .request-edit-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .request-edit-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .request-edit-field label {
+        font-size: 0.78rem;
+        color: #5f173a;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .request-edit-field input,
+      .request-edit-field select,
+      .request-edit-field textarea {
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+        font-family: inherit;
+      }
+
+      .request-edit-field textarea {
+        min-height: 78px;
+        resize: vertical;
       }
 
       .hint {
@@ -710,6 +986,37 @@ require_admin_ui();
         pointer-events: none;
       }
 
+      .slot-city-dot {
+        position: absolute;
+        left: 6px;
+        top: 4px;
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--city-color, rgba(180, 154, 177, 0.4));
+        border: 1px solid rgba(86, 18, 45, 0.12);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55);
+        pointer-events: none;
+      }
+
+      .calendar-head-city {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .calendar-head-city::before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--city-color, rgba(180, 154, 177, 0.5));
+        border: 1px solid rgba(86, 18, 45, 0.14);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+      }
+
       .calendar-slot.blocked {
         background: linear-gradient(135deg, rgba(255, 45, 147, 0.9), rgba(255, 0, 110, 0.9));
         color: #fff;
@@ -766,6 +1073,58 @@ require_admin_ui();
 
       .calendar-slot.booking.paid {
         box-shadow: inset 0 0 0 2px rgba(26, 127, 79, 0.35);
+      }
+
+      .calendar-slot.maybe {
+        box-shadow: inset 0 0 0 1px rgba(106, 58, 184, 0.28);
+      }
+
+      .slot-maybe-count {
+        position: absolute;
+        left: 4px;
+        bottom: 2px;
+        min-width: 16px;
+        height: 14px;
+        border-radius: 999px;
+        padding: 0 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #fff;
+        background: linear-gradient(135deg, #7e4cff, #5f2dc6);
+        border: 1px solid rgba(54, 17, 124, 0.35);
+        pointer-events: none;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+      }
+
+      .calendar-slot.slot-grouped {
+        border-radius: 0;
+      }
+
+      .calendar-slot.slot-group-start {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+      }
+
+      .calendar-slot.slot-group-end {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+      }
+
+      .calendar-slot.slot-group-middle,
+      .calendar-slot.slot-group-end {
+        margin-top: -4px;
+        border-top-color: transparent;
+      }
+
+      .calendar-slot.slot-group-middle::before,
+      .calendar-slot.slot-group-middle::after,
+      .calendar-slot.slot-group-end::before,
+      .calendar-slot.slot-group-end::after {
+        opacity: 0;
       }
 
       .calendar-legend {
@@ -860,10 +1219,30 @@ require_admin_ui();
         border-color: rgba(26, 127, 79, 0.35);
       }
 
+      .month-badge.maybe {
+        background: #efe7ff;
+        border-color: rgba(106, 58, 184, 0.34);
+      }
+
       .month-badge.blocked {
         background: linear-gradient(135deg, #ff2d93, #ff006e);
         border-color: rgba(255, 0, 110, 0.6);
         color: #fff;
+      }
+
+      .month-city-dots {
+        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .month-city-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(86, 18, 45, 0.14);
+        background: var(--city-color, rgba(180, 154, 177, 0.4));
       }
 
       .legend-dot {
@@ -892,6 +1271,16 @@ require_admin_ui();
       .legend-dot.paid {
         background: #e6f6ed;
         border-color: rgba(26, 127, 79, 0.35);
+      }
+
+      .legend-dot.maybe {
+        background: #efe7ff;
+        border-color: rgba(106, 58, 184, 0.34);
+      }
+
+      .legend-dot.city {
+        background: rgba(180, 154, 177, 0.45);
+        border: 1px solid rgba(86, 18, 45, 0.18);
       }
 
       .city-wizard-card {
@@ -1039,6 +1428,10 @@ require_admin_ui();
           justify-self: start;
         }
 
+        .quick-add-grid {
+          grid-template-columns: 1fr;
+        }
+
         .city-wizard-row {
           grid-template-columns: 1fr;
         }
@@ -1071,15 +1464,25 @@ require_admin_ui();
           border-radius: 16px;
         }
 
-        .age-language {
-          top: 10px;
-          right: 10px;
-        }
-
         .age-language .language-button {
           font-size: 11px;
           gap: 4px;
           padding: 1px 2px;
+        }
+
+        .header-actions {
+          width: 100%;
+          justify-content: flex-end;
+        }
+
+        .admin-menu-drawer {
+          width: 100vw;
+          max-width: 100vw;
+        }
+
+        .menu-inline-grid,
+        .menu-list-row {
+          grid-template-columns: 1fr;
         }
 
         .folder-switcher {
@@ -1164,44 +1567,226 @@ require_admin_ui();
     </style>
   </head>
   <body>
-    <div class="age-language" role="group" aria-label="language selector">
-      <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
-        <span class="language-flag" aria-hidden="true">
-          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
-            <rect width="24" height="16" fill="#012169"></rect>
-            <path
-              d="M0 0L9.5 6.5V0H14.5V6.5L24 0V3L15.5 8H24V8.5H15.5L24 13V16L14.5 9.5V16H9.5V9.5L0 16V13L8.5 8.5H0V8H8.5L0 3Z"
-              fill="#fff"
-            ></path>
-            <path
-              d="M0 0L10 6.5V0H14V6.5L24 0V2.5L13.5 8.5H24V9.5H13.5L24 15.5V16L14 9.5V16H10V9.5L0 16V13.5L10.5 9.5H0V8.5H10.5L0 2.5Z"
-              fill="#c8102e"
-              opacity="0.8"
-            ></path>
-            <path d="M9.5 0H14.5V6H24V10H14.5V16H9.5V10H0V6H9.5Z" fill="#fff"></path>
-            <path d="M10.5 0H13.5V6H24V10H13.5V16H10.5V10H0V6H10.5Z" fill="#c8102e"></path>
-          </svg>
-        </span>
-        <span class="language-code">EN</span>
-      </button>
-      <button type="button" class="language-button" data-language-choice="fr" aria-pressed="false">
-        <span class="language-flag" aria-hidden="true">
-          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
-            <rect width="24" height="16" fill="#fff"></rect>
-            <rect width="8" height="16" fill="#002395"></rect>
-            <rect width="8" height="16" x="16" fill="#ED2939"></rect>
-          </svg>
-        </span>
-        <span class="language-code">FR</span>
-      </button>
-    </div>
+    <div id="adminMenuBackdrop" class="admin-menu-backdrop" hidden></div>
     <header>
       <div class="header-top">
         <h1 id="adminMainTitle">BombaCLOUD!</h1>
-        <a class="btn secondary" id="openClientApp" href="../index.html" target="_blank" rel="noopener">Client app</a>
+        <div class="header-actions header-anchor">
+          <button class="icon-menu-btn" id="notifToggleBtn" type="button" aria-label="Notifications">
+            <span>🔔</span>
+            <span id="notifUnreadCount" class="notif-badge hidden">0</span>
+          </button>
+          <div id="notifPanel" class="notif-panel hidden">
+            <h3 class="notif-title">New bookings</h3>
+            <div id="notifList" class="notif-list"></div>
+          </div>
+          <a class="btn secondary" id="openClientApp" href="../index.html" target="_blank" rel="noopener">Client app</a>
+          <button class="icon-menu-btn" id="adminMenuToggleBtn" type="button" aria-label="Open admin menu">
+            <span class="line-stack" aria-hidden="true"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
       <p class="subtitle" id="adminSubtitle">Simple city-by-city setup. Fill each city card, save, then manage requests.</p>
     </header>
+
+    <aside id="adminMenuDrawer" class="admin-menu-drawer" aria-hidden="true">
+      <div class="admin-menu-head">
+        <h2 class="admin-menu-title">Admin menu</h2>
+        <button class="btn ghost" id="adminMenuCloseBtn" type="button">Close</button>
+      </div>
+
+      <section class="menu-group">
+        <h3>Account center</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="accountPhoto">Upload profile pic</label>
+            <input id="accountPhoto" type="file" accept="image/*" />
+            <img id="accountPhotoPreview" class="menu-avatar-preview" alt="Profile preview" hidden />
+          </div>
+          <div class="field">
+            <label for="accountName">Name</label>
+            <input id="accountName" type="text" placeholder="Your name" />
+          </div>
+          <div class="field">
+            <label for="accountEmail">Email</label>
+            <input id="accountEmail" type="email" placeholder="you@email.com" />
+          </div>
+          <div class="field">
+            <label for="accountPhone">Phone number</label>
+            <input id="accountPhone" type="tel" placeholder="+1..." />
+          </div>
+          <div class="field">
+            <label for="accountPassword">Change password</label>
+            <input id="accountPassword" type="password" placeholder="New password" />
+          </div>
+          <div class="field">
+            <label for="accountLanguage">Language preference</label>
+            <select id="accountLanguage">
+              <option value="en">English</option>
+              <option value="fr">Francais</option>
+            </select>
+          </div>
+        </div>
+        <div class="age-language" role="group" aria-label="language selector">
+          <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
+            <span class="language-flag" aria-hidden="true">
+              <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+                <rect width="24" height="16" fill="#012169"></rect>
+                <path
+                  d="M0 0L9.5 6.5V0H14.5V6.5L24 0V3L15.5 8H24V8.5H15.5L24 13V16L14.5 9.5V16H9.5V9.5L0 16V13L8.5 8.5H0V8H8.5L0 3Z"
+                  fill="#fff"
+                ></path>
+                <path
+                  d="M0 0L10 6.5V0H14V6.5L24 0V2.5L13.5 8.5H24V9.5H13.5L24 15.5V16L14 9.5V16H10V9.5L0 16V13.5L10.5 9.5H0V8.5H10.5L0 2.5Z"
+                  fill="#c8102e"
+                  opacity="0.8"
+                ></path>
+                <path d="M9.5 0H14.5V6H24V10H14.5V16H9.5V10H0V6H9.5Z" fill="#fff"></path>
+                <path d="M10.5 0H13.5V6H24V10H13.5V16H10.5V10H0V6H10.5Z" fill="#c8102e"></path>
+              </svg>
+            </span>
+            <span class="language-code">EN</span>
+          </button>
+          <button type="button" class="language-button" data-language-choice="fr" aria-pressed="false">
+            <span class="language-flag" aria-hidden="true">
+              <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+                <rect width="24" height="16" fill="#fff"></rect>
+                <rect width="8" height="16" fill="#002395"></rect>
+                <rect width="8" height="16" x="16" fill="#ED2939"></rect>
+              </svg>
+            </span>
+            <span class="language-code">FR</span>
+          </button>
+        </div>
+        <div class="row">
+          <button class="btn" id="saveAccountCenter" type="button">Save account center</button>
+          <span class="status" id="accountCenterStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Schedule</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label><input id="menuWorkAllDay" type="checkbox" /> Working all day</label>
+          </div>
+          <div class="field">
+            <label for="menuWorkStart">From time</label>
+            <input id="menuWorkStart" type="time" value="10:00" />
+          </div>
+          <div class="field">
+            <label for="menuWorkEnd">To time</label>
+            <input id="menuWorkEnd" type="time" value="18:00" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Which days</label>
+          <div id="menuWorkDays" class="menu-day-choices"></div>
+        </div>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label><input id="menuBreakEnabled" type="checkbox" /> Allow breaks</label>
+          </div>
+          <div class="field">
+            <label for="menuBreakStart">Break from</label>
+            <input id="menuBreakStart" type="time" value="14:00" />
+          </div>
+          <div class="field">
+            <label for="menuBreakEnd">Break to</label>
+            <input id="menuBreakEnd" type="time" value="15:00" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Break days</label>
+          <div id="menuBreakDays" class="menu-day-choices"></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="menuScheduleApply" type="button">Apply schedule</button>
+          <span class="status" id="menuScheduleStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Touring</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="menuTourCity">Add city</label>
+            <input id="menuTourCity" type="text" placeholder="Toronto" />
+          </div>
+          <div class="field">
+            <label for="menuTourStart">Which days start</label>
+            <input id="menuTourStart" type="date" />
+          </div>
+          <div class="field">
+            <label for="menuTourEnd">Which days end</label>
+            <input id="menuTourEnd" type="date" />
+          </div>
+          <div class="field">
+            <label for="menuTourFirstStart">First day starts at</label>
+            <input id="menuTourFirstStart" type="time" value="10:00" />
+          </div>
+          <div class="field">
+            <label for="menuTourLastEnd">Last day ends at</label>
+            <input id="menuTourLastEnd" type="time" value="18:00" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="menuTourAddBtn" type="button">Add touring stop</button>
+          <span class="status" id="menuTourStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Services</h3>
+        <p class="hint">This saves admin service presets so you can organize prices quickly.</p>
+        <div class="field">
+          <label>Price per duration</label>
+          <div id="serviceDurationList" class="menu-list"></div>
+          <button class="btn secondary" id="addServiceDuration" type="button">Add duration</button>
+        </div>
+        <div class="field">
+          <label>Service package (comma separated) + price</label>
+          <div id="servicePackageList" class="menu-list"></div>
+          <button class="btn secondary" id="addServicePackage" type="button">Add package</button>
+        </div>
+        <div class="field">
+          <label>Single add-ons</label>
+          <div id="serviceAddonList" class="menu-list"></div>
+          <button class="btn secondary" id="addServiceAddon" type="button">Add add-on</button>
+        </div>
+        <div class="row">
+          <button class="btn" id="saveServicesConfig" type="button">Save services</button>
+          <span class="status" id="servicesConfigStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Photos</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="photoDisplayMode">Display choice</label>
+            <select id="photoDisplayMode">
+              <option value="next">Next click</option>
+              <option value="album">Album</option>
+              <option value="carousel">Moving carousel</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="photoCarouselSeconds">Carousel seconds</label>
+            <input id="photoCarouselSeconds" type="number" min="2" max="30" step="1" value="5" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Photos list</label>
+          <div class="editor-list" id="photoList"></div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="addPhotoRow" type="button">Add photo</button>
+          <button class="btn" id="savePhotoConfig" type="button">Save photos</button>
+          <span class="status" id="photoStatus"></span>
+        </div>
+      </section>
+    </aside>
 
     <main>
       <section data-admin-panel-group="schedule" id="calendarEditorSection">
@@ -1245,10 +1830,12 @@ require_admin_ui();
           <div class="calendar-grid" id="calendarGrid"></div>
         </div>
         <div class="calendar-legend">
-          <span class="legend-dot blocked"></span> Blocked
-          <span class="legend-dot booking"></span> Booking
-          <span class="legend-dot outcall"></span> Outcall
-          <span class="legend-dot paid"></span> Paid
+          <span class="legend-dot blocked"></span> <span id="legendBlockedLabel">Blocked</span>
+          <span class="legend-dot booking"></span> <span id="legendBookingLabel">Booking</span>
+          <span class="legend-dot outcall"></span> <span id="legendOutcallLabel">Outcall</span>
+          <span class="legend-dot paid"></span> <span id="legendPaidLabel">Paid</span>
+          <span class="legend-dot maybe"></span> <span id="legendMaybeLabel">Maybe</span>
+          <span class="legend-dot city"></span> <span id="legendCityLabel">City marker</span>
         </div>
 
         <div class="grid">
@@ -1328,7 +1915,41 @@ require_admin_ui();
         </button>
       </div>
 
-      <section data-admin-panel-group="schedule">
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
+        <h2 id="quickAddTitle">Quick add</h2>
+        <p class="hint" id="quickAddHint">One add panel for future tour dates, plus optional full-day calendar blocks.</p>
+        <div class="quick-add-grid">
+          <div class="field">
+            <label for="quickAddType" id="quickAddTypeLabel">Type</label>
+            <select id="quickAddType">
+              <option value="tour">Tour date (website + admin)</option>
+              <option value="block">Block days (admin only)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="quickAddCity" id="quickAddCityLabel">City</label>
+            <input id="quickAddCity" type="text" placeholder="Toronto" />
+          </div>
+          <div class="field">
+            <label for="quickAddStart" id="quickAddStartLabel">Start date</label>
+            <input id="quickAddStart" type="date" />
+          </div>
+          <div class="field">
+            <label for="quickAddEnd" id="quickAddEndLabel">End date</label>
+            <input id="quickAddEnd" type="date" />
+          </div>
+          <div class="field quick-add-notes">
+            <label for="quickAddNotes" id="quickAddNotesLabel">Notes</label>
+            <input id="quickAddNotes" type="text" placeholder="Optional note" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="quickAddSubmit" type="button">Add</button>
+          <span class="status" id="quickAddStatus"></span>
+        </div>
+      </section>
+
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="tourScheduleTitle">Tour schedule</h2>
         <div class="editor-list" id="tourScheduleList"></div>
         <p class="hint" id="tourScheduleHint">Dates are inclusive. Use YYYY-MM-DD and avoid overlaps.</p>
@@ -1339,7 +1960,7 @@ require_admin_ui();
         </div>
       </section>
 
-      <section data-admin-panel-group="schedule">
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="cityWizardTitle">City schedule wizard</h2>
         <p class="hint" id="cityWizardHint">
           One card per touring city/date range. Fill question-by-question to auto-build each city schedule.
@@ -1356,7 +1977,7 @@ require_admin_ui();
         </div>
       </section>
 
-      <section data-admin-panel-group="schedule">
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="gallerySectionTitle">Eye candy</h2>
         <div class="editor-list" id="galleryList"></div>
         <p class="hint" id="gallerySectionHint">Use full paths like /photos/heidi15.jpg and short alt text.</p>
@@ -1374,6 +1995,7 @@ require_admin_ui();
           <select id="statusFilter">
             <option value="all">All</option>
             <option value="pending" selected>Pending</option>
+            <option value="maybe">Maybe</option>
             <option value="accepted">Accepted</option>
             <option value="paid">Paid</option>
             <option value="blacklisted">Blacklisted</option>
@@ -1465,6 +2087,13 @@ require_admin_ui();
       const statusFilter = document.getElementById("statusFilter");
       const requestsList = document.getElementById("requestsList");
       const requestsStatus = document.getElementById("requestsStatus");
+      const quickAddType = document.getElementById("quickAddType");
+      const quickAddCity = document.getElementById("quickAddCity");
+      const quickAddStart = document.getElementById("quickAddStart");
+      const quickAddEnd = document.getElementById("quickAddEnd");
+      const quickAddNotes = document.getElementById("quickAddNotes");
+      const quickAddSubmitBtn = document.getElementById("quickAddSubmit");
+      const quickAddStatus = document.getElementById("quickAddStatus");
       const tourScheduleList = document.getElementById("tourScheduleList");
       const tourScheduleStatus = document.getElementById("tourScheduleStatus");
       const addTourRowBtn = document.getElementById("addTourRow");
@@ -1473,15 +2102,63 @@ require_admin_ui();
       const cityScheduleStatus = document.getElementById("cityScheduleStatus");
       const calendarEditorSection = document.getElementById("calendarEditorSection");
       const clearCityTemplatesBtn = document.getElementById("clearCityTemplates");
-      const galleryList = document.getElementById("galleryList");
-      const galleryStatus = document.getElementById("galleryStatus");
-      const addGalleryRowBtn = document.getElementById("addGalleryRow");
-      const saveGalleryBtn = document.getElementById("saveGallery");
+      const galleryList = document.getElementById("photoList") || document.getElementById("galleryList");
+      const galleryStatus = document.getElementById("photoStatus") || document.getElementById("galleryStatus");
+      const addGalleryRowBtn = document.getElementById("addPhotoRow") || document.getElementById("addGalleryRow");
+      const saveGalleryBtn = document.getElementById("savePhotoConfig") || document.getElementById("saveGallery");
+      const photoDisplayModeSelect = document.getElementById("photoDisplayMode");
+      const photoCarouselSecondsInput = document.getElementById("photoCarouselSeconds");
+      const adminMenuBackdrop = document.getElementById("adminMenuBackdrop");
+      const adminMenuDrawer = document.getElementById("adminMenuDrawer");
+      const adminMenuToggleBtn = document.getElementById("adminMenuToggleBtn");
+      const adminMenuCloseBtn = document.getElementById("adminMenuCloseBtn");
+      const notifToggleBtn = document.getElementById("notifToggleBtn");
+      const notifPanel = document.getElementById("notifPanel");
+      const notifList = document.getElementById("notifList");
+      const notifUnreadCount = document.getElementById("notifUnreadCount");
+      const accountPhotoInput = document.getElementById("accountPhoto");
+      const accountPhotoPreview = document.getElementById("accountPhotoPreview");
+      const accountNameInput = document.getElementById("accountName");
+      const accountEmailInput = document.getElementById("accountEmail");
+      const accountPhoneInput = document.getElementById("accountPhone");
+      const accountPasswordInput = document.getElementById("accountPassword");
+      const accountLanguageSelect = document.getElementById("accountLanguage");
+      const saveAccountCenterBtn = document.getElementById("saveAccountCenter");
+      const accountCenterStatus = document.getElementById("accountCenterStatus");
+      const menuWorkAllDay = document.getElementById("menuWorkAllDay");
+      const menuWorkStart = document.getElementById("menuWorkStart");
+      const menuWorkEnd = document.getElementById("menuWorkEnd");
+      const menuWorkDays = document.getElementById("menuWorkDays");
+      const menuBreakEnabled = document.getElementById("menuBreakEnabled");
+      const menuBreakStart = document.getElementById("menuBreakStart");
+      const menuBreakEnd = document.getElementById("menuBreakEnd");
+      const menuBreakDays = document.getElementById("menuBreakDays");
+      const menuScheduleApply = document.getElementById("menuScheduleApply");
+      const menuScheduleStatus = document.getElementById("menuScheduleStatus");
+      const menuTourCity = document.getElementById("menuTourCity");
+      const menuTourStart = document.getElementById("menuTourStart");
+      const menuTourEnd = document.getElementById("menuTourEnd");
+      const menuTourFirstStart = document.getElementById("menuTourFirstStart");
+      const menuTourLastEnd = document.getElementById("menuTourLastEnd");
+      const menuTourAddBtn = document.getElementById("menuTourAddBtn");
+      const menuTourStatus = document.getElementById("menuTourStatus");
+      const serviceDurationList = document.getElementById("serviceDurationList");
+      const servicePackageList = document.getElementById("servicePackageList");
+      const serviceAddonList = document.getElementById("serviceAddonList");
+      const addServiceDurationBtn = document.getElementById("addServiceDuration");
+      const addServicePackageBtn = document.getElementById("addServicePackage");
+      const addServiceAddonBtn = document.getElementById("addServiceAddon");
+      const saveServicesConfigBtn = document.getElementById("saveServicesConfig");
+      const servicesConfigStatus = document.getElementById("servicesConfigStatus");
       const languageButtons = document.querySelectorAll(".age-language [data-language-choice]");
       const panelButtons = document.querySelectorAll("[data-admin-panel]");
       const panelSections = document.querySelectorAll("[data-admin-panel-group]");
       const LANGUAGE_KEY = "hvh_inside_language";
       const PANEL_STORAGE_KEY = "hvh_admin_panel";
+      const ACCOUNT_CENTER_KEY = "hvh_admin_account_center";
+      const SCHEDULE_MENU_KEY = "hvh_admin_schedule_menu";
+      const SERVICES_MENU_KEY = "hvh_admin_services_menu";
+      const NOTIFICATIONS_READ_KEY = "hvh_admin_read_notifications";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
       let currentLanguage = "en";
       const I18N = {
@@ -1502,21 +2179,36 @@ require_admin_ui();
           save_city_schedule: "Save city schedule",
           clear_template_blocks: "Clear template blocks",
           eye_candy_title: "Eye candy",
-          eye_candy_hint: "Use full paths like /photos/heidi15.jpg and short alt text.",
+          eye_candy_hint: "Use full paths like /photos/heidi15.jpg and a short photo name.",
           add_eye_candy: "Add eye candy",
           save_eye_candy: "Save eye candy",
           requests_title: "Requests",
+          quick_add_title: "Quick add",
+          quick_add_hint: "One add panel for future tour dates, plus optional full-day calendar blocks.",
+          quick_add_type: "Type",
+          quick_add_city: "City",
+          quick_add_start: "Start date",
+          quick_add_end: "End date",
+          quick_add_notes: "Notes",
+          quick_add_notes_placeholder: "Optional note",
+          quick_add_submit: "Add",
+          quick_add_type_tour: "Tour date (website + admin)",
+          quick_add_type_block: "Block days (admin only)",
+          quick_add_missing_fields: "Type, city, start, and end are required.",
+          quick_add_invalid_range: "End date must be after or equal to start date.",
+          quick_add_blocked_saved: "Block range saved to calendar.",
           start_date: "Start date",
           end_date: "End date",
           city_field: "City",
           city_name_placeholder: "City name",
           photo_path: "Photo path",
-          alt_text: "Alt text",
+          alt_text: "Photo name",
           short_description: "Short description",
           preview: "Preview",
           refresh: "Refresh",
           all: "All",
           pending: "Pending",
+          maybe: "Maybe",
           accepted: "Accepted",
           paid: "Paid",
           blacklisted: "Blacklisted",
@@ -1577,9 +2269,16 @@ require_admin_ui();
           follow_up: "Follow-up",
           no_city: "no city",
           follow_up_no: "no",
+          follow_up_phone: "Future contact (phone)",
+          follow_up_email: "Future contact (email)",
+          follow_up_cities: "Future-contact cities",
           email_label: "Email",
+          name_label: "Name",
           phone_label: "Phone",
           city_label: "City",
+          date_label: "Date",
+          time_label: "Time",
+          hours_label: "Duration hours",
           type_label: "Type",
           outcall_address: "Outcall address",
           experience: "Experience",
@@ -1598,14 +2297,30 @@ require_admin_ui();
           created: "Created",
           updated: "Updated",
           email_sent: "Email sent",
+          edit_history: "Edit history",
+          no_history: "No history yet",
           unknown: "Unknown",
           action_accept: "Accept",
+          action_maybe: "Maybe",
           action_blacklist: "Blacklist",
           action_mark_paid: "Mark paid",
           action_decline: "Decline",
           action_cancel: "Cancel",
+          action_edit: "Edit",
+          save_changes: "Save changes",
+          invalid_email: "Invalid email address.",
+          invalid_phone: "Use phone with country code, for example +14389993539.",
+          required_fields: "Please fill all required fields.",
+          appointment_updated: "Appointment updated.",
+          failed_update_appointment: "Failed to update appointment.",
           action_google_calendar: "Add to Google Calendar",
           action_samsung_calendar: "Samsung Calendar (.ics)",
+          legend_blocked: "Blocked",
+          legend_booking: "Booking",
+          legend_outcall: "Outcall",
+          legend_paid: "Paid",
+          legend_maybe: "Maybe",
+          legend_city: "City marker",
         },
         fr: {
           admin_title: "BombaCLOUD!",
@@ -1624,21 +2339,36 @@ require_admin_ui();
           save_city_schedule: "Sauvegarder le planning ville",
           clear_template_blocks: "Effacer les blocs modele",
           eye_candy_title: "Eye candy",
-          eye_candy_hint: "Utilisez des chemins complets comme /photos/heidi15.jpg et un court texte alt.",
+          eye_candy_hint: "Utilisez des chemins complets comme /photos/heidi15.jpg et un court nom de photo.",
           add_eye_candy: "Ajouter eye candy",
           save_eye_candy: "Sauvegarder eye candy",
           requests_title: "Demandes",
+          quick_add_title: "Ajout rapide",
+          quick_add_hint: "Un seul panneau pour ajouter les dates de tournee, ou bloquer rapidement des jours.",
+          quick_add_type: "Type",
+          quick_add_city: "Ville",
+          quick_add_start: "Date de debut",
+          quick_add_end: "Date de fin",
+          quick_add_notes: "Notes",
+          quick_add_notes_placeholder: "Note optionnelle",
+          quick_add_submit: "Ajouter",
+          quick_add_type_tour: "Date tournee (site + admin)",
+          quick_add_type_block: "Bloquer des jours (admin)",
+          quick_add_missing_fields: "Type, ville, debut et fin sont obligatoires.",
+          quick_add_invalid_range: "La date de fin doit etre apres ou egale au debut.",
+          quick_add_blocked_saved: "Plage bloquee sauvegardee dans le calendrier.",
           start_date: "Date de debut",
           end_date: "Date de fin",
           city_field: "Ville",
           city_name_placeholder: "Nom de ville",
           photo_path: "Chemin photo",
-          alt_text: "Texte alt",
+          alt_text: "Nom de la photo",
           short_description: "Description courte",
           preview: "Apercu",
           refresh: "Actualiser",
           all: "Tous",
           pending: "En attente",
+          maybe: "Peut-etre",
           accepted: "Acceptee",
           paid: "Payee",
           blacklisted: "Liste noire",
@@ -1699,9 +2429,16 @@ require_admin_ui();
           follow_up: "Suivi",
           no_city: "aucune ville",
           follow_up_no: "non",
+          follow_up_phone: "Contact futur (telephone)",
+          follow_up_email: "Contact futur (email)",
+          follow_up_cities: "Villes contact futur",
           email_label: "Email",
+          name_label: "Nom",
           phone_label: "Telephone",
           city_label: "Ville",
+          date_label: "Date",
+          time_label: "Heure",
+          hours_label: "Heures de duree",
           type_label: "Type",
           outcall_address: "Adresse outcall",
           experience: "Experience",
@@ -1720,14 +2457,30 @@ require_admin_ui();
           created: "Cree",
           updated: "Mis a jour",
           email_sent: "Email envoye",
+          edit_history: "Historique",
+          no_history: "Aucun historique",
           unknown: "Inconnu",
           action_accept: "Accepter",
+          action_maybe: "Peut-etre",
           action_blacklist: "Liste noire",
           action_mark_paid: "Marquer paye",
           action_decline: "Refuser",
           action_cancel: "Annuler",
+          action_edit: "Modifier",
+          save_changes: "Sauvegarder",
+          invalid_email: "Adresse email invalide.",
+          invalid_phone: "Utilisez un numero avec indicatif pays, ex: +14389993539.",
+          required_fields: "Veuillez remplir les champs obligatoires.",
+          appointment_updated: "Rendez-vous mis a jour.",
+          failed_update_appointment: "Echec mise a jour du rendez-vous.",
           action_google_calendar: "Ajouter a Google Calendar",
           action_samsung_calendar: "Samsung Calendar (.ics)",
+          legend_blocked: "Bloque",
+          legend_booking: "Reservation",
+          legend_outcall: "Outcall",
+          legend_paid: "Paye",
+          legend_maybe: "Peut-etre",
+          legend_city: "Repere ville",
         },
       };
       const formatTemplate = (template, vars = {}) =>
@@ -1781,6 +2534,374 @@ require_admin_ui();
         } catch (_error) {}
         return "schedule";
       };
+      const DAY_OPTIONS = [
+        { value: 0, label: "Sun" },
+        { value: 1, label: "Mon" },
+        { value: 2, label: "Tue" },
+        { value: 3, label: "Wed" },
+        { value: 4, label: "Thu" },
+        { value: 5, label: "Fri" },
+        { value: 6, label: "Sat" },
+      ];
+
+      const readStoredObject = (key, fallback = {}) => {
+        try {
+          const raw = window.localStorage.getItem(key);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === "object" ? parsed : fallback;
+        } catch (_error) {
+          return fallback;
+        }
+      };
+
+      const writeStoredObject = (key, value) => {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+          return true;
+        } catch (_error) {
+          return false;
+        }
+      };
+
+      const createDayChoices = (target) => {
+        if (!target) return;
+        target.innerHTML = DAY_OPTIONS.map(
+          (day) =>
+            `<label><input type="checkbox" value="${day.value}" /> ${day.label}</label>`
+        ).join("");
+      };
+
+      const getDayChoices = (target) => {
+        if (!target) return [];
+        return Array.from(target.querySelectorAll('input[type="checkbox"]:checked'))
+          .map((input) => Number(input.value))
+          .filter((value) => !Number.isNaN(value))
+          .sort((a, b) => a - b);
+      };
+
+      const setDayChoices = (target, values) => {
+        if (!target) return;
+        const allowed = new Set((Array.isArray(values) ? values : []).map((v) => Number(v)));
+        target.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+          input.checked = allowed.has(Number(input.value));
+        });
+      };
+
+      const closeAdminMenu = () => {
+        if (!adminMenuDrawer || !adminMenuBackdrop) return;
+        adminMenuDrawer.classList.remove("open");
+        adminMenuDrawer.setAttribute("aria-hidden", "true");
+        adminMenuBackdrop.hidden = true;
+      };
+
+      const openAdminMenu = () => {
+        if (!adminMenuDrawer || !adminMenuBackdrop) return;
+        adminMenuDrawer.classList.add("open");
+        adminMenuDrawer.setAttribute("aria-hidden", "false");
+        adminMenuBackdrop.hidden = false;
+      };
+
+      const readAccountCenter = () =>
+        readStoredObject(ACCOUNT_CENTER_KEY, {
+          profilePic: "",
+          name: "",
+          email: "",
+          phone: "",
+          language: "en",
+        });
+
+      const applyAccountCenterToUi = () => {
+        const data = readAccountCenter();
+        if (accountNameInput) accountNameInput.value = data.name || "";
+        if (accountEmailInput) accountEmailInput.value = data.email || "";
+        if (accountPhoneInput) accountPhoneInput.value = data.phone || "";
+        if (accountLanguageSelect) accountLanguageSelect.value = data.language || "en";
+        if (accountPhotoPreview) {
+          if (data.profilePic) {
+            accountPhotoPreview.src = data.profilePic;
+            accountPhotoPreview.hidden = false;
+          } else {
+            accountPhotoPreview.hidden = true;
+            accountPhotoPreview.removeAttribute("src");
+          }
+        }
+      };
+
+      const saveAccountCenter = () => {
+        const current = readAccountCenter();
+        const nextPassword = String(accountPasswordInput?.value || "").trim();
+        const data = {
+          ...current,
+          name: String(accountNameInput?.value || "").trim(),
+          email: String(accountEmailInput?.value || "").trim(),
+          phone: String(accountPhoneInput?.value || "").trim(),
+          language: String(accountLanguageSelect?.value || "en").trim().toLowerCase() === "fr" ? "fr" : "en",
+        };
+        const ok = writeStoredObject(ACCOUNT_CENTER_KEY, data);
+        if (accountCenterStatus) {
+          if (!ok) {
+            accountCenterStatus.textContent = "Could not save account center.";
+          } else if (nextPassword) {
+            accountCenterStatus.textContent = "Profile saved. Password field captured for next auth step.";
+          } else {
+            accountCenterStatus.textContent = "Account center saved.";
+          }
+        }
+        if (accountPasswordInput) accountPasswordInput.value = "";
+        if (data.language && SUPPORTED_LANGUAGES.includes(data.language)) {
+          applyLanguage(data.language, true);
+        }
+      };
+
+      const readScheduleMenuConfig = () =>
+        readStoredObject(SCHEDULE_MENU_KEY, {
+          workAllDay: false,
+          workStart: "10:00",
+          workEnd: "18:00",
+          workDays: [1, 2, 3, 4, 5],
+          breakEnabled: false,
+          breakStart: "14:00",
+          breakEnd: "15:00",
+          breakDays: [1, 2, 3, 4, 5],
+        });
+
+      const applyScheduleMenuConfigToUi = () => {
+        const data = readScheduleMenuConfig();
+        if (menuWorkAllDay) menuWorkAllDay.checked = !!data.workAllDay;
+        if (menuWorkStart) menuWorkStart.value = data.workStart || "10:00";
+        if (menuWorkEnd) menuWorkEnd.value = data.workEnd || "18:00";
+        if (menuBreakEnabled) menuBreakEnabled.checked = !!data.breakEnabled;
+        if (menuBreakStart) menuBreakStart.value = data.breakStart || "14:00";
+        if (menuBreakEnd) menuBreakEnd.value = data.breakEnd || "15:00";
+        setDayChoices(menuWorkDays, data.workDays);
+        setDayChoices(menuBreakDays, data.breakDays);
+      };
+
+      const getDateKeysByWeekdays = (startKey, endKey, weekdays) => {
+        const daySet = new Set((Array.isArray(weekdays) ? weekdays : []).map((v) => Number(v)));
+        return getDateRangeKeys(startKey, endKey).filter((dateKey) => {
+          const date = parseDateKey(dateKey);
+          return date ? daySet.has(date.getUTCDay()) : false;
+        });
+      };
+
+      const applyScheduleFromMenu = async () => {
+        if (!menuScheduleStatus) return;
+        menuScheduleStatus.textContent = "";
+        const workAllDay = !!menuWorkAllDay?.checked;
+        const workStart = String(menuWorkStart?.value || "").trim();
+        const workEnd = String(menuWorkEnd?.value || "").trim();
+        const workDays = getDayChoices(menuWorkDays);
+        const breakEnabled = !!menuBreakEnabled?.checked;
+        const breakStart = String(menuBreakStart?.value || "").trim();
+        const breakEnd = String(menuBreakEnd?.value || "").trim();
+        const breakDays = getDayChoices(menuBreakDays);
+
+        if (!workDays.length) {
+          menuScheduleStatus.textContent = "Pick at least one working day.";
+          return;
+        }
+        if (!workAllDay) {
+          const from = timeToMinutes(workStart);
+          const to = timeToMinutes(workEnd);
+          if (from === null || to === null || to <= from) {
+            menuScheduleStatus.textContent = "Working end time must be after start time.";
+            return;
+          }
+        }
+        if (breakEnabled) {
+          const from = timeToMinutes(breakStart);
+          const to = timeToMinutes(breakEnd);
+          if (from === null || to === null || to <= from) {
+            menuScheduleStatus.textContent = "Break end time must be after break start time.";
+            return;
+          }
+          if (!breakDays.length) {
+            menuScheduleStatus.textContent = "Pick at least one break day.";
+            return;
+          }
+        }
+
+        const payload = {
+          workAllDay,
+          workStart: workAllDay ? "00:00" : workStart,
+          workEnd: workAllDay ? "23:59" : workEnd,
+          workDays,
+          breakEnabled,
+          breakStart,
+          breakEnd,
+          breakDays,
+        };
+        writeStoredObject(SCHEDULE_MENU_KEY, payload);
+
+        citySchedules = citySchedules.map((schedule) =>
+          normalizeCitySchedule({
+            ...schedule,
+            ready_start: payload.workStart,
+            leave_day_end: payload.workEnd,
+            has_break: breakEnabled,
+            break_start: breakStart,
+            break_end: breakEnd,
+            break_days: breakEnabled ? getDateKeysByWeekdays(schedule.start, schedule.end, breakDays) : [],
+          })
+        );
+        renderCityScheduleWizard();
+
+        const offDays = DAY_OPTIONS.map((day) => day.value).filter((day) => !workDays.includes(day));
+        const offDayBlocks = offDays.map((day) => ({
+          days: [day],
+          all_day: true,
+          start: "",
+          end: "",
+          reason: "Off day",
+        }));
+        const breakBlocks = breakEnabled
+          ? breakDays.map((day) => ({
+              days: [day],
+              all_day: false,
+              start: breakStart,
+              end: breakEnd,
+              reason: "Break",
+            }))
+          : [];
+        recurringBlocks = [...offDayBlocks, ...breakBlocks];
+        renderRecurringList();
+        renderCalendarView();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
+        await saveAvailability();
+        menuScheduleStatus.textContent = "Schedule applied.";
+      };
+
+      const createMenuListRow = (container, firstPlaceholder, secondPlaceholder = "Price", firstValue = "", secondValue = "") => {
+        if (!container) return null;
+        const row = document.createElement("div");
+        row.className = "menu-list-row";
+        row.innerHTML = `
+          <input type="text" data-first placeholder="${firstPlaceholder}" value="${String(firstValue || "")}" />
+          <input type="number" data-second placeholder="${secondPlaceholder}" value="${String(secondValue || "")}" min="0" step="1" />
+          <button class="btn ghost" type="button" data-remove-row>Remove</button>
+        `;
+        const removeBtn = row.querySelector("[data-remove-row]");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", () => row.remove());
+        }
+        container.appendChild(row);
+        return row;
+      };
+
+      const readMenuRows = (container) => {
+        if (!container) return [];
+        return Array.from(container.querySelectorAll(".menu-list-row"))
+          .map((row) => {
+            const first = String(row.querySelector("[data-first]")?.value || "").trim();
+            const second = Number(row.querySelector("[data-second]")?.value || 0);
+            return {
+              first,
+              second: Number.isFinite(second) ? second : 0,
+            };
+          })
+          .filter((item) => item.first);
+      };
+
+      const readServicesConfig = () =>
+        readStoredObject(SERVICES_MENU_KEY, {
+          durations: [],
+          packages: [],
+          addons: [],
+        });
+
+      const applyServicesConfigToUi = () => {
+        const data = readServicesConfig();
+        if (serviceDurationList) serviceDurationList.innerHTML = "";
+        if (servicePackageList) servicePackageList.innerHTML = "";
+        if (serviceAddonList) serviceAddonList.innerHTML = "";
+        (Array.isArray(data.durations) ? data.durations : []).forEach((item) =>
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price", item.first, item.second)
+        );
+        (Array.isArray(data.packages) ? data.packages : []).forEach((item) =>
+          createMenuListRow(servicePackageList, "Package entries (comma)", "Price", item.first, item.second)
+        );
+        (Array.isArray(data.addons) ? data.addons : []).forEach((item) =>
+          createMenuListRow(serviceAddonList, "Addon item", "Price", item.first, item.second)
+        );
+        if (!serviceDurationList?.children.length) {
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
+        }
+        if (!servicePackageList?.children.length) {
+          createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
+        }
+        if (!serviceAddonList?.children.length) {
+          createMenuListRow(serviceAddonList, "Addon item", "Price");
+        }
+      };
+
+      const saveServicesConfig = () => {
+        const data = {
+          durations: readMenuRows(serviceDurationList),
+          packages: readMenuRows(servicePackageList),
+          addons: readMenuRows(serviceAddonList),
+        };
+        const ok = writeStoredObject(SERVICES_MENU_KEY, data);
+        if (servicesConfigStatus) {
+          servicesConfigStatus.textContent = ok ? "Services saved." : "Could not save services.";
+        }
+      };
+
+      const getReadNotificationIds = () => {
+        const data = readStoredObject(NOTIFICATIONS_READ_KEY, { ids: [] });
+        return new Set(Array.isArray(data.ids) ? data.ids.map((value) => String(value)) : []);
+      };
+
+      const setReadNotificationIds = (set) => {
+        writeStoredObject(NOTIFICATIONS_READ_KEY, { ids: Array.from(set).slice(-800) });
+      };
+
+      const requestNotificationId = (item) => {
+        const id = String(item?.id || "").trim();
+        if (id) return id;
+        return `${item?.email || ""}|${item?.preferred_date || ""}|${item?.preferred_time || ""}|${item?.created_at || ""}`;
+      };
+
+      const renderNotifications = (requests) => {
+        if (!notifList || !notifUnreadCount) return;
+        const active = (Array.isArray(requests) ? requests : [])
+          .filter((item) => {
+            const raw = String(item?.status || "pending").toLowerCase();
+            return raw !== "declined" && raw !== "cancelled";
+          })
+          .sort((a, b) => String(b?.created_at || "").localeCompare(String(a?.created_at || "")));
+        const readIds = getReadNotificationIds();
+        const unread = active.filter((item) => !readIds.has(requestNotificationId(item)));
+        notifUnreadCount.textContent = String(unread.length);
+        notifUnreadCount.classList.toggle("hidden", unread.length === 0);
+        if (!unread.length) {
+          notifList.innerHTML = `<p class="notif-empty">No new notifications.</p>`;
+          return;
+        }
+        notifList.innerHTML = "";
+        unread.forEach((item) => {
+          const id = requestNotificationId(item);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "notif-item";
+          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} • ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
+          button.addEventListener("click", () => {
+            const latestRead = getReadNotificationIds();
+            latestRead.add(id);
+            setReadNotificationIds(latestRead);
+            setAdminPanel("clients", true);
+            const cards = Array.from(requestsList.querySelectorAll("[data-request-id]"));
+            const match = cards.find((card) => card.getAttribute("data-request-id") === String(item.id || ""));
+            if (match) {
+              match.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            renderNotifications(active);
+          });
+          notifList.appendChild(button);
+        });
+      };
+
       const applyLanguage = async (lang, persist = true) => {
         currentLanguage = SUPPORTED_LANGUAGES.includes(lang) ? lang : "en";
         document.documentElement.setAttribute("lang", currentLanguage);
@@ -1798,6 +2919,14 @@ require_admin_ui();
         setTextById("adminSubtitle", t("admin_subtitle"));
         setTextById("tourScheduleTitle", t("tour_schedule_title"));
         setTextById("tourScheduleHint", t("tour_schedule_hint"));
+        setTextById("quickAddTitle", t("quick_add_title"));
+        setTextById("quickAddHint", t("quick_add_hint"));
+        setTextById("quickAddTypeLabel", t("quick_add_type"));
+        setTextById("quickAddCityLabel", t("quick_add_city"));
+        setTextById("quickAddStartLabel", t("quick_add_start"));
+        setTextById("quickAddEndLabel", t("quick_add_end"));
+        setTextById("quickAddNotesLabel", t("quick_add_notes"));
+        setTextById("quickAddSubmit", t("quick_add_submit"));
         setTextById("addTourRow", t("add_stop"));
         setTextById("saveTourSchedule", t("save_tour_schedule"));
         setTextById("cityWizardTitle", t("city_wizard_title"));
@@ -1809,14 +2938,23 @@ require_admin_ui();
         setTextById("gallerySectionHint", t("eye_candy_hint"));
         setTextById("addGalleryRow", t("add_eye_candy"));
         setTextById("saveGallery", t("save_eye_candy"));
+        setTextById("addPhotoRow", t("add_eye_candy"));
+        setTextById("savePhotoConfig", t("save_eye_candy"));
         setTextById("requestsSectionTitle", t("requests_title"));
         setTextById("refreshRequests", t("refresh"));
+        setTextById("legendBlockedLabel", t("legend_blocked"));
+        setTextById("legendBookingLabel", t("legend_booking"));
+        setTextById("legendOutcallLabel", t("legend_outcall"));
+        setTextById("legendPaidLabel", t("legend_paid"));
+        setTextById("legendMaybeLabel", t("legend_maybe"));
+        setTextById("legendCityLabel", t("legend_city"));
         const customersLink = document.querySelector('a[href="customers.php"]');
         if (customersLink) customersLink.textContent = t("costumer_directory");
 
         const statusLabels = {
           all: t("all"),
           pending: t("pending"),
+          maybe: t("maybe"),
           accepted: t("accepted"),
           paid: t("paid"),
           blacklisted: t("blacklisted"),
@@ -1827,10 +2965,20 @@ require_admin_ui();
           const option = document.querySelector(`#statusFilter option[value="${value}"]`);
           if (option) option.textContent = label;
         });
+        const quickTypeTourOption = document.querySelector('#quickAddType option[value="tour"]');
+        if (quickTypeTourOption) quickTypeTourOption.textContent = t("quick_add_type_tour");
+        const quickTypeBlockOption = document.querySelector('#quickAddType option[value="block"]');
+        if (quickTypeBlockOption) quickTypeBlockOption.textContent = t("quick_add_type_block");
+        if (quickAddNotes) {
+          quickAddNotes.placeholder = t("quick_add_notes_placeholder");
+        }
 
         languageButtons.forEach((button) => {
           button.setAttribute("aria-pressed", button.dataset.languageChoice === currentLanguage ? "true" : "false");
         });
+        if (accountLanguageSelect) {
+          accountLanguageSelect.value = currentLanguage;
+        }
 
         renderTourSchedule(touringStops);
         renderGallery(readGalleryFromUI().length ? readGalleryFromUI() : []);
@@ -1852,6 +3000,144 @@ require_admin_ui();
 
       if (statusFilter) {
         statusFilter.value = "pending";
+      }
+
+      if (adminMenuToggleBtn) {
+        adminMenuToggleBtn.addEventListener("click", () => openAdminMenu());
+      }
+      if (adminMenuCloseBtn) {
+        adminMenuCloseBtn.addEventListener("click", () => closeAdminMenu());
+      }
+      if (adminMenuBackdrop) {
+        adminMenuBackdrop.addEventListener("click", () => closeAdminMenu());
+      }
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && adminMenuDrawer?.classList.contains("open")) {
+          closeAdminMenu();
+        }
+      });
+
+      if (notifToggleBtn && notifPanel) {
+        notifToggleBtn.addEventListener("click", () => {
+          notifPanel.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (
+            target instanceof Node &&
+            !notifPanel.contains(target) &&
+            !notifToggleBtn.contains(target)
+          ) {
+            notifPanel.classList.add("hidden");
+          }
+        });
+      }
+
+      if (accountPhotoInput) {
+        accountPhotoInput.addEventListener("change", () => {
+          const file = accountPhotoInput.files && accountPhotoInput.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = String(reader.result || "");
+            if (accountPhotoPreview && dataUrl) {
+              accountPhotoPreview.src = dataUrl;
+              accountPhotoPreview.hidden = false;
+            }
+            const current = readAccountCenter();
+            writeStoredObject(ACCOUNT_CENTER_KEY, { ...current, profilePic: dataUrl });
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      if (saveAccountCenterBtn) {
+        saveAccountCenterBtn.addEventListener("click", saveAccountCenter);
+      }
+      if (accountLanguageSelect) {
+        accountLanguageSelect.addEventListener("change", () => {
+          const language = accountLanguageSelect.value === "fr" ? "fr" : "en";
+          applyLanguage(language, true);
+        });
+      }
+
+      if (addServiceDurationBtn) {
+        addServiceDurationBtn.addEventListener("click", () => {
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
+        });
+      }
+      if (addServicePackageBtn) {
+        addServicePackageBtn.addEventListener("click", () => {
+          createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
+        });
+      }
+      if (addServiceAddonBtn) {
+        addServiceAddonBtn.addEventListener("click", () => {
+          createMenuListRow(serviceAddonList, "Addon item", "Price");
+        });
+      }
+      if (saveServicesConfigBtn) {
+        saveServicesConfigBtn.addEventListener("click", saveServicesConfig);
+      }
+
+      if (menuScheduleApply) {
+        menuScheduleApply.addEventListener("click", () => {
+          applyScheduleFromMenu();
+        });
+      }
+
+      if (menuTourAddBtn) {
+        menuTourAddBtn.addEventListener("click", async () => {
+          if (!menuTourStatus) return;
+          menuTourStatus.textContent = "";
+          const city = String(menuTourCity?.value || "").trim();
+          const start = normalizeUiDate(menuTourStart?.value || "");
+          const end = normalizeUiDate(menuTourEnd?.value || "");
+          const firstStart = String(menuTourFirstStart?.value || "00:00").trim() || "00:00";
+          const lastEnd = String(menuTourLastEnd?.value || "23:59").trim() || "23:59";
+          if (!city || !start || !end) {
+            menuTourStatus.textContent = "City and date range are required.";
+            return;
+          }
+          if (start > end) {
+            menuTourStatus.textContent = "End date must be after start date.";
+            return;
+          }
+          if (!isValidTime(firstStart) || !isValidTime(lastEnd)) {
+            menuTourStatus.textContent = "Use valid start/end times.";
+            return;
+          }
+          if (!touringStops.length) {
+            await loadTourSchedule();
+          }
+          const current = normalizeTouringEntries(touringStops);
+          const ok = await saveTouringEntries([...current, { type: "tour", city, start, end }], menuTourStatus);
+          if (!ok) return;
+          const scheduleId = makeScheduleId({ city, start, end });
+          const index = citySchedules.findIndex((entry) => entry.id === scheduleId);
+          const base = index >= 0 ? citySchedules[index] : normalizeCitySchedule({ city, start, end });
+          const next = normalizeCitySchedule({
+            ...base,
+            city,
+            start,
+            end,
+            ready_start: firstStart,
+            leave_day_end: lastEnd,
+          });
+          if (index >= 0) {
+            citySchedules[index] = next;
+          } else {
+            citySchedules.push(next);
+          }
+          renderCityScheduleWizard();
+          applyCityTemplateBlocks({ announce: false });
+          renderBlockedSlots();
+          renderCalendarView();
+          await saveAvailability();
+          menuTourStatus.textContent = "Touring stop added.";
+          if (menuTourCity) menuTourCity.value = "";
+          if (menuTourStart) menuTourStart.value = "";
+          if (menuTourEnd) menuTourEnd.value = "";
+        });
       }
 
       const getKey = () => ADMIN_KEY;
@@ -1898,6 +3184,7 @@ require_admin_ui();
       const getActiveTimezone = () => normalizeTimezone(tourTzSelect?.value);
 
       let blockedSlots = [];
+      let maybeSlots = [];
       let recurringBlocks = [];
       let touringStops = [];
       let citySchedules = [];
@@ -1949,11 +3236,33 @@ require_admin_ui();
         paris: "Europe/Paris",
       };
 
+      const CITY_MARKER_COLORS = [
+        [255, 136, 189],
+        [255, 176, 133],
+        [149, 186, 255],
+        [176, 220, 188],
+        [206, 170, 245],
+        [255, 215, 136],
+        [132, 214, 226],
+        [234, 171, 198],
+      ];
+
       const normalizeCityName = (value) =>
         String(value || "")
           .trim()
           .toLowerCase()
           .replace(/\s+/g, " ");
+
+      const getCityMarkerColor = (city, alpha = 0.42) => {
+        const key = normalizeCityName(city);
+        if (!key) return `rgba(180, 154, 177, ${alpha})`;
+        let hash = 0;
+        for (let i = 0; i < key.length; i += 1) {
+          hash = (hash * 31 + key.charCodeAt(i)) % 2147483647;
+        }
+        const [r, g, b] = CITY_MARKER_COLORS[hash % CITY_MARKER_COLORS.length];
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      };
 
       const makeScheduleId = (entry) =>
         `${String(entry?.start || "").trim()}|${String(entry?.end || "").trim()}|${normalizeCityName(entry?.city || "")}`;
@@ -1987,8 +3296,8 @@ require_admin_ui();
         const sleepDaysRaw = hasSleepDaysField ? entry.sleep_days : [];
         const breakDaysRaw = hasBreakDaysField ? entry.break_days : [];
         const bufferMinutes = Math.max(0, Math.min(240, Number(entry.buffer_minutes ?? 0) || 0));
-        const readyStart = isValidTime(entry.ready_start) ? String(entry.ready_start) : "11:00";
-        const leaveDayEnd = isValidTime(entry.leave_day_end) ? String(entry.leave_day_end) : "18:00";
+        const readyStart = isValidTime(entry.ready_start) ? String(entry.ready_start) : "00:00";
+        const leaveDayEnd = isValidTime(entry.leave_day_end) ? String(entry.leave_day_end) : "23:59";
         const hasSleep = !!entry.has_sleep;
         const sleepDays = hasSleep
           ? Array.from(
@@ -2093,13 +3402,7 @@ require_admin_ui();
         }
         const sleepDaySet = new Set(Array.isArray(schedule.sleep_days) ? schedule.sleep_days : []);
         const breakDaySet = new Set(Array.isArray(schedule.break_days) ? schedule.break_days : []);
-        const startTime = isValidTime(schedule.ready_start) ? schedule.ready_start : "11:00";
-        const leaveEnd = isValidTime(schedule.leave_day_end) ? schedule.leave_day_end : "18:00";
         dates.forEach((dateKey, index) => {
-          pushTemplateRange(blocks, schedule, dateKey, "00:00", startTime, "Before ready time");
-          if (index === dates.length - 1) {
-            pushTemplateRange(blocks, schedule, dateKey, leaveEnd, "23:59", "After leave-day end");
-          }
           if (
             schedule.has_sleep &&
             sleepDaySet.has(dateKey) &&
@@ -2163,7 +3466,7 @@ require_admin_ui();
         }
       };
 
-      const blockFullDayForDate = (dateKey, reason) => {
+      const blockFullDayForDate = (dateKey, reason, city = "") => {
         blockedSlots = blockedSlots.filter(
           (slot) => !slot || slot.date !== dateKey || (slot.kind !== "manual" && slot.kind !== "template")
         );
@@ -2177,6 +3480,7 @@ require_admin_ui();
             end: endTime,
             reason,
             kind: "manual",
+            city,
           });
         }
       };
@@ -2330,11 +3634,38 @@ require_admin_ui();
         return entry;
       };
 
+      const getMaybeEntries = (dateKey, timeValue) => {
+        const targetMinutes = timeToMinutes(timeValue);
+        if (targetMinutes === null) return [];
+        return maybeSlots.filter((slot) => {
+          if (!slot || slot.date !== dateKey) return false;
+          const startMinutes = timeToMinutes(slot.start);
+          const endMinutes = timeToMinutes(slot.end);
+          if (startMinutes === null || endMinutes === null) return false;
+          return targetMinutes >= startMinutes && targetMinutes < endMinutes;
+        });
+      };
+
+      const getBookingGroupId = (slot) => {
+        if (!slot) return "";
+        const bookingId = String(slot.booking_id || "").trim();
+        if (bookingId) {
+          return `id:${bookingId}`;
+        }
+        const date = String(slot.date || "").trim();
+        const label = String(slot.label || "").trim().toLowerCase();
+        const bookingType = String(slot.booking_type || "").trim().toLowerCase();
+        if (!date || !label) {
+          return "";
+        }
+        return `legacy:${date}|${label}|${bookingType}`;
+      };
+
       const buildBookingStartMap = () => {
         const map = {};
         blockedSlots.forEach((slot) => {
           if (!slot || slot.kind !== "booking") return;
-          const key = slot.booking_id || slot.label || "";
+          const key = getBookingGroupId(slot);
           if (!key) return;
           const value = `${slot.date} ${slot.start}`;
           if (!map[key] || value < map[key]) {
@@ -2342,6 +3673,111 @@ require_admin_ui();
           }
         });
         return map;
+      };
+
+      const getAdjacentSlotTime = (timeValue, direction = 1) => {
+        const minutes = timeToMinutes(timeValue);
+        if (minutes === null) return null;
+        const nextMinutes = minutes + direction * SLOT_MINUTES;
+        if (nextMinutes < 0 || nextMinutes >= 24 * 60) return null;
+        return minutesToTime(nextMinutes);
+      };
+
+      const getSlotGroupKey = (slot) => {
+        if (!slot) return "";
+        const kind = String(slot.kind || "manual").trim();
+        const city = normalizeCityName(slot.city || "");
+        if (kind === "booking") {
+          const bookingKey = getBookingGroupId(slot);
+          return bookingKey ? `booking|${bookingKey}` : `booking|${slot.label || ""}`;
+        }
+        if (kind === "template") {
+          return `template|${slot.template_id || slot.reason || ""}|${city}`;
+        }
+        return `${kind}|${slot.reason || ""}|${city}`;
+      };
+
+      const getSlotGroupFlags = (dateKey, timeValue, entry) => {
+        if (!entry) return { hasPrevious: false, hasNext: false };
+        const groupKey = getSlotGroupKey(entry);
+        if (!groupKey) return { hasPrevious: false, hasNext: false };
+        const previousTime = getAdjacentSlotTime(timeValue, -1);
+        const nextTime = getAdjacentSlotTime(timeValue, 1);
+        const previousEntry = previousTime ? getSlotEntry(dateKey, previousTime) : null;
+        const nextEntry = nextTime ? getSlotEntry(dateKey, nextTime) : null;
+        return {
+          hasPrevious: !!previousEntry && getSlotGroupKey(previousEntry) === groupKey,
+          hasNext: !!nextEntry && getSlotGroupKey(nextEntry) === groupKey,
+        };
+      };
+
+      const normalizeRangeEndMinutes = (value) => {
+        if (value === null) return null;
+        if (value >= 1439) return 1440;
+        return value;
+      };
+
+      const formatRangeTime = (minutes) => {
+        if (!Number.isFinite(minutes)) return "";
+        if (minutes >= 24 * 60) return "24:00";
+        return minutesToTime(minutes);
+      };
+
+      const buildManualBlockGroups = () => {
+        const manualEntries = blockedSlots
+          .map((slot, index) => ({ slot, index }))
+          .filter(({ slot }) => slot && slot.kind === "manual")
+          .map(({ slot, index }) => {
+            const startMinutes = timeToMinutes(slot.start);
+            const endMinutes = normalizeRangeEndMinutes(timeToMinutes(slot.end));
+            if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+              return null;
+            }
+            return {
+              index,
+              date: slot.date,
+              reason: String(slot.reason || "").trim(),
+              reasonKey: String(slot.reason || "").trim().toLowerCase(),
+              city: String(slot.city || "").trim(),
+              cityKey: normalizeCityName(slot.city || ""),
+              startMinutes,
+              endMinutes,
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => {
+            const dateCmp = String(a.date).localeCompare(String(b.date));
+            if (dateCmp !== 0) return dateCmp;
+            return a.startMinutes - b.startMinutes;
+          });
+
+        const groups = [];
+        manualEntries.forEach((entry) => {
+          const current = groups[groups.length - 1];
+          if (
+            current &&
+            current.date === entry.date &&
+            current.cityKey === entry.cityKey &&
+            current.reasonKey === entry.reasonKey &&
+            entry.startMinutes <= current.endMinutes
+          ) {
+            current.endMinutes = Math.max(current.endMinutes, entry.endMinutes);
+            current.indexes.push(entry.index);
+            return;
+          }
+          groups.push({
+            date: entry.date,
+            reason: entry.reason,
+            reasonKey: entry.reasonKey,
+            city: entry.city,
+            cityKey: entry.cityKey,
+            startMinutes: entry.startMinutes,
+            endMinutes: entry.endMinutes,
+            indexes: [entry.index],
+          });
+        });
+
+        return groups;
       };
 
       let calendarView = "week";
@@ -2360,6 +3796,9 @@ require_admin_ui();
 
       const renderTimeGrid = (dates) => {
         const bookingStartMap = buildBookingStartMap();
+        const dateCityMap = Object.fromEntries(
+          dates.map((dateKey) => [dateKey, getTourCityForDate(dateKey)])
+        );
         calendarGrid.innerHTML = "";
         calendarGrid.classList.remove("month");
         calendarGrid.style.gridTemplateColumns = `90px repeat(${dates.length}, minmax(90px, 1fr))`;
@@ -2373,7 +3812,17 @@ require_admin_ui();
           const cell = document.createElement("div");
           cell.className = "calendar-cell calendar-head";
           cell.dataset.date = dateKey;
-          cell.textContent = formatDayLabel(dateKey);
+          const city = dateCityMap[dateKey] || "";
+          if (city) {
+            const title = document.createElement("span");
+            title.className = "calendar-head-city";
+            title.style.setProperty("--city-color", getCityMarkerColor(city, 0.56));
+            title.textContent = formatDayLabel(dateKey);
+            cell.title = city;
+            cell.appendChild(title);
+          } else {
+            cell.textContent = formatDayLabel(dateKey);
+          }
           calendarGrid.appendChild(cell);
         });
 
@@ -2390,8 +3839,30 @@ require_admin_ui();
             slotButton.dataset.date = dateKey;
             slotButton.dataset.time = timeValue;
             slotButton.dataset.dateShort = formatSlotDateShort(dateKey);
+            const dateCity = dateCityMap[dateKey] || "";
             const entry = getSlotEntry(dateKey, timeValue);
+            const maybeEntries = getMaybeEntries(dateKey, timeValue);
+            const maybePrimary = maybeEntries[0] || null;
+            const slotCity = String(entry?.city || maybePrimary?.city || dateCity || "").trim();
+            if (slotCity) {
+              slotButton.dataset.city = slotCity;
+              const cityDot = document.createElement("span");
+              cityDot.className = "slot-city-dot";
+              cityDot.style.setProperty("--city-color", getCityMarkerColor(slotCity, 0.48));
+              slotButton.appendChild(cityDot);
+            }
             if (entry) {
+              const grouping = getSlotGroupFlags(dateKey, timeValue, entry);
+              if (grouping.hasPrevious || grouping.hasNext) {
+                slotButton.classList.add("slot-grouped");
+                if (grouping.hasPrevious && grouping.hasNext) {
+                  slotButton.classList.add("slot-group-middle");
+                } else if (grouping.hasNext) {
+                  slotButton.classList.add("slot-group-start");
+                } else if (grouping.hasPrevious) {
+                  slotButton.classList.add("slot-group-end");
+                }
+              }
               if (entry.kind === "booking") {
                 slotButton.classList.add("booking");
                 if (entry.booking_type === "outcall") {
@@ -2400,13 +3871,14 @@ require_admin_ui();
                 if (entry.booking_status === "paid") {
                   slotButton.classList.add("paid");
                 }
-                const key = entry.booking_id || entry.label || "";
+                const key = getBookingGroupId(entry);
                 const startKey = key ? bookingStartMap[key] : "";
                 if (key && startKey === `${entry.date} ${entry.start}`) {
                   slotButton.textContent = entry.label || "Booked";
                 }
                 const titleLabel = entry.label ? `${entry.label} - ` : "";
-                slotButton.title = `${titleLabel}${entry.booking_type || "incall"} (${entry.booking_status || "paid"})`;
+                const citySuffix = slotCity ? ` - ${slotCity}` : "";
+                slotButton.title = `${titleLabel}${entry.booking_type || "incall"} (${entry.booking_status || "paid"})${citySuffix}`;
                 slotButton.disabled = true;
               } else if (entry.kind === "template") {
                 slotButton.classList.add("blocked");
@@ -2415,12 +3887,28 @@ require_admin_ui();
                 slotButton.title = (entry.reason || "Template block") + citySuffix;
               } else {
                 slotButton.classList.add("blocked");
-                slotButton.title = entry.reason || "Blocked";
+                const citySuffix = slotCity ? ` (${slotCity})` : "";
+                slotButton.title = (entry.reason || "Blocked") + citySuffix;
               }
             } else if (isRecurringSlot(dateKey, timeValue)) {
               slotButton.classList.add("blocked");
               slotButton.classList.add("recurring");
               slotButton.title = "Recurring block";
+            }
+            if (maybeEntries.length) {
+              slotButton.classList.add("maybe");
+              const maybeBadge = document.createElement("span");
+              maybeBadge.className = "slot-maybe-count";
+              maybeBadge.textContent = maybeEntries.length > 1 ? `?${maybeEntries.length}` : "?";
+              slotButton.appendChild(maybeBadge);
+              const maybeNames = maybeEntries
+                .map((slot) => String(slot.label || "").trim())
+                .filter(Boolean)
+                .slice(0, 4)
+                .join(", ");
+              const moreCount = maybeEntries.length > 4 ? ` +${maybeEntries.length - 4}` : "";
+              const maybeTitle = `Maybe: ${maybeNames || t("unknown")}${moreCount}`;
+              slotButton.title = slotButton.title ? `${slotButton.title} | ${maybeTitle}` : maybeTitle;
             }
             slotButton.addEventListener("click", () => {
               if (entry && (entry.kind === "booking" || entry.kind === "template")) {
@@ -2428,13 +3916,30 @@ require_admin_ui();
               }
               const start = timeValue;
               const end = minutesToTime(timeToMinutes(timeValue) + SLOT_MINUTES);
-              const index = blockedSlots.findIndex(
-                (slot) => slot.date === dateKey && slot.start === start && slot.end === end && slot.kind !== "booking"
-              );
-              if (index >= 0) {
-                blockedSlots.splice(index, 1);
+              const clickedStart = timeToMinutes(start);
+              const clickedEnd = timeToMinutes(end);
+              const hasOverlap =
+                clickedStart !== null &&
+                clickedEnd !== null &&
+                blockedSlots.some((slot) => {
+                  if (!slot || slot.date !== dateKey) return false;
+                  if (slot.kind === "booking" || slot.kind === "template") return false;
+                  const slotStart = timeToMinutes(slot.start);
+                  const slotEnd = normalizeRangeEndMinutes(timeToMinutes(slot.end));
+                  if (slotStart === null || slotEnd === null) return false;
+                  return clickedStart < slotEnd && clickedEnd > slotStart;
+                });
+              if (hasOverlap && clickedStart !== null && clickedEnd !== null) {
+                blockedSlots = blockedSlots.filter((slot) => {
+                  if (!slot || slot.date !== dateKey) return true;
+                  if (slot.kind === "booking" || slot.kind === "template") return true;
+                  const slotStart = timeToMinutes(slot.start);
+                  const slotEnd = normalizeRangeEndMinutes(timeToMinutes(slot.end));
+                  if (slotStart === null || slotEnd === null) return true;
+                  return !(clickedStart < slotEnd && clickedEnd > slotStart);
+                });
               } else {
-                blockedSlots.push({ date: dateKey, start, end, reason: "", kind: "manual" });
+                blockedSlots.push({ date: dateKey, start, end, reason: "", kind: "manual", city: slotCity });
               }
               renderBlockedSlots();
               renderCalendarView();
@@ -2475,9 +3980,15 @@ require_admin_ui();
       const getDaySummary = (dateKey) => {
         const bookingIds = new Set();
         const paidIds = new Set();
+        const maybeIds = new Set();
+        const cities = new Set();
         let hasManual = false;
         blockedSlots.forEach((slot) => {
           if (!slot || slot.date !== dateKey) return;
+          const city = String(slot.city || "").trim();
+          if (city) {
+            cities.add(city);
+          }
           if (slot.kind === "booking") {
             const key = slot.booking_id || `${slot.label}-${slot.start}`;
             bookingIds.add(key);
@@ -2487,6 +3998,17 @@ require_admin_ui();
             return;
           }
           hasManual = true;
+        });
+        maybeSlots.forEach((slot) => {
+          if (!slot || slot.date !== dateKey) return;
+          const key = String(slot.id || slot.label || `${slot.date}-${slot.start}`).trim();
+          if (key) {
+            maybeIds.add(key);
+          }
+          const city = String(slot.city || "").trim();
+          if (city) {
+            cities.add(city);
+          }
         });
         const weekdayIndex = getWeekdayIndex(dateKey);
         const hasRecurring = recurringBlocks.some((block) => {
@@ -2501,8 +4023,10 @@ require_admin_ui();
         return {
           bookings: bookingIds.size,
           paid: paidIds.size,
+          maybe: maybeIds.size,
           manual: hasManual,
           recurring: hasRecurring,
+          cities: Array.from(cities),
         };
       };
 
@@ -2554,6 +4078,12 @@ require_admin_ui();
             badge.textContent = `Paid ${summary.paid}`;
             badgeWrap.appendChild(badge);
           }
+          if (summary.maybe > 0) {
+            const badge = document.createElement("span");
+            badge.className = "month-badge maybe";
+            badge.textContent = `${t("maybe")} ${summary.maybe}`;
+            badgeWrap.appendChild(badge);
+          }
           if (summary.manual || summary.recurring) {
             const badge = document.createElement("span");
             badge.className = "month-badge blocked";
@@ -2562,6 +4092,20 @@ require_admin_ui();
           }
           if (badgeWrap.childElementCount > 0) {
             cell.appendChild(badgeWrap);
+          }
+          const city = getTourCityForDate(dateKey);
+          const cityDots = Array.from(new Set([city, ...(summary.cities || [])].filter(Boolean))).slice(0, 3);
+          if (cityDots.length) {
+            const cityDotWrap = document.createElement("div");
+            cityDotWrap.className = "month-city-dots";
+            cityDots.forEach((name) => {
+              const dot = document.createElement("span");
+              dot.className = "month-city-dot";
+              dot.style.setProperty("--city-color", getCityMarkerColor(name, 0.5));
+              dot.title = name;
+              cityDotWrap.appendChild(dot);
+            });
+            cell.appendChild(cityDotWrap);
           }
           cell.addEventListener("click", () => {
             if (calendarDay) {
@@ -2589,24 +4133,26 @@ require_admin_ui();
 
       const renderBlockedSlots = () => {
         if (!blockedList) return;
-        const manualSlots = blockedSlots
-          .map((slot, index) => ({ slot, index }))
-          .filter(({ slot }) => slot && slot.kind === "manual");
-        if (!manualSlots.length) {
+        const manualGroups = buildManualBlockGroups();
+        if (!manualGroups.length) {
           blockedList.textContent = "No manual blocked slots yet.";
           return;
         }
-        blockedList.innerHTML = manualSlots
-          .map(({ slot, index }) => {
-            const reason = slot.reason ? ` - ${slot.reason}` : "";
-            return `<div data-index="${index}">${slot.date} ${slot.start}-${slot.end}${reason} <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button></div>`;
+        blockedList.innerHTML = manualGroups
+          .map((group, index) => {
+            const reason = group.reason ? ` - ${group.reason}` : "";
+            const city = group.city ? ` (${group.city})` : "";
+            return `<div data-index="${index}">${group.date} ${formatRangeTime(group.startMinutes)}-${formatRangeTime(group.endMinutes)}${city}${reason} <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button></div>`;
           })
           .join("");
         blockedList.querySelectorAll("button[data-remove]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const idx = Number(btn.dataset.remove);
             if (Number.isNaN(idx)) return;
-            blockedSlots = blockedSlots.filter((_, i) => i !== idx);
+            const group = manualGroups[idx];
+            if (!group) return;
+            const removalSet = new Set(group.indexes);
+            blockedSlots = blockedSlots.filter((_slot, i) => !removalSet.has(i));
             renderBlockedSlots();
             renderCalendarView();
             queueAutoSave(t("saving_city_schedule"), { persist: true });
@@ -2817,6 +4363,12 @@ require_admin_ui();
         const row = document.createElement("div");
         row.className = "editor-row tour-row";
         row.dataset.tourRow = "1";
+        row.dataset.tourType = String(entry.type || "tour")
+          .trim()
+          .toLowerCase() === "block"
+          ? "block"
+          : "tour";
+        row.dataset.tourNotes = String(entry.notes || "").trim();
         const startField = createField(t("start_date"), "date", entry.start || "");
         startField.wrapper.classList.add("tour-start");
         const endField = createField(t("end_date"), "date", entry.end || "");
@@ -2923,7 +4475,13 @@ require_admin_ui();
             const start = normalizeUiDate(row.querySelector(".tour-start input")?.value || "");
             const end = normalizeUiDate(row.querySelector(".tour-end input")?.value || "");
             const city = row.querySelector(".tour-city input")?.value?.trim() || "";
-            return { start, end, city };
+            const type = String(row.dataset.tourType || "tour")
+              .trim()
+              .toLowerCase() === "block"
+              ? "block"
+              : "tour";
+            const notes = String(row.dataset.tourNotes || "").trim();
+            return { start, end, city, type, notes };
           })
           .filter((entry) => entry.start && entry.end && entry.city);
       };
@@ -2934,6 +4492,12 @@ require_admin_ui();
             start: String(entry?.start || "").trim(),
             end: String(entry?.end || "").trim(),
             city: String(entry?.city || "").trim(),
+            type: String(entry?.type || "tour")
+              .trim()
+              .toLowerCase() === "block"
+              ? "block"
+              : "tour",
+            notes: String(entry?.notes || "").trim(),
           }))
           .filter(
             (entry) =>
@@ -3350,18 +4914,23 @@ require_admin_ui();
         }
       };
 
-      const saveTourSchedule = async () => {
-        if (!tourScheduleStatus) return;
-        tourScheduleStatus.textContent = "";
+      const saveTouringEntries = async (entries, statusNode = tourScheduleStatus) => {
+        if (statusNode) {
+          statusNode.textContent = "";
+        }
         const key = getKey();
         if (!key) {
-          tourScheduleStatus.textContent = t("admin_key_required");
-          return;
+          if (statusNode) {
+            statusNode.textContent = t("admin_key_required");
+          }
+          return false;
         }
-        const entries = readTourScheduleFromUI();
-        if (!entries.length) {
-          tourScheduleStatus.textContent = t("add_entry_min");
-          return;
+        const list = normalizeTouringEntries(entries);
+        if (!list.length) {
+          if (statusNode) {
+            statusNode.textContent = t("add_entry_min");
+          }
+          return false;
         }
         try {
           const response = await fetch("../api/admin/tour-schedule.php", {
@@ -3370,7 +4939,7 @@ require_admin_ui();
               "Content-Type": "application/json",
               "X-Admin-Key": key,
             },
-            body: JSON.stringify({ touring: entries }),
+            body: JSON.stringify({ touring: list }),
           });
           const payloadText = await response.text();
           let result = {};
@@ -3378,18 +4947,83 @@ require_admin_ui();
             result = JSON.parse(payloadText);
           }
           if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
-          touringStops = normalizeTouringEntries(result.touring || entries);
+          touringStops = normalizeTouringEntries(result.touring || list);
           renderTourSchedule(touringStops);
           syncCitySchedulesWithTouring();
-          tourScheduleStatus.textContent = t("tour_schedule_saved");
+          if (statusNode) {
+            statusNode.textContent = t("tour_schedule_saved");
+          }
           availabilityStatus.textContent = t("saving_city_schedule");
           await saveAvailability();
           if (cityScheduleStatus) {
             cityScheduleStatus.textContent = t("city_schedules_saved");
           }
+          return true;
         } catch (error) {
           const message = error && error.message ? ` (${error.message})` : "";
-          tourScheduleStatus.textContent = `${t("failed_save_tour_schedule")}${message}`;
+          if (statusNode) {
+            statusNode.textContent = `${t("failed_save_tour_schedule")}${message}`;
+          }
+          return false;
+        }
+      };
+
+      const saveTourSchedule = async () => {
+        const entries = readTourScheduleFromUI();
+        await saveTouringEntries(entries, tourScheduleStatus);
+      };
+
+      const clearQuickAddFields = () => {
+        if (quickAddType) quickAddType.value = "tour";
+        if (quickAddCity) quickAddCity.value = "";
+        if (quickAddStart) quickAddStart.value = "";
+        if (quickAddEnd) quickAddEnd.value = "";
+        if (quickAddNotes) quickAddNotes.value = "";
+      };
+
+      const addQuickEntry = async () => {
+        if (!quickAddStatus) return;
+        quickAddStatus.textContent = "";
+        const type = String(quickAddType?.value || "").trim().toLowerCase();
+        const city = String(quickAddCity?.value || "").trim();
+        const start = normalizeUiDate(quickAddStart?.value || "");
+        const end = normalizeUiDate(quickAddEnd?.value || "");
+        const notes = String(quickAddNotes?.value || "").trim();
+        if (!type || !city || !start || !end) {
+          quickAddStatus.textContent = t("quick_add_missing_fields");
+          return;
+        }
+        if (start > end) {
+          quickAddStatus.textContent = t("quick_add_invalid_range");
+          return;
+        }
+        if (type === "block") {
+          const startDate = parseDateKey(start);
+          const endDate = parseDateKey(end);
+          if (!startDate || !endDate || startDate > endDate) {
+            quickAddStatus.textContent = t("quick_add_invalid_range");
+            return;
+          }
+          const reason = notes || `Quick block (${city})`;
+          const cursor = new Date(startDate.getTime());
+          while (cursor <= endDate) {
+            blockFullDayForDate(toDateKey(cursor), reason, city);
+            cursor.setUTCDate(cursor.getUTCDate() + 1);
+          }
+          renderBlockedSlots();
+          renderCalendarView();
+          await saveAvailability();
+          quickAddStatus.textContent = t("quick_add_blocked_saved");
+          clearQuickAddFields();
+          return;
+        }
+        const current = readTourScheduleFromUI();
+        const ok = await saveTouringEntries(
+          [...current, { type: "tour", city, start, end, notes }],
+          quickAddStatus
+        );
+        if (ok) {
+          clearQuickAddFields();
         }
       };
 
@@ -3409,6 +5043,16 @@ require_admin_ui();
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "load");
           renderGallery(data.items || []);
+          if (photoDisplayModeSelect) {
+            photoDisplayModeSelect.value = ["next", "album", "carousel"].includes(String(data.display_mode || ""))
+              ? String(data.display_mode)
+              : "next";
+          }
+          if (photoCarouselSecondsInput) {
+            const seconds = Number(data.carousel_seconds || 5);
+            photoCarouselSecondsInput.value = Number.isFinite(seconds) ? String(Math.min(30, Math.max(2, seconds))) : "5";
+          }
+          updatePhotoModeUi();
         } catch (_error) {
           galleryStatus.textContent = t("failed_load_eye_candy");
         }
@@ -3427,6 +5071,13 @@ require_admin_ui();
           galleryStatus.textContent = t("add_photo_min");
           return;
         }
+        const displayMode = photoDisplayModeSelect?.value || "next";
+        let carouselSeconds = Number(photoCarouselSecondsInput?.value || 5);
+        if (!Number.isFinite(carouselSeconds)) carouselSeconds = 5;
+        carouselSeconds = Math.min(30, Math.max(2, Math.round(carouselSeconds)));
+        if (photoCarouselSecondsInput) {
+          photoCarouselSecondsInput.value = String(carouselSeconds);
+        }
         try {
           const response = await fetch("../api/admin/gallery.php", {
             method: "POST",
@@ -3434,15 +5085,34 @@ require_admin_ui();
               "Content-Type": "application/json",
               "X-Admin-Key": key,
             },
-            body: JSON.stringify({ items }),
+            body: JSON.stringify({
+              items,
+              display_mode: displayMode,
+              carousel_seconds: carouselSeconds,
+            }),
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || "save");
           renderGallery(result.items || items);
+          if (photoDisplayModeSelect) {
+            photoDisplayModeSelect.value = result.display_mode || displayMode;
+          }
+          if (photoCarouselSecondsInput) {
+            photoCarouselSecondsInput.value = String(
+              Math.min(30, Math.max(2, Number(result.carousel_seconds || carouselSeconds)))
+            );
+          }
+          updatePhotoModeUi();
           galleryStatus.textContent = t("eye_candy_saved");
         } catch (_error) {
           galleryStatus.textContent = t("failed_save_eye_candy");
         }
+      };
+
+      const updatePhotoModeUi = () => {
+        if (!photoCarouselSecondsInput) return;
+        const mode = String(photoDisplayModeSelect?.value || "next").trim().toLowerCase();
+        photoCarouselSecondsInput.disabled = mode !== "carousel";
       };
 
 
@@ -3460,6 +5130,31 @@ require_admin_ui();
 
       const formatArray = (list) => (Array.isArray(list) ? list.filter(Boolean).join(", ") : "");
 
+      const escapeHtml = (value) =>
+        String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+
+      const formatHistory = (history) => {
+        if (!Array.isArray(history) || !history.length) {
+          return `<div class="meta"><strong>${t("edit_history")}:</strong> ${t("no_history")}</div>`;
+        }
+        const items = history
+          .slice()
+          .reverse()
+          .map((entry) => {
+            const at = entry?.at ? String(entry.at) : "";
+            const summary = String(entry?.summary || entry?.action || "update");
+            const source = entry?.source ? ` [${String(entry.source)}]` : "";
+            return `<li>${escapeHtml(at)} - ${escapeHtml(summary)}${escapeHtml(source)}</li>`;
+          })
+          .join("");
+        return `<div class="meta"><strong>${t("edit_history")}:</strong><ul style="margin:6px 0 0 16px; padding:0;">${items}</ul></div>`;
+      };
+
       const formatPaymentMethod = (value) => {
         const normalized = String(value || "").toLowerCase();
         if (normalized === "etransfer" || normalized === "interac") return "Interac e-Transfer";
@@ -3469,6 +5164,232 @@ require_admin_ui();
         if (normalized === "btc") return "Bitcoin";
         if (normalized === "paypal") return "PayPal";
         return value || "";
+      };
+
+      const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(String(value || "").trim());
+
+      const isValidInternationalPhone = (value) => {
+        const raw = String(value || "").trim();
+        if (!raw.startsWith("+")) return false;
+        if (!/^\+[0-9\s().-]+$/.test(raw)) return false;
+        const digits = raw.replace(/\D/g, "");
+        if (digits.length < 8 || digits.length > 15) return false;
+        return !digits.startsWith("0");
+      };
+
+      const createEditField = (labelText, type, value = "", options = {}) => {
+        const wrap = document.createElement("div");
+        wrap.className = "request-edit-field";
+        if (options.full) {
+          wrap.style.gridColumn = "1 / -1";
+        }
+        const label = document.createElement("label");
+        label.textContent = labelText;
+        const input =
+          type === "textarea" ? document.createElement("textarea") : document.createElement(type === "select" ? "select" : "input");
+        if (type !== "textarea" && type !== "select") {
+          input.type = type;
+        }
+        input.value = String(value ?? "");
+        if (options.placeholder) {
+          input.placeholder = options.placeholder;
+        }
+        if (options.required) {
+          input.required = true;
+        }
+        if (options.min !== undefined) {
+          input.min = String(options.min);
+        }
+        if (options.max !== undefined) {
+          input.max = String(options.max);
+        }
+        if (options.step !== undefined) {
+          input.step = String(options.step);
+        }
+        if (Array.isArray(options.selectOptions) && input.tagName === "SELECT") {
+          options.selectOptions.forEach((entry) => {
+            const option = document.createElement("option");
+            option.value = entry.value;
+            option.textContent = entry.label;
+            input.appendChild(option);
+          });
+        }
+        wrap.appendChild(label);
+        wrap.appendChild(input);
+        return { wrap, input };
+      };
+
+      const createRequestEditPanel = (item) => {
+        const panel = document.createElement("div");
+        panel.className = "request-edit-panel hidden";
+
+        const grid = document.createElement("div");
+        grid.className = "request-edit-grid";
+
+        const nameField = createEditField(t("name_label"), "text", item.name || "", { required: true });
+        const emailField = createEditField(t("email_label"), "email", item.email || "", { required: true });
+        const phoneField = createEditField(t("phone_label"), "tel", item.phone || "", {
+          required: true,
+          placeholder: "+14389993539",
+        });
+        const cityField = createEditField(t("city_label"), "text", item.city || "", { required: true });
+        const typeField = createEditField(t("type_label"), "select", item.booking_type || "incall", {
+          required: true,
+          selectOptions: [
+            { value: "incall", label: "incall" },
+            { value: "outcall", label: "outcall" },
+          ],
+        });
+        typeField.input.value = String(item.booking_type || "incall").toLowerCase() === "outcall" ? "outcall" : "incall";
+
+        const outcallField = createEditField(t("outcall_address"), "text", item.outcall_address || "");
+        const dateField = createEditField(t("date_label"), "date", item.preferred_date || "", { required: true });
+        const timeField = createEditField(t("time_label"), "time", item.preferred_time || "", { required: true, step: 1800 });
+        const durationLabelField = createEditField(t("duration"), "text", item.duration_label || "", { required: true });
+        const durationHoursField = createEditField(t("hours_label"), "number", item.duration_hours || "", {
+          required: true,
+          min: 0.5,
+          max: 24,
+          step: 0.5,
+        });
+        const experienceField = createEditField(t("experience"), "select", item.experience || "gfe", {
+          required: true,
+          selectOptions: [
+            { value: "gfe", label: "GFE" },
+            { value: "pse", label: "PSE" },
+            { value: "filming", label: "Filming" },
+          ],
+        });
+        experienceField.input.value = ["gfe", "pse", "filming"].includes(String(item.experience || "").toLowerCase())
+          ? String(item.experience || "").toLowerCase()
+          : "gfe";
+
+        const notesField = createEditField(t("notes"), "textarea", item.notes || "", { full: true });
+
+        [
+          nameField,
+          emailField,
+          phoneField,
+          cityField,
+          typeField,
+          outcallField,
+          dateField,
+          timeField,
+          durationLabelField,
+          durationHoursField,
+          experienceField,
+          notesField,
+        ].forEach(({ wrap }) => grid.appendChild(wrap));
+
+        panel.appendChild(grid);
+
+        const row = document.createElement("div");
+        row.className = "actions";
+        const saveBtn = createActionButton(t("save_changes"), () => {}, "btn secondary");
+        const cancelBtn = createActionButton(t("action_cancel"), () => {}, "btn ghost");
+        const statusNode = document.createElement("span");
+        statusNode.className = "status";
+
+        const setOutcallVisibility = () => {
+          const isOutcall = typeField.input.value === "outcall";
+          outcallField.wrap.style.display = isOutcall ? "" : "none";
+        };
+
+        const buildPayload = () => ({
+          id: item.id,
+          name: nameField.input.value.trim(),
+          email: emailField.input.value.trim(),
+          phone: phoneField.input.value.trim(),
+          city: cityField.input.value.trim(),
+          booking_type: typeField.input.value,
+          outcall_address: outcallField.input.value.trim(),
+          experience: experienceField.input.value,
+          duration_label: durationLabelField.input.value.trim(),
+          duration_hours: String(durationHoursField.input.value || "").trim(),
+          preferred_date: dateField.input.value,
+          preferred_time: timeField.input.value,
+          notes: notesField.input.value.trim(),
+        });
+
+        saveBtn.addEventListener("click", async () => {
+          statusNode.textContent = "";
+          const payload = buildPayload();
+          if (
+            !payload.name ||
+            !payload.email ||
+            !payload.phone ||
+            !payload.city ||
+            !payload.preferred_date ||
+            !payload.preferred_time ||
+            !payload.duration_label ||
+            !payload.duration_hours
+          ) {
+            statusNode.textContent = t("required_fields");
+            return;
+          }
+          if (!isValidEmail(payload.email)) {
+            statusNode.textContent = t("invalid_email");
+            return;
+          }
+          if (!isValidInternationalPhone(payload.phone)) {
+            statusNode.textContent = t("invalid_phone");
+            return;
+          }
+          if (payload.booking_type === "outcall" && !payload.outcall_address) {
+            statusNode.textContent = t("required_fields");
+            return;
+          }
+          const hours = Number(payload.duration_hours);
+          if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
+            statusNode.textContent = t("required_fields");
+            return;
+          }
+
+          const key = getKey();
+          if (!key) {
+            statusNode.textContent = t("admin_key_required");
+            return;
+          }
+
+          saveBtn.disabled = true;
+          try {
+            const response = await fetch("../api/admin/update-request.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Key": key,
+              },
+              body: JSON.stringify(payload),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              const fieldError =
+                result?.fields && typeof result.fields === "object" ? Object.values(result.fields)[0] : result?.error;
+              throw new Error(fieldError || "update");
+            }
+            statusNode.textContent = t("appointment_updated");
+            await loadRequests();
+            await loadAvailability();
+          } catch (error) {
+            statusNode.textContent = `${t("failed_update_appointment")} ${error?.message ? `(${error.message})` : ""}`;
+          } finally {
+            saveBtn.disabled = false;
+          }
+        });
+
+        cancelBtn.addEventListener("click", () => {
+          panel.classList.add("hidden");
+        });
+
+        typeField.input.addEventListener("change", setOutcallVisibility);
+        setOutcallVisibility();
+
+        row.appendChild(saveBtn);
+        row.appendChild(cancelBtn);
+        row.appendChild(statusNode);
+        panel.appendChild(row);
+
+        return panel;
       };
 
       const formatCalendarStamp = (dateValue, timeValue, addMinutes = 0) => {
@@ -3564,6 +5485,37 @@ require_admin_ui();
         return { status, paymentStatus };
       };
 
+      const buildMaybeSlotsFromRequests = (requests) => {
+        const slots = [];
+        (Array.isArray(requests) ? requests : []).forEach((item) => {
+          const { status, paymentStatus } = normalizeStatus(item);
+          if (status !== "maybe" || paymentStatus === "paid") return;
+          const date = String(item?.preferred_date || "").trim();
+          const start = String(item?.preferred_time || "").trim();
+          const durationHours = Number(item?.duration_hours || 0);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(start)) return;
+          if (!Number.isFinite(durationHours) || durationHours <= 0) return;
+          const startMinutes = timeToMinutes(start);
+          if (startMinutes === null) return;
+          const totalMinutes = Math.max(SLOT_MINUTES, Math.round(durationHours * 60));
+          const endMinutes = Math.min(24 * 60, startMinutes + totalMinutes);
+          if (endMinutes <= startMinutes) return;
+          const label = String(item?.name || "").trim();
+          const city = String(item?.city || "").trim();
+          for (let minutes = startMinutes; minutes < endMinutes; minutes += SLOT_MINUTES) {
+            slots.push({
+              date,
+              start: minutesToTime(minutes),
+              end: minutesToTime(Math.min(minutes + SLOT_MINUTES, endMinutes)),
+              id: String(item?.id || "").trim(),
+              label: label || t("unknown"),
+              city,
+            });
+          }
+        });
+        return slots;
+      };
+
       const updateStatus = async (id, status, reason = "") => {
         const key = getKey();
         if (!key) {
@@ -3630,9 +5582,11 @@ require_admin_ui();
       const loadRequests = async () => {
         requestsStatus.textContent = "";
         requestsList.innerHTML = "";
+        maybeSlots = [];
         const key = getKey();
         if (!key) {
           requestsStatus.textContent = t("admin_key_required");
+          renderCalendarView();
           return;
         }
         try {
@@ -3641,7 +5595,31 @@ require_admin_ui();
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "load");
-          const requests = Array.isArray(data.requests) ? data.requests : [];
+          const sourceRequests = Array.isArray(data.requests) ? data.requests : [];
+          const requestsByKey = new Map();
+          sourceRequests.forEach((item) => {
+            if (!item || typeof item !== "object") return;
+            const id = String(item.id || "").trim();
+            const fallbackKey = [
+              String(item.email || "").trim().toLowerCase(),
+              String(item.phone || "").replace(/\D+/g, ""),
+              String(item.preferred_date || "").trim(),
+              String(item.preferred_time || "").trim(),
+              String(item.city || "").trim().toLowerCase(),
+              String(item.name || "").trim().toLowerCase(),
+            ].join("|");
+            const key = id ? `id:${id}` : `fallback:${fallbackKey}`;
+            const current = requestsByKey.get(key);
+            const nextStamp = String(item.updated_at || item.created_at || "");
+            const currentStamp = current ? String(current.updated_at || current.created_at || "") : "";
+            if (!current || nextStamp >= currentStamp) {
+              requestsByKey.set(key, item);
+            }
+          });
+          const requests = Array.from(requestsByKey.values());
+          renderNotifications(requests);
+          maybeSlots = buildMaybeSlotsFromRequests(requests);
+          renderCalendarView();
           const filterValue = statusFilter.value;
           const filtered = requests.filter((item) => {
             const { status, paymentStatus } = normalizeStatus(item);
@@ -3663,6 +5641,7 @@ require_admin_ui();
               const { status, paymentStatus } = normalizeStatus(item);
               const card = document.createElement("div");
               card.className = "request-card";
+              card.setAttribute("data-request-id", String(item.id || ""));
               const badgeClass = `badge ${status}`;
               const followupCities = formatArray(item.followup_cities);
               const percentLabel = item.deposit_percent ? `${item.deposit_percent}%` : "";
@@ -3675,14 +5654,20 @@ require_admin_ui();
               } else if (percentLabel) {
                 depositLabel = percentLabel;
               }
-              const channelLabel =
-                String(item.contact_channel || "").toLowerCase() === "phone"
-                  ? t("phone_label").toLowerCase()
-                  : t("email_label").toLowerCase();
-              const followupInfo =
-                item.contact_followup === "yes"
-                  ? `${t("follow_up")}: ${channelLabel} (${followupCities || t("no_city")})`
-                  : `${t("follow_up")}: ${t("follow_up_no")}`;
+              const followupChannelList = String(item.contact_channel || "")
+                .toLowerCase()
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean);
+              const hasLegacyFollowup = String(item.contact_followup || "").toLowerCase() === "yes";
+              const followupPhoneEnabled =
+                String(item.contact_followup_phone || "").toLowerCase() === "yes" ||
+                (hasLegacyFollowup && followupChannelList.includes("phone"));
+              const followupEmailEnabled =
+                String(item.contact_followup_email || "").toLowerCase() === "yes" ||
+                (hasLegacyFollowup && followupChannelList.includes("email"));
+              const followupPhoneLabel = followupPhoneEnabled ? t("yes") : t("no");
+              const followupEmailLabel = followupEmailEnabled ? t("yes") : t("no");
               card.innerHTML = `
                 <div class="request-header">
                   <div><strong>${item.name || t("unknown")}</strong></div>
@@ -3707,18 +5692,29 @@ require_admin_ui();
                 ${formatLine(t("notes"), item.notes)}
                 <div class="meta"><strong>${t("decline_reason")}:</strong> <input class="decline-reason" type="text" placeholder="${t("reason")}" value="${item.decline_reason || ""}" /></div>
                 ${formatLine(t("blacklist_reason"), item.blacklist_reason)}
-                ${formatLine(t("follow_up"), followupInfo)}
+                ${formatLine(t("follow_up_phone"), followupPhoneLabel)}
+                ${formatLine(t("follow_up_email"), followupEmailLabel)}
+                ${formatLine(t("follow_up_cities"), followupCities || t("no_city"))}
                 ${formatLine(t("payment_details"), item.payment_link)}
                 ${formatLine(t("created"), item.created_at)}
                 ${formatLine(t("updated"), item.updated_at)}
                 ${formatLine(t("email_sent"), item.payment_email_sent_at)}
+                ${formatHistory(item.history)}
               `;
               const declineInput = card.querySelector(".decline-reason");
+              const editPanel = createRequestEditPanel(item);
               const actions = document.createElement("div");
               actions.className = "actions";
               if (status === "pending") {
                 actions.appendChild(
                   createActionButton(t("action_accept"), () => updateStatus(item.id, "accepted"), "btn")
+                );
+                actions.appendChild(
+                  createActionButton(
+                    t("action_maybe"),
+                    () => updateStatus(item.id, "maybe", declineInput ? declineInput.value.trim() : ""),
+                    "btn secondary"
+                  )
                 );
                 actions.appendChild(
                   createActionButton(
@@ -3734,6 +5730,20 @@ require_admin_ui();
                 );
               }
               if (status !== "blacklisted") {
+                if (status !== "pending" && status !== "maybe" && paymentStatus !== "paid") {
+                  actions.appendChild(
+                    createActionButton(
+                      t("action_maybe"),
+                      () => updateStatus(item.id, "maybe", declineInput ? declineInput.value.trim() : ""),
+                      "btn ghost"
+                    )
+                  );
+                }
+                actions.appendChild(
+                  createActionButton(t("action_edit"), () => {
+                    editPanel.classList.toggle("hidden");
+                  }, "btn ghost")
+                );
                 actions.appendChild(
                   createActionButton(
                     t("action_decline"),
@@ -3762,12 +5772,15 @@ require_admin_ui();
                 );
               }
               card.appendChild(actions);
+              card.appendChild(editPanel);
               requestsList.appendChild(card);
             });
           if (!filtered.length) {
             requestsList.innerHTML = `<p class="hint">${t("no_requests_found")}</p>`;
           }
         } catch (_error) {
+          maybeSlots = [];
+          renderCalendarView();
           requestsStatus.textContent = t("failed_load_requests");
         }
       };
@@ -3938,6 +5951,24 @@ require_admin_ui();
           tourScheduleList.appendChild(createTourRow());
         });
       }
+      if (quickAddSubmitBtn) {
+        quickAddSubmitBtn.addEventListener("click", addQuickEntry);
+      }
+      if (quickAddStart && quickAddEnd) {
+        quickAddStart.addEventListener("change", () => {
+          if (!quickAddEnd.value) {
+            quickAddEnd.value = quickAddStart.value;
+          }
+        });
+      }
+      if (quickAddNotes) {
+        quickAddNotes.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addQuickEntry();
+          }
+        });
+      }
       if (saveTourScheduleBtn) {
         saveTourScheduleBtn.addEventListener("click", saveTourSchedule);
       }
@@ -3975,6 +6006,9 @@ require_admin_ui();
       if (saveGalleryBtn) {
         saveGalleryBtn.addEventListener("click", saveGallery);
       }
+      if (photoDisplayModeSelect) {
+        photoDisplayModeSelect.addEventListener("change", updatePhotoModeUi);
+      }
 
       if (toggleBlockedListBtn) {
         setBlockedListVisible(false);
@@ -3985,16 +6019,22 @@ require_admin_ui();
       }
       refreshBtn.addEventListener("click", loadRequests);
       statusFilter.addEventListener("change", loadRequests);
-      window.setInterval(() => {
-        if (document.visibilityState === "visible") {
-          loadRequests();
-        }
-      }, 15000);
+      // Keep requests stable while reviewing/editing. Use Refresh button when needed.
 
       const initialLanguage = getStoredLanguage() || detectBrowserLanguage();
       currentLanguage = initialLanguage;
       document.documentElement.setAttribute("lang", currentLanguage);
       setAdminPanel(getStoredAdminPanel(), false);
+      createDayChoices(menuWorkDays);
+      createDayChoices(menuBreakDays);
+      applyAccountCenterToUi();
+      applyScheduleMenuConfigToUi();
+      applyServicesConfigToUi();
+      updatePhotoModeUi();
+      closeAdminMenu();
+      if (notifPanel) {
+        notifPanel.classList.add("hidden");
+      }
 
       setCalendarView("week");
       populateTimezones();

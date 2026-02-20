@@ -197,18 +197,15 @@ require_admin_ui();
       }
 
       .age-language {
-        position: fixed;
-        top: clamp(14px, 4vw, 24px);
-        right: clamp(14px, 4vw, 24px);
-        left: auto;
-        display: inline-flex;
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         padding: 0;
         border: none;
         background: transparent;
         box-shadow: none;
-        z-index: 130;
       }
 
       .age-language .language-button {
@@ -269,6 +266,226 @@ require_admin_ui();
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 12px;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-menu-btn {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.35);
+        background: #fff;
+        color: #7a1c45;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(255, 0, 110, 0.12);
+      }
+
+      .icon-menu-btn:focus-visible,
+      .icon-menu-btn:hover {
+        border-color: rgba(255, 0, 110, 0.55);
+        outline: none;
+      }
+
+      .icon-menu-btn .line-stack {
+        display: grid;
+        gap: 4px;
+      }
+
+      .icon-menu-btn .line-stack span {
+        width: 16px;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+        display: block;
+      }
+
+      .notif-badge {
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: var(--hot);
+        color: #fff;
+        font-size: 11px;
+        line-height: 18px;
+        text-align: center;
+        padding: 0 5px;
+        margin-left: 6px;
+      }
+
+      .notif-panel {
+        position: absolute;
+        top: 56px;
+        right: 0;
+        width: min(360px, calc(100vw - 32px));
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 20px 40px rgba(255, 0, 110, 0.16);
+        padding: 10px;
+        z-index: 60;
+      }
+
+      .notif-title {
+        margin: 0 0 8px;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        color: #7a1c45;
+        text-transform: uppercase;
+      }
+
+      .notif-list {
+        display: grid;
+        gap: 8px;
+        max-height: 300px;
+        overflow: auto;
+      }
+
+      .notif-item {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff7fc;
+        padding: 8px 10px;
+        cursor: pointer;
+        color: #5c1738;
+      }
+
+      .notif-item:hover,
+      .notif-item:focus-visible {
+        background: #ffeef8;
+        outline: none;
+      }
+
+      .notif-empty {
+        margin: 0;
+        color: #7b4b61;
+        font-size: 0.86rem;
+      }
+
+      .header-anchor {
+        position: relative;
+      }
+
+      .admin-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(19, 4, 12, 0.36);
+        z-index: 150;
+      }
+
+      .admin-menu-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: min(520px, 94vw);
+        background: #fff;
+        border-left: 1px solid var(--line);
+        box-shadow: -24px 0 48px rgba(255, 0, 110, 0.2);
+        z-index: 160;
+        overflow: auto;
+        transform: translateX(100%);
+        transition: transform 0.2s ease;
+        padding: 16px;
+      }
+
+      .admin-menu-drawer.open {
+        transform: translateX(0);
+      }
+
+      .admin-menu-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .admin-menu-title {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--hot);
+      }
+
+      .menu-group {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #fff9fd;
+      }
+
+      .menu-group h3 {
+        margin: 0 0 10px;
+        font-size: 0.84rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #7a1c45;
+      }
+
+      .menu-inline-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .menu-day-choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .menu-day-choices label {
+        margin: 0;
+        font-size: 0.78rem;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 8px;
+      }
+
+      .menu-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .menu-list-row {
+        display: grid;
+        grid-template-columns: 1fr minmax(88px, 120px) auto;
+        gap: 8px;
+      }
+
+      .menu-list-row input {
+        min-width: 0;
+      }
+
+      .menu-list-row .btn {
+        padding: 8px 10px;
+      }
+
+      .menu-avatar-preview {
+        width: 74px;
+        height: 74px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        object-fit: cover;
+        background: #fff;
+        display: block;
+      }
+
+      .legacy-admin-section {
+        display: none;
       }
 
       h1 {
@@ -1247,15 +1464,25 @@ require_admin_ui();
           border-radius: 16px;
         }
 
-        .age-language {
-          top: 10px;
-          right: 10px;
-        }
-
         .age-language .language-button {
           font-size: 11px;
           gap: 4px;
           padding: 1px 2px;
+        }
+
+        .header-actions {
+          width: 100%;
+          justify-content: flex-end;
+        }
+
+        .admin-menu-drawer {
+          width: 100vw;
+          max-width: 100vw;
+        }
+
+        .menu-inline-grid,
+        .menu-list-row {
+          grid-template-columns: 1fr;
         }
 
         .folder-switcher {
@@ -1340,44 +1567,226 @@ require_admin_ui();
     </style>
   </head>
   <body>
-    <div class="age-language" role="group" aria-label="language selector">
-      <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
-        <span class="language-flag" aria-hidden="true">
-          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
-            <rect width="24" height="16" fill="#012169"></rect>
-            <path
-              d="M0 0L9.5 6.5V0H14.5V6.5L24 0V3L15.5 8H24V8.5H15.5L24 13V16L14.5 9.5V16H9.5V9.5L0 16V13L8.5 8.5H0V8H8.5L0 3Z"
-              fill="#fff"
-            ></path>
-            <path
-              d="M0 0L10 6.5V0H14V6.5L24 0V2.5L13.5 8.5H24V9.5H13.5L24 15.5V16L14 9.5V16H10V9.5L0 16V13.5L10.5 9.5H0V8.5H10.5L0 2.5Z"
-              fill="#c8102e"
-              opacity="0.8"
-            ></path>
-            <path d="M9.5 0H14.5V6H24V10H14.5V16H9.5V10H0V6H9.5Z" fill="#fff"></path>
-            <path d="M10.5 0H13.5V6H24V10H13.5V16H10.5V10H0V6H10.5Z" fill="#c8102e"></path>
-          </svg>
-        </span>
-        <span class="language-code">EN</span>
-      </button>
-      <button type="button" class="language-button" data-language-choice="fr" aria-pressed="false">
-        <span class="language-flag" aria-hidden="true">
-          <svg viewBox="0 0 24 16" role="presentation" focusable="false">
-            <rect width="24" height="16" fill="#fff"></rect>
-            <rect width="8" height="16" fill="#002395"></rect>
-            <rect width="8" height="16" x="16" fill="#ED2939"></rect>
-          </svg>
-        </span>
-        <span class="language-code">FR</span>
-      </button>
-    </div>
+    <div id="adminMenuBackdrop" class="admin-menu-backdrop" hidden></div>
     <header>
       <div class="header-top">
         <h1 id="adminMainTitle">BombaCLOUD!</h1>
-        <a class="btn secondary" id="openClientApp" href="../index.html" target="_blank" rel="noopener">Client app</a>
+        <div class="header-actions header-anchor">
+          <button class="icon-menu-btn" id="notifToggleBtn" type="button" aria-label="Notifications">
+            <span>🔔</span>
+            <span id="notifUnreadCount" class="notif-badge hidden">0</span>
+          </button>
+          <div id="notifPanel" class="notif-panel hidden">
+            <h3 class="notif-title">New bookings</h3>
+            <div id="notifList" class="notif-list"></div>
+          </div>
+          <a class="btn secondary" id="openClientApp" href="../index.html" target="_blank" rel="noopener">Client app</a>
+          <button class="icon-menu-btn" id="adminMenuToggleBtn" type="button" aria-label="Open admin menu">
+            <span class="line-stack" aria-hidden="true"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
       <p class="subtitle" id="adminSubtitle">Simple city-by-city setup. Fill each city card, save, then manage requests.</p>
     </header>
+
+    <aside id="adminMenuDrawer" class="admin-menu-drawer" aria-hidden="true">
+      <div class="admin-menu-head">
+        <h2 class="admin-menu-title">Admin menu</h2>
+        <button class="btn ghost" id="adminMenuCloseBtn" type="button">Close</button>
+      </div>
+
+      <section class="menu-group">
+        <h3>Account center</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="accountPhoto">Upload profile pic</label>
+            <input id="accountPhoto" type="file" accept="image/*" />
+            <img id="accountPhotoPreview" class="menu-avatar-preview" alt="Profile preview" hidden />
+          </div>
+          <div class="field">
+            <label for="accountName">Name</label>
+            <input id="accountName" type="text" placeholder="Your name" />
+          </div>
+          <div class="field">
+            <label for="accountEmail">Email</label>
+            <input id="accountEmail" type="email" placeholder="you@email.com" />
+          </div>
+          <div class="field">
+            <label for="accountPhone">Phone number</label>
+            <input id="accountPhone" type="tel" placeholder="+1..." />
+          </div>
+          <div class="field">
+            <label for="accountPassword">Change password</label>
+            <input id="accountPassword" type="password" placeholder="New password" />
+          </div>
+          <div class="field">
+            <label for="accountLanguage">Language preference</label>
+            <select id="accountLanguage">
+              <option value="en">English</option>
+              <option value="fr">Francais</option>
+            </select>
+          </div>
+        </div>
+        <div class="age-language" role="group" aria-label="language selector">
+          <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
+            <span class="language-flag" aria-hidden="true">
+              <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+                <rect width="24" height="16" fill="#012169"></rect>
+                <path
+                  d="M0 0L9.5 6.5V0H14.5V6.5L24 0V3L15.5 8H24V8.5H15.5L24 13V16L14.5 9.5V16H9.5V9.5L0 16V13L8.5 8.5H0V8H8.5L0 3Z"
+                  fill="#fff"
+                ></path>
+                <path
+                  d="M0 0L10 6.5V0H14V6.5L24 0V2.5L13.5 8.5H24V9.5H13.5L24 15.5V16L14 9.5V16H10V9.5L0 16V13.5L10.5 9.5H0V8.5H10.5L0 2.5Z"
+                  fill="#c8102e"
+                  opacity="0.8"
+                ></path>
+                <path d="M9.5 0H14.5V6H24V10H14.5V16H9.5V10H0V6H9.5Z" fill="#fff"></path>
+                <path d="M10.5 0H13.5V6H24V10H13.5V16H10.5V10H0V6H10.5Z" fill="#c8102e"></path>
+              </svg>
+            </span>
+            <span class="language-code">EN</span>
+          </button>
+          <button type="button" class="language-button" data-language-choice="fr" aria-pressed="false">
+            <span class="language-flag" aria-hidden="true">
+              <svg viewBox="0 0 24 16" role="presentation" focusable="false">
+                <rect width="24" height="16" fill="#fff"></rect>
+                <rect width="8" height="16" fill="#002395"></rect>
+                <rect width="8" height="16" x="16" fill="#ED2939"></rect>
+              </svg>
+            </span>
+            <span class="language-code">FR</span>
+          </button>
+        </div>
+        <div class="row">
+          <button class="btn" id="saveAccountCenter" type="button">Save account center</button>
+          <span class="status" id="accountCenterStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Schedule</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label><input id="menuWorkAllDay" type="checkbox" /> Working all day</label>
+          </div>
+          <div class="field">
+            <label for="menuWorkStart">From time</label>
+            <input id="menuWorkStart" type="time" value="10:00" />
+          </div>
+          <div class="field">
+            <label for="menuWorkEnd">To time</label>
+            <input id="menuWorkEnd" type="time" value="18:00" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Which days</label>
+          <div id="menuWorkDays" class="menu-day-choices"></div>
+        </div>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label><input id="menuBreakEnabled" type="checkbox" /> Allow breaks</label>
+          </div>
+          <div class="field">
+            <label for="menuBreakStart">Break from</label>
+            <input id="menuBreakStart" type="time" value="14:00" />
+          </div>
+          <div class="field">
+            <label for="menuBreakEnd">Break to</label>
+            <input id="menuBreakEnd" type="time" value="15:00" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Break days</label>
+          <div id="menuBreakDays" class="menu-day-choices"></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="menuScheduleApply" type="button">Apply schedule</button>
+          <span class="status" id="menuScheduleStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Touring</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="menuTourCity">Add city</label>
+            <input id="menuTourCity" type="text" placeholder="Toronto" />
+          </div>
+          <div class="field">
+            <label for="menuTourStart">Which days start</label>
+            <input id="menuTourStart" type="date" />
+          </div>
+          <div class="field">
+            <label for="menuTourEnd">Which days end</label>
+            <input id="menuTourEnd" type="date" />
+          </div>
+          <div class="field">
+            <label for="menuTourFirstStart">First day starts at</label>
+            <input id="menuTourFirstStart" type="time" value="10:00" />
+          </div>
+          <div class="field">
+            <label for="menuTourLastEnd">Last day ends at</label>
+            <input id="menuTourLastEnd" type="time" value="18:00" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="menuTourAddBtn" type="button">Add touring stop</button>
+          <span class="status" id="menuTourStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Services</h3>
+        <p class="hint">This saves admin service presets so you can organize prices quickly.</p>
+        <div class="field">
+          <label>Price per duration</label>
+          <div id="serviceDurationList" class="menu-list"></div>
+          <button class="btn secondary" id="addServiceDuration" type="button">Add duration</button>
+        </div>
+        <div class="field">
+          <label>Service package (comma separated) + price</label>
+          <div id="servicePackageList" class="menu-list"></div>
+          <button class="btn secondary" id="addServicePackage" type="button">Add package</button>
+        </div>
+        <div class="field">
+          <label>Single add-ons</label>
+          <div id="serviceAddonList" class="menu-list"></div>
+          <button class="btn secondary" id="addServiceAddon" type="button">Add add-on</button>
+        </div>
+        <div class="row">
+          <button class="btn" id="saveServicesConfig" type="button">Save services</button>
+          <span class="status" id="servicesConfigStatus"></span>
+        </div>
+      </section>
+
+      <section class="menu-group">
+        <h3>Photos</h3>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="photoDisplayMode">Display choice</label>
+            <select id="photoDisplayMode">
+              <option value="next">Next click</option>
+              <option value="album">Album</option>
+              <option value="carousel">Moving carousel</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="photoCarouselSeconds">Carousel seconds</label>
+            <input id="photoCarouselSeconds" type="number" min="2" max="30" step="1" value="5" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Photos list</label>
+          <div class="editor-list" id="photoList"></div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="addPhotoRow" type="button">Add photo</button>
+          <button class="btn" id="savePhotoConfig" type="button">Save photos</button>
+          <span class="status" id="photoStatus"></span>
+        </div>
+      </section>
+    </aside>
 
     <main>
       <section data-admin-panel-group="schedule" id="calendarEditorSection">
@@ -1506,7 +1915,7 @@ require_admin_ui();
         </button>
       </div>
 
-      <section data-admin-panel-group="schedule">
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="quickAddTitle">Quick add</h2>
         <p class="hint" id="quickAddHint">One add panel for future tour dates, plus optional full-day calendar blocks.</p>
         <div class="quick-add-grid">
@@ -1540,7 +1949,7 @@ require_admin_ui();
         </div>
       </section>
 
-      <section data-admin-panel-group="schedule">
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="tourScheduleTitle">Tour schedule</h2>
         <div class="editor-list" id="tourScheduleList"></div>
         <p class="hint" id="tourScheduleHint">Dates are inclusive. Use YYYY-MM-DD and avoid overlaps.</p>
@@ -1551,7 +1960,7 @@ require_admin_ui();
         </div>
       </section>
 
-      <section data-admin-panel-group="schedule">
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="cityWizardTitle">City schedule wizard</h2>
         <p class="hint" id="cityWizardHint">
           One card per touring city/date range. Fill question-by-question to auto-build each city schedule.
@@ -1568,7 +1977,7 @@ require_admin_ui();
         </div>
       </section>
 
-      <section data-admin-panel-group="schedule">
+      <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="gallerySectionTitle">Eye candy</h2>
         <div class="editor-list" id="galleryList"></div>
         <p class="hint" id="gallerySectionHint">Use full paths like /photos/heidi15.jpg and short alt text.</p>
@@ -1693,15 +2102,63 @@ require_admin_ui();
       const cityScheduleStatus = document.getElementById("cityScheduleStatus");
       const calendarEditorSection = document.getElementById("calendarEditorSection");
       const clearCityTemplatesBtn = document.getElementById("clearCityTemplates");
-      const galleryList = document.getElementById("galleryList");
-      const galleryStatus = document.getElementById("galleryStatus");
-      const addGalleryRowBtn = document.getElementById("addGalleryRow");
-      const saveGalleryBtn = document.getElementById("saveGallery");
+      const galleryList = document.getElementById("photoList") || document.getElementById("galleryList");
+      const galleryStatus = document.getElementById("photoStatus") || document.getElementById("galleryStatus");
+      const addGalleryRowBtn = document.getElementById("addPhotoRow") || document.getElementById("addGalleryRow");
+      const saveGalleryBtn = document.getElementById("savePhotoConfig") || document.getElementById("saveGallery");
+      const photoDisplayModeSelect = document.getElementById("photoDisplayMode");
+      const photoCarouselSecondsInput = document.getElementById("photoCarouselSeconds");
+      const adminMenuBackdrop = document.getElementById("adminMenuBackdrop");
+      const adminMenuDrawer = document.getElementById("adminMenuDrawer");
+      const adminMenuToggleBtn = document.getElementById("adminMenuToggleBtn");
+      const adminMenuCloseBtn = document.getElementById("adminMenuCloseBtn");
+      const notifToggleBtn = document.getElementById("notifToggleBtn");
+      const notifPanel = document.getElementById("notifPanel");
+      const notifList = document.getElementById("notifList");
+      const notifUnreadCount = document.getElementById("notifUnreadCount");
+      const accountPhotoInput = document.getElementById("accountPhoto");
+      const accountPhotoPreview = document.getElementById("accountPhotoPreview");
+      const accountNameInput = document.getElementById("accountName");
+      const accountEmailInput = document.getElementById("accountEmail");
+      const accountPhoneInput = document.getElementById("accountPhone");
+      const accountPasswordInput = document.getElementById("accountPassword");
+      const accountLanguageSelect = document.getElementById("accountLanguage");
+      const saveAccountCenterBtn = document.getElementById("saveAccountCenter");
+      const accountCenterStatus = document.getElementById("accountCenterStatus");
+      const menuWorkAllDay = document.getElementById("menuWorkAllDay");
+      const menuWorkStart = document.getElementById("menuWorkStart");
+      const menuWorkEnd = document.getElementById("menuWorkEnd");
+      const menuWorkDays = document.getElementById("menuWorkDays");
+      const menuBreakEnabled = document.getElementById("menuBreakEnabled");
+      const menuBreakStart = document.getElementById("menuBreakStart");
+      const menuBreakEnd = document.getElementById("menuBreakEnd");
+      const menuBreakDays = document.getElementById("menuBreakDays");
+      const menuScheduleApply = document.getElementById("menuScheduleApply");
+      const menuScheduleStatus = document.getElementById("menuScheduleStatus");
+      const menuTourCity = document.getElementById("menuTourCity");
+      const menuTourStart = document.getElementById("menuTourStart");
+      const menuTourEnd = document.getElementById("menuTourEnd");
+      const menuTourFirstStart = document.getElementById("menuTourFirstStart");
+      const menuTourLastEnd = document.getElementById("menuTourLastEnd");
+      const menuTourAddBtn = document.getElementById("menuTourAddBtn");
+      const menuTourStatus = document.getElementById("menuTourStatus");
+      const serviceDurationList = document.getElementById("serviceDurationList");
+      const servicePackageList = document.getElementById("servicePackageList");
+      const serviceAddonList = document.getElementById("serviceAddonList");
+      const addServiceDurationBtn = document.getElementById("addServiceDuration");
+      const addServicePackageBtn = document.getElementById("addServicePackage");
+      const addServiceAddonBtn = document.getElementById("addServiceAddon");
+      const saveServicesConfigBtn = document.getElementById("saveServicesConfig");
+      const servicesConfigStatus = document.getElementById("servicesConfigStatus");
       const languageButtons = document.querySelectorAll(".age-language [data-language-choice]");
       const panelButtons = document.querySelectorAll("[data-admin-panel]");
       const panelSections = document.querySelectorAll("[data-admin-panel-group]");
       const LANGUAGE_KEY = "hvh_inside_language";
       const PANEL_STORAGE_KEY = "hvh_admin_panel";
+      const ACCOUNT_CENTER_KEY = "hvh_admin_account_center";
+      const SCHEDULE_MENU_KEY = "hvh_admin_schedule_menu";
+      const SERVICES_MENU_KEY = "hvh_admin_services_menu";
+      const NOTIFICATIONS_READ_KEY = "hvh_admin_read_notifications";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
       let currentLanguage = "en";
       const I18N = {
@@ -1722,7 +2179,7 @@ require_admin_ui();
           save_city_schedule: "Save city schedule",
           clear_template_blocks: "Clear template blocks",
           eye_candy_title: "Eye candy",
-          eye_candy_hint: "Use full paths like /photos/heidi15.jpg and short alt text.",
+          eye_candy_hint: "Use full paths like /photos/heidi15.jpg and a short photo name.",
           add_eye_candy: "Add eye candy",
           save_eye_candy: "Save eye candy",
           requests_title: "Requests",
@@ -1745,7 +2202,7 @@ require_admin_ui();
           city_field: "City",
           city_name_placeholder: "City name",
           photo_path: "Photo path",
-          alt_text: "Alt text",
+          alt_text: "Photo name",
           short_description: "Short description",
           preview: "Preview",
           refresh: "Refresh",
@@ -1882,7 +2339,7 @@ require_admin_ui();
           save_city_schedule: "Sauvegarder le planning ville",
           clear_template_blocks: "Effacer les blocs modele",
           eye_candy_title: "Eye candy",
-          eye_candy_hint: "Utilisez des chemins complets comme /photos/heidi15.jpg et un court texte alt.",
+          eye_candy_hint: "Utilisez des chemins complets comme /photos/heidi15.jpg et un court nom de photo.",
           add_eye_candy: "Ajouter eye candy",
           save_eye_candy: "Sauvegarder eye candy",
           requests_title: "Demandes",
@@ -1905,7 +2362,7 @@ require_admin_ui();
           city_field: "Ville",
           city_name_placeholder: "Nom de ville",
           photo_path: "Chemin photo",
-          alt_text: "Texte alt",
+          alt_text: "Nom de la photo",
           short_description: "Description courte",
           preview: "Apercu",
           refresh: "Actualiser",
@@ -2077,6 +2534,374 @@ require_admin_ui();
         } catch (_error) {}
         return "schedule";
       };
+      const DAY_OPTIONS = [
+        { value: 0, label: "Sun" },
+        { value: 1, label: "Mon" },
+        { value: 2, label: "Tue" },
+        { value: 3, label: "Wed" },
+        { value: 4, label: "Thu" },
+        { value: 5, label: "Fri" },
+        { value: 6, label: "Sat" },
+      ];
+
+      const readStoredObject = (key, fallback = {}) => {
+        try {
+          const raw = window.localStorage.getItem(key);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === "object" ? parsed : fallback;
+        } catch (_error) {
+          return fallback;
+        }
+      };
+
+      const writeStoredObject = (key, value) => {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+          return true;
+        } catch (_error) {
+          return false;
+        }
+      };
+
+      const createDayChoices = (target) => {
+        if (!target) return;
+        target.innerHTML = DAY_OPTIONS.map(
+          (day) =>
+            `<label><input type="checkbox" value="${day.value}" /> ${day.label}</label>`
+        ).join("");
+      };
+
+      const getDayChoices = (target) => {
+        if (!target) return [];
+        return Array.from(target.querySelectorAll('input[type="checkbox"]:checked'))
+          .map((input) => Number(input.value))
+          .filter((value) => !Number.isNaN(value))
+          .sort((a, b) => a - b);
+      };
+
+      const setDayChoices = (target, values) => {
+        if (!target) return;
+        const allowed = new Set((Array.isArray(values) ? values : []).map((v) => Number(v)));
+        target.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+          input.checked = allowed.has(Number(input.value));
+        });
+      };
+
+      const closeAdminMenu = () => {
+        if (!adminMenuDrawer || !adminMenuBackdrop) return;
+        adminMenuDrawer.classList.remove("open");
+        adminMenuDrawer.setAttribute("aria-hidden", "true");
+        adminMenuBackdrop.hidden = true;
+      };
+
+      const openAdminMenu = () => {
+        if (!adminMenuDrawer || !adminMenuBackdrop) return;
+        adminMenuDrawer.classList.add("open");
+        adminMenuDrawer.setAttribute("aria-hidden", "false");
+        adminMenuBackdrop.hidden = false;
+      };
+
+      const readAccountCenter = () =>
+        readStoredObject(ACCOUNT_CENTER_KEY, {
+          profilePic: "",
+          name: "",
+          email: "",
+          phone: "",
+          language: "en",
+        });
+
+      const applyAccountCenterToUi = () => {
+        const data = readAccountCenter();
+        if (accountNameInput) accountNameInput.value = data.name || "";
+        if (accountEmailInput) accountEmailInput.value = data.email || "";
+        if (accountPhoneInput) accountPhoneInput.value = data.phone || "";
+        if (accountLanguageSelect) accountLanguageSelect.value = data.language || "en";
+        if (accountPhotoPreview) {
+          if (data.profilePic) {
+            accountPhotoPreview.src = data.profilePic;
+            accountPhotoPreview.hidden = false;
+          } else {
+            accountPhotoPreview.hidden = true;
+            accountPhotoPreview.removeAttribute("src");
+          }
+        }
+      };
+
+      const saveAccountCenter = () => {
+        const current = readAccountCenter();
+        const nextPassword = String(accountPasswordInput?.value || "").trim();
+        const data = {
+          ...current,
+          name: String(accountNameInput?.value || "").trim(),
+          email: String(accountEmailInput?.value || "").trim(),
+          phone: String(accountPhoneInput?.value || "").trim(),
+          language: String(accountLanguageSelect?.value || "en").trim().toLowerCase() === "fr" ? "fr" : "en",
+        };
+        const ok = writeStoredObject(ACCOUNT_CENTER_KEY, data);
+        if (accountCenterStatus) {
+          if (!ok) {
+            accountCenterStatus.textContent = "Could not save account center.";
+          } else if (nextPassword) {
+            accountCenterStatus.textContent = "Profile saved. Password field captured for next auth step.";
+          } else {
+            accountCenterStatus.textContent = "Account center saved.";
+          }
+        }
+        if (accountPasswordInput) accountPasswordInput.value = "";
+        if (data.language && SUPPORTED_LANGUAGES.includes(data.language)) {
+          applyLanguage(data.language, true);
+        }
+      };
+
+      const readScheduleMenuConfig = () =>
+        readStoredObject(SCHEDULE_MENU_KEY, {
+          workAllDay: false,
+          workStart: "10:00",
+          workEnd: "18:00",
+          workDays: [1, 2, 3, 4, 5],
+          breakEnabled: false,
+          breakStart: "14:00",
+          breakEnd: "15:00",
+          breakDays: [1, 2, 3, 4, 5],
+        });
+
+      const applyScheduleMenuConfigToUi = () => {
+        const data = readScheduleMenuConfig();
+        if (menuWorkAllDay) menuWorkAllDay.checked = !!data.workAllDay;
+        if (menuWorkStart) menuWorkStart.value = data.workStart || "10:00";
+        if (menuWorkEnd) menuWorkEnd.value = data.workEnd || "18:00";
+        if (menuBreakEnabled) menuBreakEnabled.checked = !!data.breakEnabled;
+        if (menuBreakStart) menuBreakStart.value = data.breakStart || "14:00";
+        if (menuBreakEnd) menuBreakEnd.value = data.breakEnd || "15:00";
+        setDayChoices(menuWorkDays, data.workDays);
+        setDayChoices(menuBreakDays, data.breakDays);
+      };
+
+      const getDateKeysByWeekdays = (startKey, endKey, weekdays) => {
+        const daySet = new Set((Array.isArray(weekdays) ? weekdays : []).map((v) => Number(v)));
+        return getDateRangeKeys(startKey, endKey).filter((dateKey) => {
+          const date = parseDateKey(dateKey);
+          return date ? daySet.has(date.getUTCDay()) : false;
+        });
+      };
+
+      const applyScheduleFromMenu = async () => {
+        if (!menuScheduleStatus) return;
+        menuScheduleStatus.textContent = "";
+        const workAllDay = !!menuWorkAllDay?.checked;
+        const workStart = String(menuWorkStart?.value || "").trim();
+        const workEnd = String(menuWorkEnd?.value || "").trim();
+        const workDays = getDayChoices(menuWorkDays);
+        const breakEnabled = !!menuBreakEnabled?.checked;
+        const breakStart = String(menuBreakStart?.value || "").trim();
+        const breakEnd = String(menuBreakEnd?.value || "").trim();
+        const breakDays = getDayChoices(menuBreakDays);
+
+        if (!workDays.length) {
+          menuScheduleStatus.textContent = "Pick at least one working day.";
+          return;
+        }
+        if (!workAllDay) {
+          const from = timeToMinutes(workStart);
+          const to = timeToMinutes(workEnd);
+          if (from === null || to === null || to <= from) {
+            menuScheduleStatus.textContent = "Working end time must be after start time.";
+            return;
+          }
+        }
+        if (breakEnabled) {
+          const from = timeToMinutes(breakStart);
+          const to = timeToMinutes(breakEnd);
+          if (from === null || to === null || to <= from) {
+            menuScheduleStatus.textContent = "Break end time must be after break start time.";
+            return;
+          }
+          if (!breakDays.length) {
+            menuScheduleStatus.textContent = "Pick at least one break day.";
+            return;
+          }
+        }
+
+        const payload = {
+          workAllDay,
+          workStart: workAllDay ? "00:00" : workStart,
+          workEnd: workAllDay ? "23:59" : workEnd,
+          workDays,
+          breakEnabled,
+          breakStart,
+          breakEnd,
+          breakDays,
+        };
+        writeStoredObject(SCHEDULE_MENU_KEY, payload);
+
+        citySchedules = citySchedules.map((schedule) =>
+          normalizeCitySchedule({
+            ...schedule,
+            ready_start: payload.workStart,
+            leave_day_end: payload.workEnd,
+            has_break: breakEnabled,
+            break_start: breakStart,
+            break_end: breakEnd,
+            break_days: breakEnabled ? getDateKeysByWeekdays(schedule.start, schedule.end, breakDays) : [],
+          })
+        );
+        renderCityScheduleWizard();
+
+        const offDays = DAY_OPTIONS.map((day) => day.value).filter((day) => !workDays.includes(day));
+        const offDayBlocks = offDays.map((day) => ({
+          days: [day],
+          all_day: true,
+          start: "",
+          end: "",
+          reason: "Off day",
+        }));
+        const breakBlocks = breakEnabled
+          ? breakDays.map((day) => ({
+              days: [day],
+              all_day: false,
+              start: breakStart,
+              end: breakEnd,
+              reason: "Break",
+            }))
+          : [];
+        recurringBlocks = [...offDayBlocks, ...breakBlocks];
+        renderRecurringList();
+        renderCalendarView();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
+        await saveAvailability();
+        menuScheduleStatus.textContent = "Schedule applied.";
+      };
+
+      const createMenuListRow = (container, firstPlaceholder, secondPlaceholder = "Price", firstValue = "", secondValue = "") => {
+        if (!container) return null;
+        const row = document.createElement("div");
+        row.className = "menu-list-row";
+        row.innerHTML = `
+          <input type="text" data-first placeholder="${firstPlaceholder}" value="${String(firstValue || "")}" />
+          <input type="number" data-second placeholder="${secondPlaceholder}" value="${String(secondValue || "")}" min="0" step="1" />
+          <button class="btn ghost" type="button" data-remove-row>Remove</button>
+        `;
+        const removeBtn = row.querySelector("[data-remove-row]");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", () => row.remove());
+        }
+        container.appendChild(row);
+        return row;
+      };
+
+      const readMenuRows = (container) => {
+        if (!container) return [];
+        return Array.from(container.querySelectorAll(".menu-list-row"))
+          .map((row) => {
+            const first = String(row.querySelector("[data-first]")?.value || "").trim();
+            const second = Number(row.querySelector("[data-second]")?.value || 0);
+            return {
+              first,
+              second: Number.isFinite(second) ? second : 0,
+            };
+          })
+          .filter((item) => item.first);
+      };
+
+      const readServicesConfig = () =>
+        readStoredObject(SERVICES_MENU_KEY, {
+          durations: [],
+          packages: [],
+          addons: [],
+        });
+
+      const applyServicesConfigToUi = () => {
+        const data = readServicesConfig();
+        if (serviceDurationList) serviceDurationList.innerHTML = "";
+        if (servicePackageList) servicePackageList.innerHTML = "";
+        if (serviceAddonList) serviceAddonList.innerHTML = "";
+        (Array.isArray(data.durations) ? data.durations : []).forEach((item) =>
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price", item.first, item.second)
+        );
+        (Array.isArray(data.packages) ? data.packages : []).forEach((item) =>
+          createMenuListRow(servicePackageList, "Package entries (comma)", "Price", item.first, item.second)
+        );
+        (Array.isArray(data.addons) ? data.addons : []).forEach((item) =>
+          createMenuListRow(serviceAddonList, "Addon item", "Price", item.first, item.second)
+        );
+        if (!serviceDurationList?.children.length) {
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
+        }
+        if (!servicePackageList?.children.length) {
+          createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
+        }
+        if (!serviceAddonList?.children.length) {
+          createMenuListRow(serviceAddonList, "Addon item", "Price");
+        }
+      };
+
+      const saveServicesConfig = () => {
+        const data = {
+          durations: readMenuRows(serviceDurationList),
+          packages: readMenuRows(servicePackageList),
+          addons: readMenuRows(serviceAddonList),
+        };
+        const ok = writeStoredObject(SERVICES_MENU_KEY, data);
+        if (servicesConfigStatus) {
+          servicesConfigStatus.textContent = ok ? "Services saved." : "Could not save services.";
+        }
+      };
+
+      const getReadNotificationIds = () => {
+        const data = readStoredObject(NOTIFICATIONS_READ_KEY, { ids: [] });
+        return new Set(Array.isArray(data.ids) ? data.ids.map((value) => String(value)) : []);
+      };
+
+      const setReadNotificationIds = (set) => {
+        writeStoredObject(NOTIFICATIONS_READ_KEY, { ids: Array.from(set).slice(-800) });
+      };
+
+      const requestNotificationId = (item) => {
+        const id = String(item?.id || "").trim();
+        if (id) return id;
+        return `${item?.email || ""}|${item?.preferred_date || ""}|${item?.preferred_time || ""}|${item?.created_at || ""}`;
+      };
+
+      const renderNotifications = (requests) => {
+        if (!notifList || !notifUnreadCount) return;
+        const active = (Array.isArray(requests) ? requests : [])
+          .filter((item) => {
+            const raw = String(item?.status || "pending").toLowerCase();
+            return raw !== "declined" && raw !== "cancelled";
+          })
+          .sort((a, b) => String(b?.created_at || "").localeCompare(String(a?.created_at || "")));
+        const readIds = getReadNotificationIds();
+        const unread = active.filter((item) => !readIds.has(requestNotificationId(item)));
+        notifUnreadCount.textContent = String(unread.length);
+        notifUnreadCount.classList.toggle("hidden", unread.length === 0);
+        if (!unread.length) {
+          notifList.innerHTML = `<p class="notif-empty">No new notifications.</p>`;
+          return;
+        }
+        notifList.innerHTML = "";
+        unread.forEach((item) => {
+          const id = requestNotificationId(item);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "notif-item";
+          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} • ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
+          button.addEventListener("click", () => {
+            const latestRead = getReadNotificationIds();
+            latestRead.add(id);
+            setReadNotificationIds(latestRead);
+            setAdminPanel("clients", true);
+            const cards = Array.from(requestsList.querySelectorAll("[data-request-id]"));
+            const match = cards.find((card) => card.getAttribute("data-request-id") === String(item.id || ""));
+            if (match) {
+              match.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            renderNotifications(active);
+          });
+          notifList.appendChild(button);
+        });
+      };
+
       const applyLanguage = async (lang, persist = true) => {
         currentLanguage = SUPPORTED_LANGUAGES.includes(lang) ? lang : "en";
         document.documentElement.setAttribute("lang", currentLanguage);
@@ -2113,6 +2938,8 @@ require_admin_ui();
         setTextById("gallerySectionHint", t("eye_candy_hint"));
         setTextById("addGalleryRow", t("add_eye_candy"));
         setTextById("saveGallery", t("save_eye_candy"));
+        setTextById("addPhotoRow", t("add_eye_candy"));
+        setTextById("savePhotoConfig", t("save_eye_candy"));
         setTextById("requestsSectionTitle", t("requests_title"));
         setTextById("refreshRequests", t("refresh"));
         setTextById("legendBlockedLabel", t("legend_blocked"));
@@ -2149,6 +2976,9 @@ require_admin_ui();
         languageButtons.forEach((button) => {
           button.setAttribute("aria-pressed", button.dataset.languageChoice === currentLanguage ? "true" : "false");
         });
+        if (accountLanguageSelect) {
+          accountLanguageSelect.value = currentLanguage;
+        }
 
         renderTourSchedule(touringStops);
         renderGallery(readGalleryFromUI().length ? readGalleryFromUI() : []);
@@ -2170,6 +3000,144 @@ require_admin_ui();
 
       if (statusFilter) {
         statusFilter.value = "pending";
+      }
+
+      if (adminMenuToggleBtn) {
+        adminMenuToggleBtn.addEventListener("click", () => openAdminMenu());
+      }
+      if (adminMenuCloseBtn) {
+        adminMenuCloseBtn.addEventListener("click", () => closeAdminMenu());
+      }
+      if (adminMenuBackdrop) {
+        adminMenuBackdrop.addEventListener("click", () => closeAdminMenu());
+      }
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && adminMenuDrawer?.classList.contains("open")) {
+          closeAdminMenu();
+        }
+      });
+
+      if (notifToggleBtn && notifPanel) {
+        notifToggleBtn.addEventListener("click", () => {
+          notifPanel.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (
+            target instanceof Node &&
+            !notifPanel.contains(target) &&
+            !notifToggleBtn.contains(target)
+          ) {
+            notifPanel.classList.add("hidden");
+          }
+        });
+      }
+
+      if (accountPhotoInput) {
+        accountPhotoInput.addEventListener("change", () => {
+          const file = accountPhotoInput.files && accountPhotoInput.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = String(reader.result || "");
+            if (accountPhotoPreview && dataUrl) {
+              accountPhotoPreview.src = dataUrl;
+              accountPhotoPreview.hidden = false;
+            }
+            const current = readAccountCenter();
+            writeStoredObject(ACCOUNT_CENTER_KEY, { ...current, profilePic: dataUrl });
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      if (saveAccountCenterBtn) {
+        saveAccountCenterBtn.addEventListener("click", saveAccountCenter);
+      }
+      if (accountLanguageSelect) {
+        accountLanguageSelect.addEventListener("change", () => {
+          const language = accountLanguageSelect.value === "fr" ? "fr" : "en";
+          applyLanguage(language, true);
+        });
+      }
+
+      if (addServiceDurationBtn) {
+        addServiceDurationBtn.addEventListener("click", () => {
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
+        });
+      }
+      if (addServicePackageBtn) {
+        addServicePackageBtn.addEventListener("click", () => {
+          createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
+        });
+      }
+      if (addServiceAddonBtn) {
+        addServiceAddonBtn.addEventListener("click", () => {
+          createMenuListRow(serviceAddonList, "Addon item", "Price");
+        });
+      }
+      if (saveServicesConfigBtn) {
+        saveServicesConfigBtn.addEventListener("click", saveServicesConfig);
+      }
+
+      if (menuScheduleApply) {
+        menuScheduleApply.addEventListener("click", () => {
+          applyScheduleFromMenu();
+        });
+      }
+
+      if (menuTourAddBtn) {
+        menuTourAddBtn.addEventListener("click", async () => {
+          if (!menuTourStatus) return;
+          menuTourStatus.textContent = "";
+          const city = String(menuTourCity?.value || "").trim();
+          const start = normalizeUiDate(menuTourStart?.value || "");
+          const end = normalizeUiDate(menuTourEnd?.value || "");
+          const firstStart = String(menuTourFirstStart?.value || "00:00").trim() || "00:00";
+          const lastEnd = String(menuTourLastEnd?.value || "23:59").trim() || "23:59";
+          if (!city || !start || !end) {
+            menuTourStatus.textContent = "City and date range are required.";
+            return;
+          }
+          if (start > end) {
+            menuTourStatus.textContent = "End date must be after start date.";
+            return;
+          }
+          if (!isValidTime(firstStart) || !isValidTime(lastEnd)) {
+            menuTourStatus.textContent = "Use valid start/end times.";
+            return;
+          }
+          if (!touringStops.length) {
+            await loadTourSchedule();
+          }
+          const current = normalizeTouringEntries(touringStops);
+          const ok = await saveTouringEntries([...current, { type: "tour", city, start, end }], menuTourStatus);
+          if (!ok) return;
+          const scheduleId = makeScheduleId({ city, start, end });
+          const index = citySchedules.findIndex((entry) => entry.id === scheduleId);
+          const base = index >= 0 ? citySchedules[index] : normalizeCitySchedule({ city, start, end });
+          const next = normalizeCitySchedule({
+            ...base,
+            city,
+            start,
+            end,
+            ready_start: firstStart,
+            leave_day_end: lastEnd,
+          });
+          if (index >= 0) {
+            citySchedules[index] = next;
+          } else {
+            citySchedules.push(next);
+          }
+          renderCityScheduleWizard();
+          applyCityTemplateBlocks({ announce: false });
+          renderBlockedSlots();
+          renderCalendarView();
+          await saveAvailability();
+          menuTourStatus.textContent = "Touring stop added.";
+          if (menuTourCity) menuTourCity.value = "";
+          if (menuTourStart) menuTourStart.value = "";
+          if (menuTourEnd) menuTourEnd.value = "";
+        });
       }
 
       const getKey = () => ADMIN_KEY;
@@ -4075,6 +5043,16 @@ require_admin_ui();
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "load");
           renderGallery(data.items || []);
+          if (photoDisplayModeSelect) {
+            photoDisplayModeSelect.value = ["next", "album", "carousel"].includes(String(data.display_mode || ""))
+              ? String(data.display_mode)
+              : "next";
+          }
+          if (photoCarouselSecondsInput) {
+            const seconds = Number(data.carousel_seconds || 5);
+            photoCarouselSecondsInput.value = Number.isFinite(seconds) ? String(Math.min(30, Math.max(2, seconds))) : "5";
+          }
+          updatePhotoModeUi();
         } catch (_error) {
           galleryStatus.textContent = t("failed_load_eye_candy");
         }
@@ -4093,6 +5071,13 @@ require_admin_ui();
           galleryStatus.textContent = t("add_photo_min");
           return;
         }
+        const displayMode = photoDisplayModeSelect?.value || "next";
+        let carouselSeconds = Number(photoCarouselSecondsInput?.value || 5);
+        if (!Number.isFinite(carouselSeconds)) carouselSeconds = 5;
+        carouselSeconds = Math.min(30, Math.max(2, Math.round(carouselSeconds)));
+        if (photoCarouselSecondsInput) {
+          photoCarouselSecondsInput.value = String(carouselSeconds);
+        }
         try {
           const response = await fetch("../api/admin/gallery.php", {
             method: "POST",
@@ -4100,15 +5085,34 @@ require_admin_ui();
               "Content-Type": "application/json",
               "X-Admin-Key": key,
             },
-            body: JSON.stringify({ items }),
+            body: JSON.stringify({
+              items,
+              display_mode: displayMode,
+              carousel_seconds: carouselSeconds,
+            }),
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || "save");
           renderGallery(result.items || items);
+          if (photoDisplayModeSelect) {
+            photoDisplayModeSelect.value = result.display_mode || displayMode;
+          }
+          if (photoCarouselSecondsInput) {
+            photoCarouselSecondsInput.value = String(
+              Math.min(30, Math.max(2, Number(result.carousel_seconds || carouselSeconds)))
+            );
+          }
+          updatePhotoModeUi();
           galleryStatus.textContent = t("eye_candy_saved");
         } catch (_error) {
           galleryStatus.textContent = t("failed_save_eye_candy");
         }
+      };
+
+      const updatePhotoModeUi = () => {
+        if (!photoCarouselSecondsInput) return;
+        const mode = String(photoDisplayModeSelect?.value || "next").trim().toLowerCase();
+        photoCarouselSecondsInput.disabled = mode !== "carousel";
       };
 
 
@@ -4591,7 +5595,29 @@ require_admin_ui();
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "load");
-          const requests = Array.isArray(data.requests) ? data.requests : [];
+          const sourceRequests = Array.isArray(data.requests) ? data.requests : [];
+          const requestsByKey = new Map();
+          sourceRequests.forEach((item) => {
+            if (!item || typeof item !== "object") return;
+            const id = String(item.id || "").trim();
+            const fallbackKey = [
+              String(item.email || "").trim().toLowerCase(),
+              String(item.phone || "").replace(/\D+/g, ""),
+              String(item.preferred_date || "").trim(),
+              String(item.preferred_time || "").trim(),
+              String(item.city || "").trim().toLowerCase(),
+              String(item.name || "").trim().toLowerCase(),
+            ].join("|");
+            const key = id ? `id:${id}` : `fallback:${fallbackKey}`;
+            const current = requestsByKey.get(key);
+            const nextStamp = String(item.updated_at || item.created_at || "");
+            const currentStamp = current ? String(current.updated_at || current.created_at || "") : "";
+            if (!current || nextStamp >= currentStamp) {
+              requestsByKey.set(key, item);
+            }
+          });
+          const requests = Array.from(requestsByKey.values());
+          renderNotifications(requests);
           maybeSlots = buildMaybeSlotsFromRequests(requests);
           renderCalendarView();
           const filterValue = statusFilter.value;
@@ -4615,6 +5641,7 @@ require_admin_ui();
               const { status, paymentStatus } = normalizeStatus(item);
               const card = document.createElement("div");
               card.className = "request-card";
+              card.setAttribute("data-request-id", String(item.id || ""));
               const badgeClass = `badge ${status}`;
               const followupCities = formatArray(item.followup_cities);
               const percentLabel = item.deposit_percent ? `${item.deposit_percent}%` : "";
@@ -4979,6 +6006,9 @@ require_admin_ui();
       if (saveGalleryBtn) {
         saveGalleryBtn.addEventListener("click", saveGallery);
       }
+      if (photoDisplayModeSelect) {
+        photoDisplayModeSelect.addEventListener("change", updatePhotoModeUi);
+      }
 
       if (toggleBlockedListBtn) {
         setBlockedListVisible(false);
@@ -4995,6 +6025,16 @@ require_admin_ui();
       currentLanguage = initialLanguage;
       document.documentElement.setAttribute("lang", currentLanguage);
       setAdminPanel(getStoredAdminPanel(), false);
+      createDayChoices(menuWorkDays);
+      createDayChoices(menuBreakDays);
+      applyAccountCenterToUi();
+      applyScheduleMenuConfigToUi();
+      applyServicesConfigToUi();
+      updatePhotoModeUi();
+      closeAdminMenu();
+      if (notifPanel) {
+        notifPanel.classList.add("hidden");
+      }
 
       setCalendarView("week");
       populateTimezones();

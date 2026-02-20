@@ -205,7 +205,7 @@ function append_calendar_links_lines(string &$body, array $calendarLinks): void
         $body .= "- Samsung / Microsoft Calendar: " . $calendarLinks['outlook'] . "\n";
     }
     if (!empty($calendarLinks['ics'])) {
-        $body .= "- Apple Calendar (ICS): " . $calendarLinks['ics'] . "\n";
+        $body .= "- iCloud / Apple Calendar (ICS): " . $calendarLinks['ics'] . "\n";
     }
     $body .= "\n";
 }

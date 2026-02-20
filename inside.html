@@ -1424,6 +1424,15 @@
         margin-right: auto;
       }
 
+      .section-acronyms {
+        margin: 4px 0 0;
+        color: rgba(248, 255, 248, 0.84);
+        text-align: center;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+
       .gate-required {
         display: block;
       }
@@ -4331,9 +4340,9 @@
 
               <div class="menu-grid" id="menu-limited" hidden>
                 <a class="menu-link" href="#touring">touring &amp; schedule</a>
-                <button class="menu-link menu-toggle" type="button" data-toggle-section="rates-services" aria-expanded="false">
+                <a class="menu-link" href="#rates-services">
                   rates &amp; services
-                </button>
+                </a>
                 <button class="menu-link menu-toggle" type="button" data-toggle-section="conditions" aria-expanded="false">
                   conditions
                 </button>
@@ -4348,9 +4357,9 @@
               </div>
               <div class="menu-grid" id="menu-full">
                 <a class="menu-link" href="#touring">touring &amp; schedule</a>
-                <button class="menu-link menu-toggle" type="button" data-toggle-section="rates-services" aria-expanded="false">
+                <a class="menu-link" href="#rates-services">
                   rates &amp; services
-                </button>
+                </a>
                 <button class="menu-link menu-toggle" type="button" data-toggle-section="conditions" aria-expanded="false">
                   conditions
                 </button>
@@ -4383,6 +4392,7 @@
               <p class="section-intro">
                 full menu, currency selector, and service details in one place.
               </p>
+              <p id="rates-acronyms" class="section-acronyms">gfe · pse (+100) · filming (+500)</p>
             </div>
             <div class="embed-frame">
               <iframe
@@ -4392,9 +4402,6 @@
                 data-embed-id="rates-services"
                 scrolling="no"
               ></iframe>
-            </div>
-            <div class="menu-dropdown-close">
-              <button type="button" class="menu-collapse" data-collapse="rates-services">close</button>
             </div>
           </section>
 
@@ -4834,6 +4841,7 @@
       const HTML_TRANSLATION_KEYS = new Set([
         "touring.cities",
         "rates.intro",
+        "rates.acronyms",
         "rates.footer",
         "conditions.deposit",
         "conditions.fast",
@@ -4858,8 +4866,7 @@
         "menu.subtitle": () => [document.querySelector(".menu-subtitle")],
         "menu.link.touring": () => Array.from(document.querySelectorAll('a.menu-link[href="#touring"]')),
         "menu.link.booking": () => Array.from(document.querySelectorAll('a.menu-link[href="#booking"]')),
-        "menu.link.rates": () =>
-          Array.from(document.querySelectorAll('[data-toggle-section="rates-services"]')),
+        "menu.link.rates": () => Array.from(document.querySelectorAll('a.menu-link[href="#rates-services"]')),
         "menu.link.conditions": () =>
           Array.from(document.querySelectorAll('[data-toggle-section="conditions"]')),
         "menu.link.spoil": () =>
@@ -4875,6 +4882,7 @@
         "touring.note": () => [document.querySelector(".touring-note")],
         "rates.title": () => [document.getElementById("rates-services-title")],
         "rates.intro": () => [document.querySelector("#rates-services .section-intro")],
+        "rates.acronyms": () => [document.getElementById("rates-acronyms")],
         "rates.currencyNote": () => [document.getElementById("rates-currency-note")],
         "rates.footer": () => [document.querySelector(".section-footer strong")],
         "services.title": () => [document.getElementById("services-title")],
@@ -4970,6 +4978,7 @@
           "touring.note": "",
           "rates.title": "Rates & services",
           "rates.intro": "Full menu, currency selector, and service details in one place.",
+          "rates.acronyms": "GFE · PSE (+100) · Filming (+500)",
           "rates.currencyNote": "Rates display in CAD by default.",
           "rates.footer": "Available &amp; negotiable for longer appointments.",
           "rates.note.native": "Showing native rates in {currency}{approx}.",
@@ -5079,6 +5088,7 @@
           "touring.note": "",
           "rates.title": "Tarifs & services",
           "rates.intro": "Menu complet, selection de devise et details des services au meme endroit.",
+          "rates.acronyms": "GFE · PSE (+100) · Filming (+500)",
           "rates.currencyNote": "Tarifs affichés en CAD par défaut.",
           "rates.footer": "Disponible et negociable pour les rendez-vous plus longs.",
           "rates.note.native": "Affichage des tarifs natifs en {currency}{approx}.",
@@ -5434,6 +5444,14 @@
 
         ratesSection.removeAttribute("hidden");
         touringSection.insertAdjacentElement("afterend", ratesSection);
+
+        // Rates & services stays permanently visible; only acronym panel toggles inside rates-menu.html.
+        const observer = new MutationObserver(() => {
+          if (ratesSection.hasAttribute("hidden")) {
+            ratesSection.removeAttribute("hidden");
+          }
+        });
+        observer.observe(ratesSection, { attributes: true, attributeFilter: ["hidden"] });
       })();
 
       (function setupMenuToggles() {

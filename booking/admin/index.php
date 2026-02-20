@@ -257,7 +257,7 @@ require_admin_ui();
       header {
         max-width: 1100px;
         margin: 0 auto;
-        padding: 48px clamp(150px, 16vw, 220px) 24px 24px;
+        padding: 48px 24px 24px 24px;
       }
 
       .header-top {
@@ -272,6 +272,8 @@ require_admin_ui();
         display: flex;
         align-items: center;
         gap: 10px;
+        margin-left: auto;
+        justify-content: flex-end;
       }
 
       .icon-menu-btn {
@@ -424,6 +426,44 @@ require_admin_ui();
         padding: 12px;
         margin-bottom: 12px;
         background: #fff9fd;
+      }
+
+      .menu-section-list {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .menu-section-btn {
+        width: 100%;
+        text-align: left;
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        background: #fff;
+        border-radius: 12px;
+        color: #6f1a41;
+        padding: 12px 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .menu-section-btn:hover,
+      .menu-section-btn:focus-visible {
+        border-color: rgba(255, 0, 110, 0.55);
+        outline: none;
+      }
+
+      .menu-page-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .menu-page-head h3 {
+        margin: 0;
       }
 
       .menu-group h3 {
@@ -1402,11 +1442,15 @@ require_admin_ui();
 
         .header-top {
           flex-direction: column;
-          align-items: flex-start;
+          align-items: stretch;
         }
 
         header {
           padding-right: 24px;
+        }
+
+        .header-actions {
+          align-self: flex-end;
         }
 
         .folder-button {
@@ -1595,8 +1639,19 @@ require_admin_ui();
         <button class="btn ghost" id="adminMenuCloseBtn" type="button">Close</button>
       </div>
 
-      <section class="menu-group">
-        <h3>Account center</h3>
+      <div id="adminMenuSectionList" class="menu-section-list">
+        <button class="menu-section-btn" type="button" data-menu-open="account">Account center</button>
+        <button class="menu-section-btn" type="button" data-menu-open="schedule">Schedule</button>
+        <button class="menu-section-btn" type="button" data-menu-open="touring">Touring</button>
+        <button class="menu-section-btn" type="button" data-menu-open="services">Services</button>
+        <button class="menu-section-btn" type="button" data-menu-open="photos">Photos</button>
+      </div>
+
+      <section class="menu-group hidden" data-menu-page="account" data-menu-title="Account center">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Account center</h3>
+        </div>
         <div class="menu-inline-grid">
           <div class="field">
             <label for="accountPhoto">Upload profile pic</label>
@@ -1664,8 +1719,11 @@ require_admin_ui();
         </div>
       </section>
 
-      <section class="menu-group">
-        <h3>Schedule</h3>
+      <section class="menu-group hidden" data-menu-page="schedule" data-menu-title="Schedule">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Schedule</h3>
+        </div>
         <div class="menu-inline-grid">
           <div class="field">
             <label><input id="menuWorkAllDay" type="checkbox" /> Working all day</label>
@@ -1706,8 +1764,11 @@ require_admin_ui();
         </div>
       </section>
 
-      <section class="menu-group">
-        <h3>Touring</h3>
+      <section class="menu-group hidden" data-menu-page="touring" data-menu-title="Touring">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Touring</h3>
+        </div>
         <div class="menu-inline-grid">
           <div class="field">
             <label for="menuTourCity">Add city</label>
@@ -1736,8 +1797,11 @@ require_admin_ui();
         </div>
       </section>
 
-      <section class="menu-group">
-        <h3>Services</h3>
+      <section class="menu-group hidden" data-menu-page="services" data-menu-title="Services">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Services</h3>
+        </div>
         <p class="hint">This saves admin service presets so you can organize prices quickly.</p>
         <div class="field">
           <label>Price per duration</label>
@@ -1760,8 +1824,11 @@ require_admin_ui();
         </div>
       </section>
 
-      <section class="menu-group">
-        <h3>Photos</h3>
+      <section class="menu-group hidden" data-menu-page="photos" data-menu-title="Photos">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Photos</h3>
+        </div>
         <div class="menu-inline-grid">
           <div class="field">
             <label for="photoDisplayMode">Display choice</label>
@@ -2112,6 +2179,11 @@ require_admin_ui();
       const adminMenuDrawer = document.getElementById("adminMenuDrawer");
       const adminMenuToggleBtn = document.getElementById("adminMenuToggleBtn");
       const adminMenuCloseBtn = document.getElementById("adminMenuCloseBtn");
+      const adminMenuTitle = document.querySelector(".admin-menu-title");
+      const adminMenuSectionList = document.getElementById("adminMenuSectionList");
+      const adminMenuPages = document.querySelectorAll("[data-menu-page]");
+      const adminMenuOpenButtons = document.querySelectorAll("[data-menu-open]");
+      const adminMenuBackButtons = document.querySelectorAll("[data-menu-back]");
       const notifToggleBtn = document.getElementById("notifToggleBtn");
       const notifPanel = document.getElementById("notifPanel");
       const notifList = document.getElementById("notifList");
@@ -2593,6 +2665,36 @@ require_admin_ui();
         adminMenuDrawer.classList.remove("open");
         adminMenuDrawer.setAttribute("aria-hidden", "true");
         adminMenuBackdrop.hidden = true;
+        showAdminMenuHome();
+      };
+
+      const showAdminMenuHome = () => {
+        if (adminMenuSectionList) {
+          adminMenuSectionList.classList.remove("hidden");
+        }
+        adminMenuPages.forEach((section) => section.classList.add("hidden"));
+        if (adminMenuTitle) {
+          adminMenuTitle.textContent = "Admin menu";
+        }
+      };
+
+      const showAdminMenuPage = (pageKey) => {
+        const key = String(pageKey || "").trim().toLowerCase();
+        if (!key) return;
+        if (adminMenuSectionList) {
+          adminMenuSectionList.classList.add("hidden");
+        }
+        let selectedTitle = "Admin menu";
+        adminMenuPages.forEach((section) => {
+          const isMatch = String(section.getAttribute("data-menu-page") || "").toLowerCase() === key;
+          section.classList.toggle("hidden", !isMatch);
+          if (isMatch) {
+            selectedTitle = String(section.getAttribute("data-menu-title") || selectedTitle);
+          }
+        });
+        if (adminMenuTitle) {
+          adminMenuTitle.textContent = selectedTitle;
+        }
       };
 
       const openAdminMenu = () => {
@@ -2600,6 +2702,7 @@ require_admin_ui();
         adminMenuDrawer.classList.add("open");
         adminMenuDrawer.setAttribute("aria-hidden", "false");
         adminMenuBackdrop.hidden = false;
+        showAdminMenuHome();
       };
 
       const readAccountCenter = () =>
@@ -3008,6 +3111,14 @@ require_admin_ui();
       if (adminMenuCloseBtn) {
         adminMenuCloseBtn.addEventListener("click", () => closeAdminMenu());
       }
+      adminMenuOpenButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          showAdminMenuPage(button.getAttribute("data-menu-open"));
+        });
+      });
+      adminMenuBackButtons.forEach((button) => {
+        button.addEventListener("click", () => showAdminMenuHome());
+      });
       if (adminMenuBackdrop) {
         adminMenuBackdrop.addEventListener("click", () => closeAdminMenu());
       }

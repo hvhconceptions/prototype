@@ -110,6 +110,8 @@ class PushMessagingService : FirebaseMessagingService() {
         val city = data["city"]?.trim().orEmpty()
         val phone = data["phone"]?.trim().orEmpty()
         val requestId = data["id"]?.trim().orEmpty()
+        val preferredDate = data["preferred_date"]?.trim().orEmpty()
+        val preferredTime = data["preferred_time"]?.trim().orEmpty()
         val contactRaw = data["contact_ok"] ?: data["contact_followup"] ?: ""
         val normalized = contactRaw.lowercase(Locale.US)
         val contactOk = normalized == "yes" || normalized == "true"
@@ -128,6 +130,17 @@ class PushMessagingService : FirebaseMessagingService() {
             createdAt = System.currentTimeMillis()
         )
         ClientDatabase.getInstance(this).clientDao().upsert(client)
+
+        if (preferredDate.isNotBlank() && preferredTime.isNotBlank()) {
+            AppointmentReminderScheduler.scheduleFromBooking(
+                context = this,
+                requestId = entryId,
+                name = name,
+                city = city,
+                preferredDate = preferredDate,
+                preferredTime = preferredTime
+            )
+        }
     }
 
     private fun getOverviewLines(): List<String> {

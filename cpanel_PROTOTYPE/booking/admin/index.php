@@ -1789,6 +1789,15 @@ require_admin_ui();
     </aside>
 
     <main>
+      <div class="folder-switcher" role="tablist" aria-label="Admin folders">
+        <button class="folder-button" id="panelScheduleBtn" type="button" data-admin-panel="schedule" aria-pressed="true">
+          Schedule
+        </button>
+        <button class="folder-button" id="panelClientsBtn" type="button" data-admin-panel="clients" aria-pressed="false">
+          Clients
+        </button>
+      </div>
+
       <section data-admin-panel-group="schedule" id="calendarEditorSection">
         <h2>City calendar editor</h2>
         <p class="hint">After wizard Done, you can edit slots here and then switch to Clients.</p>
@@ -1905,15 +1914,6 @@ require_admin_ui();
         </div>
         <div id="recurringList"></div>
       </section>
-
-      <div class="folder-switcher" role="tablist" aria-label="Admin folders">
-        <button class="folder-button" id="panelScheduleBtn" type="button" data-admin-panel="schedule" aria-pressed="true">
-          Schedule
-        </button>
-        <button class="folder-button" id="panelClientsBtn" type="button" data-admin-panel="clients" aria-pressed="false">
-          Clients
-        </button>
-      </div>
 
       <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="quickAddTitle">Quick add</h2>
@@ -5422,6 +5422,12 @@ require_admin_ui();
         return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${start}/${end}&ctz=${tz}`;
       };
 
+      const buildIcsDownloadUrl = (item) => {
+        const id = String(item?.id || "").trim();
+        if (!id) return "";
+        return `../api/calendar.php?id=${encodeURIComponent(id)}`;
+      };
+
       const buildIcsTimestamp = (dateValue, timeValue, addMinutes = 0) => {
         const [year, month, day] = String(dateValue || "").split("-").map((value) => Number(value));
         const [hour, minute] = String(timeValue || "").split(":").map((value) => Number(value));
@@ -5596,7 +5602,9 @@ require_admin_ui();
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "load");
           const sourceRequests = Array.isArray(data.requests) ? data.requests : [];
-          const requestsByKey = new Map();
+          const requests = [];
+          const indexById = new Map();
+          const indexByFallback = new Map();
           sourceRequests.forEach((item) => {
             if (!item || typeof item !== "object") return;
             const id = String(item.id || "").trim();
@@ -5608,15 +5616,46 @@ require_admin_ui();
               String(item.city || "").trim().toLowerCase(),
               String(item.name || "").trim().toLowerCase(),
             ].join("|");
-            const key = id ? `id:${id}` : `fallback:${fallbackKey}`;
-            const current = requestsByKey.get(key);
+
+            let matchIndex = null;
+            if (id && indexById.has(id)) {
+              matchIndex = indexById.get(id);
+            } else if (indexByFallback.has(fallbackKey)) {
+              matchIndex = indexByFallback.get(fallbackKey);
+            }
+
+            if (matchIndex === null || matchIndex === undefined) {
+              requests.push(item);
+              const idx = requests.length - 1;
+              if (id) indexById.set(id, idx);
+              indexByFallback.set(fallbackKey, idx);
+              return;
+            }
+
+            const current = requests[matchIndex];
             const nextStamp = String(item.updated_at || item.created_at || "");
-            const currentStamp = current ? String(current.updated_at || current.created_at || "") : "";
-            if (!current || nextStamp >= currentStamp) {
-              requestsByKey.set(key, item);
+            const currentStamp = String(current?.updated_at || current?.created_at || "");
+            const keepNext = nextStamp >= currentStamp;
+            if (keepNext) {
+              requests[matchIndex] = item;
+              if (id) indexById.set(id, matchIndex);
+              indexByFallback.set(fallbackKey, matchIndex);
+            } else {
+              const currentId = String(current?.id || "").trim();
+              const currentFallback = [
+                String(current?.email || "").trim().toLowerCase(),
+                String(current?.phone || "").replace(/\D+/g, ""),
+                String(current?.preferred_date || "").trim(),
+                String(current?.preferred_time || "").trim(),
+                String(current?.city || "").trim().toLowerCase(),
+                String(current?.name || "").trim().toLowerCase(),
+              ].join("|");
+              if (currentId) indexById.set(currentId, matchIndex);
+              indexByFallback.set(currentFallback, matchIndex);
+              if (id) indexById.set(id, matchIndex);
+              indexByFallback.set(fallbackKey, matchIndex);
             }
           });
-          const requests = Array.from(requestsByKey.values());
           renderNotifications(requests);
           maybeSlots = buildMaybeSlotsFromRequests(requests);
           renderCalendarView();
@@ -5760,11 +5799,24 @@ require_admin_ui();
               if (calendarUrl) {
                 actions.appendChild(
                   createActionButton(t("action_google_calendar"), () => {
-                    window.open(calendarUrl, "_blank", "noopener");
+                    const popup = window.open(calendarUrl, "_blank", "noopener");
+                    if (!popup) {
+                      window.location.href = calendarUrl;
+                    }
                   }, "btn ghost")
                 );
               }
-              if (item.preferred_date && item.preferred_time) {
+              const icsUrl = buildIcsDownloadUrl(item);
+              if (icsUrl) {
+                actions.appendChild(
+                  createActionButton(t("action_samsung_calendar"), () => {
+                    const popup = window.open(icsUrl, "_blank", "noopener");
+                    if (!popup) {
+                      window.location.href = icsUrl;
+                    }
+                  }, "btn ghost")
+                );
+              } else if (item.preferred_date && item.preferred_time) {
                 actions.appendChild(
                   createActionButton(t("action_samsung_calendar"), () => {
                     downloadSamsungIcs(item);

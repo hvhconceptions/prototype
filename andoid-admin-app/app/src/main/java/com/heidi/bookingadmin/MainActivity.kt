@@ -2,6 +2,7 @@
 
 import android.Manifest
 import android.content.Intent
+import android.net.Uri
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -69,6 +70,16 @@ class MainActivity : AppCompatActivity() {
         webView.clearCache(true)
 
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val uri = request.url ?: return false
+                val target = uri.toString()
+                if (shouldOpenExternally(target)) {
+                    openExternalLink(uri)
+                    return true
+                }
+                return false
+            }
+
             override fun onReceivedHttpAuthRequest(
                 view: WebView?,
                 handler: HttpAuthHandler?,
@@ -93,6 +104,28 @@ class MainActivity : AppCompatActivity() {
                 offlineMessage.visibility = View.GONE
                 webView.visibility = View.VISIBLE
             }
+        }
+
+        webView.setDownloadListener { url, _, _, _, _ ->
+            if (!url.isNullOrBlank()) {
+                openExternalLink(Uri.parse(url))
+            }
+        }
+    }
+
+    private fun shouldOpenExternally(url: String): Boolean {
+        val lower = url.lowercase()
+        return lower.contains("google.com/calendar/render") ||
+            lower.contains("calendar.google.com/calendar") ||
+            lower.contains("outlook.live.com/calendar") ||
+            lower.contains("/booking/api/calendar.php") ||
+            lower.endsWith(".ics")
+    }
+
+    private fun openExternalLink(uri: Uri) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+        } catch (_: Exception) {
         }
     }
 

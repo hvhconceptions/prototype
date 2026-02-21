@@ -24,16 +24,15 @@ if (!$request) {
     exit;
 }
 
-$method = strtolower((string) ($request['payment_method'] ?? 'paypal'));
+$method = strtolower((string) ($request['payment_method'] ?? 'interac'));
+if ($method === 'paypal') {
+    $method = 'interac';
+}
 $deposit = isset($request['deposit_amount']) ? (int) $request['deposit_amount'] : 0;
-$currency = (string) ($request['deposit_currency'] ?? (PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'USD'));
+$currency = (string) ($request['deposit_currency'] ?? 'CAD');
 $depositPercent = (string) ($request['deposit_percent'] ?? '');
 $details = build_payment_details($method, $deposit);
 $isUrl = preg_match('/^https?:\\/\\//i', $details) === 1;
-$paypalClientId = defined('PAYPAL_CLIENT_ID') ? (string) PAYPAL_CLIENT_ID : '';
-$paypalCurrency = PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'CAD';
-$showPaypalButtons = $method === 'paypal' && $deposit > 0 && $paypalClientId !== '';
-$paypalAmount = number_format((float) $deposit, 2, '.', '');
 
 $mailto = '';
 if (in_array($method, ['interac', 'etransfer', 'e-transfer'], true) && INTERAC_EMAIL !== '') {
@@ -139,72 +138,7 @@ if ($method === 'wise' && WISE_EMAIL !== '') {
         <div class="row"><span class="label">Payment info:</span> <?php echo htmlspecialchars($details); ?></div>
       <?php endif; ?>
 
-      <?php if ($showPaypalButtons) : ?>
-        <p class="muted">On the payment page, they can pay by card or PayPal.</p>
-        <div class="row"><span class="label">Pay by card or PayPal:</span></div>
-        <div id="paypal-buttons"></div>
-        <div id="paypal-fallback" class="row hidden">
-          <a class="btn" href="<?php echo htmlspecialchars($details); ?>" target="_blank" rel="noopener">Open PayPal</a>
-        </div>
-        <p id="payment-status" class="muted"></p>
-        <script>
-          const paypalStatus = document.getElementById("payment-status");
-          const paypalFallback = document.getElementById("paypal-fallback");
-          const showPaypalFallback = (message) => {
-            if (paypalFallback) {
-              paypalFallback.classList.remove("hidden");
-            }
-            if (paypalStatus) {
-              paypalStatus.textContent = message;
-            }
-          };
-
-          const renderPaypalButtons = () => {
-            if (!window.paypal) {
-              showPaypalFallback("PayPal failed to load. Use the PayPal link instead.");
-              return;
-            }
-            window.paypal
-              .Buttons({
-                style: { layout: "vertical", color: "gold", shape: "pill", label: "pay" },
-                createOrder: (data, actions) =>
-                  actions.order.create({
-                    purchase_units: [
-                      {
-                        amount: {
-                          value: <?php echo json_encode($paypalAmount); ?>,
-                          currency_code: <?php echo json_encode($paypalCurrency); ?>,
-                        },
-                        description: <?php echo json_encode('Booking deposit ' . $id); ?>,
-                      },
-                    ],
-                  }),
-                onApprove: (data, actions) =>
-                  actions.order.capture().then(() => {
-                    if (paypalStatus) {
-                      paypalStatus.textContent =
-                        "Payment received. We will confirm your booking shortly.";
-                    }
-                  }),
-                onError: () => {
-                  showPaypalFallback("Payment error. Use the PayPal link or contact me.");
-                },
-              })
-              .render("#paypal-buttons");
-          };
-        </script>
-        <script
-          src="https://www.paypal.com/sdk/js?client-id=<?php echo htmlspecialchars($paypalClientId); ?>&currency=<?php echo htmlspecialchars($paypalCurrency); ?>&intent=capture&enable-funding=card&components=buttons"
-          onerror="window.__paypalLoadFailed = true;"
-        ></script>
-        <script>
-          if (window.__paypalLoadFailed) {
-            showPaypalFallback("PayPal failed to load. Use the PayPal link instead.");
-          } else {
-            renderPaypalButtons();
-          }
-        </script>
-      <?php elseif ($isUrl && $deposit > 0) : ?>
+      <?php if ($isUrl && $deposit > 0) : ?>
         <a class="btn" href="<?php echo htmlspecialchars($details); ?>" target="_blank" rel="noopener">Open payment link</a>
         <p class="muted">Redirecting now...</p>
         <script>

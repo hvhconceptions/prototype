@@ -5418,7 +5418,7 @@ require_admin_ui();
         if (normalized === "usdc") return "USDC";
         if (normalized === "ltc" || normalized === "litecoin") return "Litecoin";
         if (normalized === "btc") return "Bitcoin";
-        if (normalized === "paypal") return "PayPal";
+        if (normalized === "paypal") return "Interac e-Transfer";
         return value || "";
       };
 

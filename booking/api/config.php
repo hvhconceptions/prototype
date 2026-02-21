@@ -592,7 +592,10 @@ function format_payment_method(string $method): string
     if ($normalized === 'btc') {
         return 'Bitcoin';
     }
-    return 'PayPal';
+    if ($normalized === 'paypal') {
+        return 'Interac e-Transfer';
+    }
+    return $normalized !== '' ? strtoupper($normalized) : 'Interac e-Transfer';
 }
 
 function build_crypto_details(string $label, string $wallet, string $network): string
@@ -656,7 +659,15 @@ function build_payment_details(string $method, int $amount): string
             return $details;
         }
     }
-    return build_paypal_link($amount);
+    $details = build_interac_details();
+    if ($details !== '') {
+        return $details;
+    }
+    $details = build_wise_details();
+    if ($details !== '') {
+        return $details;
+    }
+    return '';
 }
 
 function escape_html(string $value): string

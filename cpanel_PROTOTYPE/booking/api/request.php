@@ -270,7 +270,7 @@ if (!empty($errors)) {
     json_response(['error' => 'Validation failed', 'fields' => $errors], 422);
 }
 
-$paymentMethod = strtolower(trim((string) ($payload['payment_method'] ?? 'paypal')));
+$paymentMethod = strtolower(trim((string) ($payload['payment_method'] ?? 'interac')));
 if ($paymentMethod === 'e-transfer') {
     $paymentMethod = 'interac';
 }
@@ -280,9 +280,9 @@ if ($paymentMethod === 'litecoin') {
 if ($paymentMethod === 'bitcoin') {
     $paymentMethod = 'btc';
 }
-$allowedMethods = ['paypal', 'usdc', 'btc', 'ltc', 'interac', 'etransfer', 'wise'];
+$allowedMethods = ['usdc', 'btc', 'ltc', 'interac', 'etransfer', 'wise'];
 if (!in_array($paymentMethod, $allowedMethods, true)) {
-    $paymentMethod = 'paypal';
+    $paymentMethod = 'interac';
 }
 
 $depositPercent = 20.0;
@@ -293,11 +293,8 @@ $fiatOverrides = [
     'EUR' => 0.7,
     'GBP' => 0.65,
 ];
-$depositCurrency = $currency !== '' ? $currency : (PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'CAD');
-if ($paymentMethod === 'paypal') {
-    $depositCurrency = PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'CAD';
-    $displayRate = 1.0;
-} elseif (in_array($depositCurrency, ['USDC', 'BTC', 'LTC'], true)) {
+$depositCurrency = $currency !== '' ? $currency : 'CAD';
+if (in_array($depositCurrency, ['USDC', 'BTC', 'LTC'], true)) {
     $depositCurrency = 'CAD';
 } elseif (isset($fiatOverrides[$depositCurrency])) {
     $displayRate = (float) $fiatOverrides[$depositCurrency];

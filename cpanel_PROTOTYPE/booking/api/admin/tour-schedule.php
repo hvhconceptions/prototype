@@ -82,23 +82,6 @@ usort($clean, static function (array $a, array $b): int {
     return strcmp($left, $right);
 });
 
-for ($i = 1, $count = count($clean); $i < $count; $i++) {
-    $prev = $clean[$i - 1];
-    $curr = $clean[$i];
-    if ($curr['start'] <= $prev['end']) {
-        $message = sprintf(
-            'Overlapping tour dates: %s (%s to %s) overlaps %s (%s to %s)',
-            (string) $prev['city'],
-            (string) $prev['start'],
-            (string) $prev['end'],
-            (string) $curr['city'],
-            (string) $curr['start'],
-            (string) $curr['end']
-        );
-        json_response(['error' => $message], 422);
-    }
-}
-
 $content = read_site_content();
 $content['touring'] = array_values($clean);
 write_site_content($content);

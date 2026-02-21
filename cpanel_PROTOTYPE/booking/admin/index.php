@@ -181,6 +181,7 @@ require_admin_ui();
         --hot: #ff006e;
         --line: rgba(255, 0, 110, 0.25);
         --shadow: rgba(255, 0, 110, 0.2);
+        --body-gradient: radial-gradient(circle at 15% 10%, #ffe1f0 0%, #fff5fb 45%, #fff 100%);
         --mono: "Avenir Next", "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         --bubble: "Baloo 2", "Cooper Black", "Bookman Old Style", "Georgia", serif;
       }
@@ -193,7 +194,7 @@ require_admin_ui();
         margin: 0;
         font-family: var(--mono);
         color: var(--ink);
-        background: radial-gradient(circle at 15% 10%, #ffe1f0 0%, #fff5fb 45%, #fff 100%);
+        background: var(--body-gradient);
       }
 
       .age-language {
@@ -1681,6 +1682,10 @@ require_admin_ui();
               <option value="fr">Francais</option>
             </select>
           </div>
+          <div class="field">
+            <label for="accountAccentColor">Color theme</label>
+            <input id="accountAccentColor" type="color" value="#ff006e" />
+          </div>
         </div>
         <div class="age-language" role="group" aria-label="language selector">
           <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
@@ -2030,7 +2035,7 @@ require_admin_ui();
       <section data-admin-panel-group="schedule" class="legacy-admin-section">
         <h2 id="tourScheduleTitle">Tour schedule</h2>
         <div class="editor-list" id="tourScheduleList"></div>
-        <p class="hint" id="tourScheduleHint">Dates are inclusive. Use YYYY-MM-DD and avoid overlaps.</p>
+        <p class="hint" id="tourScheduleHint">Dates are inclusive. Use YYYY-MM-DD. Overlapping city dates are allowed.</p>
         <div class="row">
           <button class="btn secondary" id="addTourRow" type="button">Add stop</button>
           <button class="btn" id="saveTourSchedule" type="button">Save tour schedule</button>
@@ -2207,6 +2212,7 @@ require_admin_ui();
       const accountPhoneInput = document.getElementById("accountPhone");
       const accountPasswordInput = document.getElementById("accountPassword");
       const accountLanguageSelect = document.getElementById("accountLanguage");
+      const accountAccentColorInput = document.getElementById("accountAccentColor");
       const saveAccountCenterBtn = document.getElementById("saveAccountCenter");
       const accountCenterStatus = document.getElementById("accountCenterStatus");
       const menuWorkAllDay = document.getElementById("menuWorkAllDay");
@@ -2245,6 +2251,7 @@ require_admin_ui();
       const SERVICES_MENU_KEY = "hvh_admin_services_menu";
       const NOTIFICATIONS_READ_KEY = "hvh_admin_read_notifications";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
+      const DEFAULT_ACCENT_COLOR = "#ff006e";
       let currentLanguage = "en";
       const I18N = {
         en: {
@@ -2254,7 +2261,7 @@ require_admin_ui();
           panel_schedule: "Schedule",
           panel_clients: "Clients",
           tour_schedule_title: "Tour schedule",
-          tour_schedule_hint: "Dates are inclusive. Use YYYY-MM-DD and avoid overlaps.",
+          tour_schedule_hint: "Dates are inclusive. Use YYYY-MM-DD. Overlapping city dates are allowed.",
           add_stop: "Add stop",
           save_tour_schedule: "Save tour schedule",
           city_wizard_title: "City schedule wizard",
@@ -2414,7 +2421,7 @@ require_admin_ui();
           panel_schedule: "Planning",
           panel_clients: "Clients",
           tour_schedule_title: "Calendrier de tournee",
-          tour_schedule_hint: "Les dates sont inclusives. Utilisez YYYY-MM-DD et evitez les chevauchements.",
+          tour_schedule_hint: "Les dates sont inclusives. Utilisez YYYY-MM-DD. Les chevauchements de villes sont autorises.",
           add_stop: "Ajouter une ville",
           save_tour_schedule: "Sauvegarder la tournee",
           city_wizard_title: "Assistant planning par ville",
@@ -2725,7 +2732,54 @@ require_admin_ui();
           email: "",
           phone: "",
           language: "en",
+          accentColor: DEFAULT_ACCENT_COLOR,
         });
+
+      const normalizeHexColor = (value, fallback = DEFAULT_ACCENT_COLOR) => {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (/^#[0-9a-f]{6}$/.test(normalized)) {
+          return normalized;
+        }
+        return fallback;
+      };
+
+      const hexToRgb = (value) => {
+        const hex = normalizeHexColor(value).slice(1);
+        return {
+          r: Number.parseInt(hex.slice(0, 2), 16),
+          g: Number.parseInt(hex.slice(2, 4), 16),
+          b: Number.parseInt(hex.slice(4, 6), 16),
+        };
+      };
+
+      const rgbToHex = ({ r, g, b }) => {
+        const toHex = (number) => Math.max(0, Math.min(255, Math.round(number))).toString(16).padStart(2, "0");
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      };
+
+      const mixWithWhite = (rgb, ratio) => {
+        const amount = Math.max(0, Math.min(1, Number(ratio) || 0));
+        return {
+          r: rgb.r + (255 - rgb.r) * amount,
+          g: rgb.g + (255 - rgb.g) * amount,
+          b: rgb.b + (255 - rgb.b) * amount,
+        };
+      };
+
+      const rgbaString = (rgb, alpha) => {
+        const opacity = Math.max(0, Math.min(1, Number(alpha) || 0));
+        return `rgba(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}, ${opacity})`;
+      };
+
+      const applyAccentTheme = (accentValue) => {
+        const accent = normalizeHexColor(accentValue);
+        const rgb = hexToRgb(accent);
+        const pink = rgbToHex(mixWithWhite(rgb, 0.2));
+        document.documentElement.style.setProperty("--hot", accent);
+        document.documentElement.style.setProperty("--pink", pink);
+        document.documentElement.style.setProperty("--line", rgbaString(rgb, 0.25));
+        document.documentElement.style.setProperty("--shadow", rgbaString(rgb, 0.2));
+      };
 
       const applyAccountCenterToUi = () => {
         const data = readAccountCenter();
@@ -2733,6 +2787,10 @@ require_admin_ui();
         if (accountEmailInput) accountEmailInput.value = data.email || "";
         if (accountPhoneInput) accountPhoneInput.value = data.phone || "";
         if (accountLanguageSelect) accountLanguageSelect.value = data.language || "en";
+        if (accountAccentColorInput) {
+          accountAccentColorInput.value = normalizeHexColor(data.accentColor, DEFAULT_ACCENT_COLOR);
+        }
+        applyAccentTheme(data.accentColor || DEFAULT_ACCENT_COLOR);
         if (accountPhotoPreview) {
           if (data.profilePic) {
             accountPhotoPreview.src = data.profilePic;
@@ -2753,6 +2811,7 @@ require_admin_ui();
           email: String(accountEmailInput?.value || "").trim(),
           phone: String(accountPhoneInput?.value || "").trim(),
           language: String(accountLanguageSelect?.value || "en").trim().toLowerCase() === "fr" ? "fr" : "en",
+          accentColor: normalizeHexColor(accountAccentColorInput?.value || current.accentColor || DEFAULT_ACCENT_COLOR),
         };
         const ok = writeStoredObject(ACCOUNT_CENTER_KEY, data);
         if (accountCenterStatus) {
@@ -2765,6 +2824,7 @@ require_admin_ui();
           }
         }
         if (accountPasswordInput) accountPasswordInput.value = "";
+        applyAccentTheme(data.accentColor);
         if (data.language && SUPPORTED_LANGUAGES.includes(data.language)) {
           applyLanguage(data.language, true);
         }
@@ -3183,6 +3243,11 @@ require_admin_ui();
       if (saveAccountCenterBtn) {
         saveAccountCenterBtn.addEventListener("click", saveAccountCenter);
       }
+      if (accountAccentColorInput) {
+        accountAccentColorInput.addEventListener("input", () => {
+          applyAccentTheme(accountAccentColorInput.value || DEFAULT_ACCENT_COLOR);
+        });
+      }
       if (accountLanguageSelect) {
         accountLanguageSelect.addEventListener("change", () => {
           const language = accountLanguageSelect.value === "fr" ? "fr" : "en";
@@ -3401,6 +3466,13 @@ require_admin_ui();
       const getDefaultTimezoneForCity = (_city) => DEFAULT_TIMEZONE;
 
       const isValidTime = (value) => /^\d{2}:\d{2}$/.test(String(value || ""));
+      const normalizeBufferMinutes = (value, fallback = 0) => {
+        const fallbackNumber = Number(fallback);
+        const safeFallback = Number.isFinite(fallbackNumber) ? fallbackNumber : 0;
+        const parsed = Number(value);
+        const normalized = Number.isFinite(parsed) ? parsed : safeFallback;
+        return Math.max(0, Math.min(240, Math.round(normalized)));
+      };
 
       const normalizeCitySchedule = (entry = {}) => {
         const city = String(entry.city || "").trim();
@@ -3426,7 +3498,7 @@ require_admin_ui();
         const hasBreakDaysField = Array.isArray(entry.break_days);
         const sleepDaysRaw = hasSleepDaysField ? entry.sleep_days : [];
         const breakDaysRaw = hasBreakDaysField ? entry.break_days : [];
-        const bufferMinutes = Math.max(0, Math.min(240, Number(entry.buffer_minutes ?? 0) || 0));
+        const bufferMinutes = normalizeBufferMinutes(entry.buffer_minutes, 0);
         const readyStart = isValidTime(entry.ready_start) ? String(entry.ready_start) : "00:00";
         const leaveDayEnd = isValidTime(entry.leave_day_end) ? String(entry.leave_day_end) : "23:59";
         const hasSleep = !!entry.has_sleep;
@@ -4363,7 +4435,7 @@ require_admin_ui();
           }
           tourCityInput.value = data.tour_city || "";
           applyTimezoneValue(data.tour_timezone);
-          bufferInput.value = data.buffer_minutes || 30;
+          bufferInput.value = String(normalizeBufferMinutes(data.buffer_minutes, 30));
           blockedSlots = normalizeBlockedSlots(data.blocked);
           recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
           citySchedules = (Array.isArray(data.city_schedules) ? data.city_schedules : [])
@@ -4401,6 +4473,16 @@ require_admin_ui();
           availabilityStatus.textContent = t("admin_key_required");
           return;
         }
+        const defaultBufferMinutes = normalizeBufferMinutes(bufferInput?.value, 0);
+        if (bufferInput) {
+          bufferInput.value = String(defaultBufferMinutes);
+        }
+        citySchedules = citySchedules.map((schedule) =>
+          normalizeCitySchedule({
+            ...schedule,
+            buffer_minutes: defaultBufferMinutes,
+          })
+        );
         applyCityTemplateBlocks({ announce: false });
         const cityPayload = readCitySchedulePayload();
         const firstCity = cityPayload[0] || null;
@@ -4408,7 +4490,7 @@ require_admin_ui();
         const payload = {
           tour_city: activeTourCity || firstCity?.city || "",
           tour_timezone: DEFAULT_TIMEZONE,
-          buffer_minutes: Number((firstCity?.buffer_minutes ?? bufferInput.value) || 0),
+          buffer_minutes: defaultBufferMinutes,
           availability_mode: "open",
           blocked: blockedSlots,
           recurring: recurringBlocks,
@@ -4997,7 +5079,7 @@ require_admin_ui();
             applyTimezoneValue(first.timezone);
           }
           if (bufferInput) {
-            bufferInput.value = Number(first.buffer_minutes || 0);
+            bufferInput.value = String(normalizeBufferMinutes(first.buffer_minutes, 0));
           }
         }
         syncTourCityFromCalendar();
@@ -6013,6 +6095,26 @@ require_admin_ui();
         }
         renderCalendarView();
       });
+      if (bufferInput) {
+        bufferInput.addEventListener("change", () => {
+          const normalizedBuffer = normalizeBufferMinutes(bufferInput.value, 0);
+          bufferInput.value = String(normalizedBuffer);
+          citySchedules = citySchedules.map((schedule) =>
+            normalizeCitySchedule({
+              ...schedule,
+              buffer_minutes: normalizedBuffer,
+            })
+          );
+          if (cityScheduleWizard) {
+            cityScheduleWizard.querySelectorAll('input[data-field="buffer_minutes"]').forEach((input) => {
+              input.value = String(normalizedBuffer);
+            });
+          }
+          applyCityTemplateBlocks({ announce: false });
+          renderCalendarView();
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
       addBlockedBtn.addEventListener("click", () => {
         blockedStatus.textContent = "";
         const date = blockedDate.value;

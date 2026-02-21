@@ -5841,7 +5841,6 @@ require_admin_ui();
                 ${formatLine(t("duration"), item.duration_label)}
                 ${formatLine(t("preferred"), `${item.preferred_date || ""} ${item.preferred_time || ""}`)}
                 ${formatLine(t("client_tz"), item.client_timezone)}
-                ${formatLine(t("tour_tz"), item.tour_timezone)}
                 ${formatLine(t("deposit"), depositLabel)}
                 ${formatLine(t("payment_status"), paymentStatus === "paid" ? t("paid") : "")}
                 ${formatLine(t("payment_method"), formatPaymentMethod(item.payment_method))}

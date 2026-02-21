@@ -3296,6 +3296,7 @@ require_admin_ui();
 
       let blockedSlots = [];
       let maybeSlots = [];
+      let loadRequestsToken = 0;
       let recurringBlocks = [];
       let touringStops = [];
       let citySchedules = [];
@@ -5697,6 +5698,7 @@ require_admin_ui();
       };
 
       const loadRequests = async () => {
+        const requestToken = ++loadRequestsToken;
         requestsStatus.textContent = "";
         requestsList.innerHTML = "";
         maybeSlots = [];
@@ -5712,34 +5714,48 @@ require_admin_ui();
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "load");
+          if (requestToken !== loadRequestsToken) return;
           const sourceRequests = Array.isArray(data.requests) ? data.requests : [];
           const requests = [];
-          const indexById = new Map();
-          const indexByFallback = new Map();
+          const indexByAlias = new Map();
+          const aliasKeys = (item) => {
+            const id = String(item?.id || "").trim();
+            const email = String(item?.email || "").trim().toLowerCase();
+            const phone = String(item?.phone || "").replace(/\D+/g, "");
+            const date = String(item?.preferred_date || "").trim();
+            const time = String(item?.preferred_time || "").trim();
+            const city = String(item?.city || "").trim().toLowerCase();
+            const name = String(item?.name || "").trim().toLowerCase();
+            const keys = [];
+            if (id) keys.push(`id:${id}`);
+            if (date && time) {
+              if (email && phone) keys.push(`dt-ep:${date}|${time}|${email}|${phone}`);
+              if (email) keys.push(`dt-e:${date}|${time}|${email}`);
+              if (phone) keys.push(`dt-p:${date}|${time}|${phone}`);
+              if (name) {
+                keys.push(`dt-n:${date}|${time}|${name}`);
+                if (city) keys.push(`dt-nc:${date}|${time}|${name}|${city}`);
+              }
+            }
+            return Array.from(new Set(keys));
+          };
           sourceRequests.forEach((item) => {
             if (!item || typeof item !== "object") return;
-            const id = String(item.id || "").trim();
-            const fallbackKey = [
-              String(item.email || "").trim().toLowerCase(),
-              String(item.phone || "").replace(/\D+/g, ""),
-              String(item.preferred_date || "").trim(),
-              String(item.preferred_time || "").trim(),
-              String(item.city || "").trim().toLowerCase(),
-              String(item.name || "").trim().toLowerCase(),
-            ].join("|");
+            let keys = aliasKeys(item);
+            if (!keys.length) return;
 
             let matchIndex = null;
-            if (id && indexById.has(id)) {
-              matchIndex = indexById.get(id);
-            } else if (indexByFallback.has(fallbackKey)) {
-              matchIndex = indexByFallback.get(fallbackKey);
+            for (const key of keys) {
+              if (indexByAlias.has(key)) {
+                matchIndex = indexByAlias.get(key);
+                break;
+              }
             }
 
             if (matchIndex === null || matchIndex === undefined) {
               requests.push(item);
               const idx = requests.length - 1;
-              if (id) indexById.set(id, idx);
-              indexByFallback.set(fallbackKey, idx);
+              keys.forEach((key) => indexByAlias.set(key, idx));
               return;
             }
 
@@ -5749,24 +5765,14 @@ require_admin_ui();
             const keepNext = nextStamp >= currentStamp;
             if (keepNext) {
               requests[matchIndex] = item;
-              if (id) indexById.set(id, matchIndex);
-              indexByFallback.set(fallbackKey, matchIndex);
+              keys = aliasKeys(item);
             } else {
-              const currentId = String(current?.id || "").trim();
-              const currentFallback = [
-                String(current?.email || "").trim().toLowerCase(),
-                String(current?.phone || "").replace(/\D+/g, ""),
-                String(current?.preferred_date || "").trim(),
-                String(current?.preferred_time || "").trim(),
-                String(current?.city || "").trim().toLowerCase(),
-                String(current?.name || "").trim().toLowerCase(),
-              ].join("|");
-              if (currentId) indexById.set(currentId, matchIndex);
-              indexByFallback.set(currentFallback, matchIndex);
-              if (id) indexById.set(id, matchIndex);
-              indexByFallback.set(fallbackKey, matchIndex);
+              keys = Array.from(new Set([...aliasKeys(current || {}), ...keys]));
             }
+            keys.forEach((key) => indexByAlias.set(key, matchIndex));
           });
+          if (requestToken !== loadRequestsToken) return;
+          requestsList.innerHTML = "";
           renderNotifications(requests);
           maybeSlots = buildMaybeSlotsFromRequests(requests);
           renderCalendarView();

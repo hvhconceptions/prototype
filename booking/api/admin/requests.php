@@ -15,43 +15,66 @@ if (!is_array($requests)) {
     $requests = [];
 }
 
-function request_fallback_key(array $request): string
+function request_alias_keys(array $request): array
 {
-    return implode('|', [
-        strtolower(trim((string) ($request['email'] ?? ''))),
-        preg_replace('/\D+/', '', (string) ($request['phone'] ?? '')),
-        trim((string) ($request['preferred_date'] ?? '')),
-        trim((string) ($request['preferred_time'] ?? '')),
-        strtolower(trim((string) ($request['city'] ?? ''))),
-        strtolower(trim((string) ($request['name'] ?? ''))),
-    ]);
+    $email = strtolower(trim((string) ($request['email'] ?? '')));
+    $phone = preg_replace('/\D+/', '', (string) ($request['phone'] ?? ''));
+    $date = trim((string) ($request['preferred_date'] ?? ''));
+    $time = trim((string) ($request['preferred_time'] ?? ''));
+    $city = strtolower(trim((string) ($request['city'] ?? '')));
+    $name = strtolower(trim((string) ($request['name'] ?? '')));
+    $keys = [];
+
+    $id = trim((string) ($request['id'] ?? ''));
+    if ($id !== '') {
+        $keys[] = 'id:' . $id;
+    }
+    if ($date !== '' && $time !== '') {
+        if ($email !== '' && $phone !== '') {
+            $keys[] = "dt-ep:{$date}|{$time}|{$email}|{$phone}";
+        }
+        if ($email !== '') {
+            $keys[] = "dt-e:{$date}|{$time}|{$email}";
+        }
+        if ($phone !== '') {
+            $keys[] = "dt-p:{$date}|{$time}|{$phone}";
+        }
+        if ($name !== '') {
+            $keys[] = "dt-n:{$date}|{$time}|{$name}";
+            if ($city !== '') {
+                $keys[] = "dt-nc:{$date}|{$time}|{$name}|{$city}";
+            }
+        }
+    }
+    return array_values(array_unique(array_filter($keys)));
 }
 
 $kept = [];
-$indexById = [];
-$indexByFallback = [];
+$indexByAlias = [];
 
 foreach ($requests as $request) {
     if (!is_array($request)) {
         continue;
     }
-    $id = trim((string) ($request['id'] ?? ''));
-    $fallback = request_fallback_key($request);
+    $aliases = request_alias_keys($request);
+    if (!$aliases) {
+        continue;
+    }
 
     $matchIndex = null;
-    if ($id !== '' && isset($indexById[$id])) {
-        $matchIndex = $indexById[$id];
-    } elseif (isset($indexByFallback[$fallback])) {
-        $matchIndex = $indexByFallback[$fallback];
+    foreach ($aliases as $alias) {
+        if (isset($indexByAlias[$alias])) {
+            $matchIndex = $indexByAlias[$alias];
+            break;
+        }
     }
 
     if ($matchIndex === null) {
         $kept[] = $request;
         $newIndex = count($kept) - 1;
-        if ($id !== '') {
-            $indexById[$id] = $newIndex;
+        foreach ($aliases as $alias) {
+            $indexByAlias[$alias] = $newIndex;
         }
-        $indexByFallback[$fallback] = $newIndex;
         continue;
     }
 
@@ -60,23 +83,12 @@ foreach ($requests as $request) {
     $nextUpdated = (string) ($request['updated_at'] ?? ($request['created_at'] ?? ''));
     if ($nextUpdated >= $currentUpdated) {
         $kept[$matchIndex] = $request;
-        $id = trim((string) ($request['id'] ?? ''));
-        $fallback = request_fallback_key($request);
-        if ($id !== '') {
-            $indexById[$id] = $matchIndex;
-        }
-        $indexByFallback[$fallback] = $matchIndex;
+        $aliases = request_alias_keys($request);
     } else {
-        $currentId = trim((string) ($current['id'] ?? ''));
-        $currentFallback = request_fallback_key($current);
-        if ($currentId !== '') {
-            $indexById[$currentId] = $matchIndex;
-        }
-        $indexByFallback[$currentFallback] = $matchIndex;
-        if ($id !== '') {
-            $indexById[$id] = $matchIndex;
-        }
-        $indexByFallback[$fallback] = $matchIndex;
+        $aliases = array_values(array_unique(array_merge(request_alias_keys($current), $aliases)));
+    }
+    foreach ($aliases as $alias) {
+        $indexByAlias[$alias] = $matchIndex;
     }
 }
 

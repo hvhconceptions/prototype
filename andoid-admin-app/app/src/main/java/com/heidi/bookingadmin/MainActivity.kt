@@ -169,7 +169,8 @@ class MainActivity : AppCompatActivity() {
                         name = entry.name,
                         city = entry.city,
                         preferredDate = entry.preferredDate,
-                        preferredTime = entry.preferredTime
+                        preferredTime = entry.preferredTime,
+                        durationHours = entry.durationHours
                     )
                 }
             } catch (_: Exception) {
@@ -225,7 +226,8 @@ class MainActivity : AppCompatActivity() {
                     name = name,
                     city = city,
                     preferredDate = preferredDate,
-                    preferredTime = preferredTime
+                    preferredTime = preferredTime,
+                    durationHours = item.optString("duration_hours", "").trim()
                 )
             )
         }
@@ -292,6 +294,7 @@ class MainActivity : AppCompatActivity() {
         val name: String,
         val city: String,
         val preferredDate: String,
-        val preferredTime: String
+        val preferredTime: String,
+        val durationHours: String
     )
 }

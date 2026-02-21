@@ -18,6 +18,7 @@ class AppointmentReminderReceiver : BroadcastReceiver() {
         val city = intent.getStringExtra("city").orEmpty()
         val date = intent.getStringExtra("preferred_date").orEmpty()
         val time = intent.getStringExtra("preferred_time").orEmpty()
+        val eventType = intent.getStringExtra("event_type").orEmpty().trim().lowercase()
         val requestId = intent.getStringExtra("request_id").orEmpty().ifBlank { "$clientName|$date|$time" }
 
         val soundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.its_britney}")
@@ -28,7 +29,7 @@ class AppointmentReminderReceiver : BroadcastReceiver() {
                 "Appointment reminders",
                 NotificationManager.IMPORTANCE_HIGH
             )
-            channel.description = "30-minute booking reminders"
+            channel.description = "Appointment start/end reminders"
             channel.enableVibration(true)
             channel.setShowBadge(true)
             channel.setSound(
@@ -50,7 +51,8 @@ class AppointmentReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = "Client in 30 minutes"
+        val isEndEvent = eventType == "end"
+        val title = if (isEndEvent) "Appointment ended" else "Appointment starting now"
         val details = buildString {
             append(clientName)
             if (city.isNotBlank()) {
@@ -75,12 +77,12 @@ class AppointmentReminderReceiver : BroadcastReceiver() {
             .setSound(soundUri)
             .build()
 
-        NotificationManagerCompat.from(context).notify(BASE_NOTIFICATION_ID + requestId.hashCode(), notification)
+        val eventKey = "$requestId|$eventType"
+        NotificationManagerCompat.from(context).notify(BASE_NOTIFICATION_ID + eventKey.hashCode(), notification)
     }
 
     companion object {
-        private const val CHANNEL_ID = "appointment_reminders_v1"
+        private const val CHANNEL_ID = "appointment_reminders_v2"
         private const val BASE_NOTIFICATION_ID = 410000
     }
 }
-

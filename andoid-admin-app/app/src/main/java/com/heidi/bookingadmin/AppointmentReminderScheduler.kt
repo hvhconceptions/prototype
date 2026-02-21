@@ -10,33 +10,70 @@ import java.util.Date
 import java.util.Locale
 
 object AppointmentReminderScheduler {
-    private const val REMINDER_OFFSET_MS = 30 * 60 * 1000L
-
     fun scheduleFromBooking(
         context: Context,
         requestId: String,
         name: String,
         city: String,
         preferredDate: String,
-        preferredTime: String
+        preferredTime: String,
+        durationHours: String?
     ) {
         val id = resolveReminderId(requestId, name, preferredDate, preferredTime)
         val appointmentAt = parseLocalDateTime(preferredDate, preferredTime) ?: return
-        val reminderAt = appointmentAt.time - REMINDER_OFFSET_MS
         val now = System.currentTimeMillis()
-        if (reminderAt <= now) {
-            return
+        if (appointmentAt.time > now) {
+            scheduleAlarm(
+                context = context,
+                id = id,
+                triggerAt = appointmentAt.time,
+                name = name,
+                city = city,
+                preferredDate = preferredDate,
+                preferredTime = preferredTime,
+                eventType = "start"
+            )
         }
 
+        val durationMinutes = parseDurationMinutes(durationHours)
+        if (durationMinutes <= 0) {
+            return
+        }
+        val appointmentEnd = appointmentAt.time + (durationMinutes * 60_000L)
+        if (appointmentEnd > now) {
+            scheduleAlarm(
+                context = context,
+                id = id,
+                triggerAt = appointmentEnd,
+                name = name,
+                city = city,
+                preferredDate = preferredDate,
+                preferredTime = preferredTime,
+                eventType = "end"
+            )
+        }
+    }
+
+    private fun scheduleAlarm(
+        context: Context,
+        id: String,
+        triggerAt: Long,
+        name: String,
+        city: String,
+        preferredDate: String,
+        preferredTime: String,
+        eventType: String
+    ) {
         val intent = Intent(context, AppointmentReminderReceiver::class.java).apply {
             putExtra("request_id", id)
             putExtra("client_name", name)
             putExtra("city", city)
             putExtra("preferred_date", preferredDate)
             putExtra("preferred_time", preferredTime)
+            putExtra("event_type", eventType)
         }
 
-        val requestCode = id.hashCode()
+        val requestCode = "$id|$eventType".hashCode()
         val pending = PendingIntent.getBroadcast(
             context,
             requestCode,
@@ -46,9 +83,9 @@ object AppointmentReminderScheduler {
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         try {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, reminderAt, pending)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
         } catch (_: SecurityException) {
-            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, reminderAt, pending)
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
         }
     }
 
@@ -74,5 +111,12 @@ object AppointmentReminderScheduler {
             null
         }
     }
-}
 
+    private fun parseDurationMinutes(durationHours: String?): Int {
+        val hours = durationHours?.trim()?.toDoubleOrNull() ?: return 0
+        if (hours <= 0.0 || !hours.isFinite()) {
+            return 0
+        }
+        return (hours * 60.0).toInt()
+    }
+}

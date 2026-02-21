@@ -112,6 +112,7 @@ class PushMessagingService : FirebaseMessagingService() {
         val requestId = data["id"]?.trim().orEmpty()
         val preferredDate = data["preferred_date"]?.trim().orEmpty()
         val preferredTime = data["preferred_time"]?.trim().orEmpty()
+        val durationHours = data["duration_hours"]?.trim().orEmpty()
         val contactRaw = data["contact_ok"] ?: data["contact_followup"] ?: ""
         val normalized = contactRaw.lowercase(Locale.US)
         val contactOk = normalized == "yes" || normalized == "true"
@@ -138,7 +139,8 @@ class PushMessagingService : FirebaseMessagingService() {
                 name = name,
                 city = city,
                 preferredDate = preferredDate,
-                preferredTime = preferredTime
+                preferredTime = preferredTime,
+                durationHours = durationHours
             )
         }
     }

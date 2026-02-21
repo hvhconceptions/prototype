@@ -2235,7 +2235,7 @@ require_admin_ui();
       const ACCOUNT_CENTER_KEY = "hvh_admin_account_center";
       const SCHEDULE_MENU_KEY = "hvh_admin_schedule_menu";
       const SERVICES_MENU_KEY = "hvh_admin_services_menu";
-      const NOTIFICATIONS_READ_KEY = "hvh_admin_read_notifications";
+      const NOTIFICATIONS_READ_LOCAL_KEY = "hvh_admin_read_notifications";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
       let currentLanguage = "en";
       const I18N = {
@@ -2959,13 +2959,55 @@ require_admin_ui();
         }
       };
 
-      const getReadNotificationIds = () => {
-        const data = readStoredObject(NOTIFICATIONS_READ_KEY, { ids: [] });
-        return new Set(Array.isArray(data.ids) ? data.ids.map((value) => String(value)) : []);
-      };
+      let readNotificationIdsCache = new Set();
+      let readNotificationIdsLoaded = false;
+
+      const getReadNotificationIds = () => new Set(readNotificationIdsCache);
 
       const setReadNotificationIds = (set) => {
-        writeStoredObject(NOTIFICATIONS_READ_KEY, { ids: Array.from(set).slice(-800) });
+        const ids = Array.from(set).map((value) => String(value)).filter(Boolean).slice(-2000);
+        readNotificationIdsCache = new Set(ids);
+        writeStoredObject(NOTIFICATIONS_READ_LOCAL_KEY, { ids: ids.slice(-800) });
+      };
+
+      const loadNotificationReadState = async () => {
+        if (readNotificationIdsLoaded) return;
+        const key = getKey();
+        const local = readStoredObject(NOTIFICATIONS_READ_LOCAL_KEY, { ids: [] });
+        const localIds = Array.isArray(local.ids) ? local.ids.map((value) => String(value)).filter(Boolean) : [];
+        if (!key) {
+          readNotificationIdsCache = new Set(localIds);
+          readNotificationIdsLoaded = true;
+          return;
+        }
+        try {
+          const response = await fetch("../api/admin/notifications-state.php", {
+            headers: { ...headersWithKey() },
+            cache: "no-store",
+          });
+          const data = await response.json().catch(() => ({}));
+          const remoteIds = Array.isArray(data.read_ids) ? data.read_ids.map((value) => String(value)).filter(Boolean) : [];
+          const merged = new Set([...localIds, ...remoteIds]);
+          setReadNotificationIds(merged);
+        } catch (_error) {
+          readNotificationIdsCache = new Set(localIds);
+        }
+        readNotificationIdsLoaded = true;
+      };
+
+      const syncNotificationReadState = async () => {
+        const key = getKey();
+        if (!key) return;
+        try {
+          await fetch("../api/admin/notifications-state.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headersWithKey(),
+            },
+            body: JSON.stringify({ read_ids: Array.from(readNotificationIdsCache) }),
+          });
+        } catch (_error) {}
       };
 
       const requestNotificationId = (item) => {
@@ -3001,6 +3043,7 @@ require_admin_ui();
             const latestRead = getReadNotificationIds();
             latestRead.add(id);
             setReadNotificationIds(latestRead);
+            syncNotificationReadState();
             setAdminPanel("clients", true);
             const cards = Array.from(requestsList.querySelectorAll("[data-request-id]"));
             const match = cards.find((card) => card.getAttribute("data-request-id") === String(item.id || ""));
@@ -5488,8 +5531,10 @@ require_admin_ui();
               throw new Error(fieldError || "update");
             }
             statusNode.textContent = t("appointment_updated");
+            panel.classList.add("hidden");
             await loadRequests();
             await loadAvailability();
+            setAdminPanel("schedule", true);
           } catch (error) {
             statusNode.textContent = `${t("failed_update_appointment")} ${error?.message ? `(${error.message})` : ""}`;
           } finally {
@@ -5716,6 +5761,7 @@ require_admin_ui();
           renderCalendarView();
           return;
         }
+        await loadNotificationReadState();
         try {
           const response = await fetch("../api/admin/requests.php", {
             headers: { ...headersWithKey() },

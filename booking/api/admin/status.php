@@ -442,7 +442,11 @@ if ($found) {
         $blocked = [];
     }
     $blocked = array_values(array_filter($blocked, function ($entry) use ($id): bool {
-        return !is_array($entry) || (($entry['booking_id'] ?? '') !== $id);
+        if (!is_array($entry)) {
+            return true;
+        }
+        $entryBookingId = trim((string) ($entry['booking_id'] ?? ''));
+        return $entryBookingId === '' || $entryBookingId !== $id;
     }));
     $isAccepted = (string) ($request['status'] ?? '') === 'accepted';
     $isPaid = (string) ($request['payment_status'] ?? '') === 'paid';

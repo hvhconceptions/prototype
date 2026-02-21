@@ -13,7 +13,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -30,8 +29,6 @@ import java.net.URL
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var offlineMessage: TextView
-    private lateinit var openClientsButton: Button
-    private lateinit var requestsBadge: TextView
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -43,12 +40,6 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.adminWebView)
         offlineMessage = findViewById(R.id.offlineMessage)
-        openClientsButton = findViewById(R.id.openClientsButton)
-        requestsBadge = findViewById(R.id.requestsBadge)
-
-        openClientsButton.setOnClickListener {
-            openNotificationsFeed()
-        }
 
         setupWebView()
         loadAdminUrl(forceFresh = true)
@@ -275,14 +266,8 @@ class MainActivity : AppCompatActivity() {
     private fun refreshUnreadBadge() {
         val unread = NotificationState.getUnread(this)
         if (unread <= 0) {
-            requestsBadge.visibility = View.GONE
-            openClientsButton.text = "Notifications"
             NotificationManagerCompat.from(this).cancel(PushMessagingService.BADGE_NOTIFICATION_ID)
-            return
         }
-        requestsBadge.visibility = View.VISIBLE
-        requestsBadge.text = if (unread > 99) "99+" else unread.toString()
-        openClientsButton.text = "Notifications ($unread)"
     }
 
     private fun openNotificationsFeed() {

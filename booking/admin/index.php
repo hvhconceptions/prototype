@@ -1804,6 +1804,10 @@ require_admin_ui();
         </div>
         <p class="hint">This saves admin service presets so you can organize prices quickly.</p>
         <div class="field">
+          <label for="serviceNameInput">Name</label>
+          <input id="serviceNameInput" type="text" placeholder="ex: Heidi Van Horny" />
+        </div>
+        <div class="field">
           <label>Price per duration</label>
           <div id="serviceDurationList" class="menu-list"></div>
           <button class="btn secondary" id="addServiceDuration" type="button">Add duration</button>
@@ -2214,6 +2218,7 @@ require_admin_ui();
       const menuTourLastEnd = document.getElementById("menuTourLastEnd");
       const menuTourAddBtn = document.getElementById("menuTourAddBtn");
       const menuTourStatus = document.getElementById("menuTourStatus");
+      const serviceNameInput = document.getElementById("serviceNameInput");
       const serviceDurationList = document.getElementById("serviceDurationList");
       const servicePackageList = document.getElementById("servicePackageList");
       const serviceAddonList = document.getElementById("serviceAddonList");
@@ -2909,6 +2914,7 @@ require_admin_ui();
 
       const readServicesConfig = () =>
         readStoredObject(SERVICES_MENU_KEY, {
+          name: "",
           durations: [],
           packages: [],
           addons: [],
@@ -2916,6 +2922,7 @@ require_admin_ui();
 
       const applyServicesConfigToUi = () => {
         const data = readServicesConfig();
+        if (serviceNameInput) serviceNameInput.value = String(data?.name || "");
         if (serviceDurationList) serviceDurationList.innerHTML = "";
         if (servicePackageList) servicePackageList.innerHTML = "";
         if (serviceAddonList) serviceAddonList.innerHTML = "";
@@ -2941,6 +2948,7 @@ require_admin_ui();
 
       const saveServicesConfig = () => {
         const data = {
+          name: String(serviceNameInput?.value || "").trim(),
           durations: readMenuRows(serviceDurationList),
           packages: readMenuRows(servicePackageList),
           addons: readMenuRows(serviceAddonList),

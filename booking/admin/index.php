@@ -1795,6 +1795,13 @@ require_admin_ui();
           <button class="btn" id="menuTourAddBtn" type="button">Add touring stop</button>
           <span class="status" id="menuTourStatus"></span>
         </div>
+        <p class="hint" id="menuTourScheduleHint">Dates are inclusive. You can edit or remove rows before saving.</p>
+        <div class="editor-list" id="menuTourScheduleList"></div>
+        <div class="row">
+          <button class="btn secondary" id="menuAddTourRow" type="button">Add stop</button>
+          <button class="btn" id="menuSaveTourSchedule" type="button">Save tour schedule</button>
+          <span class="status" id="menuTourScheduleStatus"></span>
+        </div>
       </section>
 
       <section class="menu-group hidden" data-menu-page="services" data-menu-title="Services">
@@ -2165,10 +2172,11 @@ require_admin_ui();
       const quickAddNotes = document.getElementById("quickAddNotes");
       const quickAddSubmitBtn = document.getElementById("quickAddSubmit");
       const quickAddStatus = document.getElementById("quickAddStatus");
-      const tourScheduleList = document.getElementById("tourScheduleList");
-      const tourScheduleStatus = document.getElementById("tourScheduleStatus");
-      const addTourRowBtn = document.getElementById("addTourRow");
-      const saveTourScheduleBtn = document.getElementById("saveTourSchedule");
+      const tourScheduleList = document.getElementById("menuTourScheduleList") || document.getElementById("tourScheduleList");
+      const tourScheduleStatus =
+        document.getElementById("menuTourScheduleStatus") || document.getElementById("tourScheduleStatus");
+      const addTourRowBtn = document.getElementById("menuAddTourRow") || document.getElementById("addTourRow");
+      const saveTourScheduleBtn = document.getElementById("menuSaveTourSchedule") || document.getElementById("saveTourSchedule");
       const cityScheduleWizard = document.getElementById("cityScheduleWizard");
       const cityScheduleStatus = document.getElementById("cityScheduleStatus");
       const calendarEditorSection = document.getElementById("calendarEditorSection");
@@ -3082,10 +3090,13 @@ require_admin_ui();
         setTextById("quickAddNotesLabel", t("quick_add_notes"));
         setTextById("quickAddSubmit", t("quick_add_submit"));
         setTextById("addTourRow", t("add_stop"));
+        setTextById("menuAddTourRow", t("add_stop"));
         setTextById("saveTourSchedule", t("save_tour_schedule"));
+        setTextById("menuSaveTourSchedule", t("save_tour_schedule"));
         setTextById("cityWizardTitle", t("city_wizard_title"));
         setTextById("cityWizardHint", t("city_wizard_hint"));
         setTextById("cityWizardTimezoneHint", t("city_wizard_timezone_hint"));
+        setTextById("menuTourScheduleHint", t("tour_schedule_hint"));
         setTextById("saveAvailability", t("save_city_schedule"));
         setTextById("clearCityTemplates", t("clear_template_blocks"));
         setTextById("gallerySectionTitle", t("eye_candy_title"));

@@ -255,6 +255,45 @@ require_admin_ui();
         display: block;
       }
 
+      .account-language-switch {
+        gap: 14px;
+        margin-top: 10px;
+        margin-bottom: 14px;
+      }
+
+      .account-language-switch .language-button {
+        padding: 4px 8px;
+      }
+
+      .account-center-actions {
+        margin-top: 8px;
+        gap: 14px;
+      }
+
+      #accountAccentColor {
+        width: 100%;
+        height: 48px;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        background: #fff;
+        cursor: pointer;
+      }
+
+      #accountAccentColor::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      #accountAccentColor::-webkit-color-swatch {
+        border: none;
+        border-radius: 8px;
+      }
+
+      #accountAccentColor::-moz-color-swatch {
+        border: none;
+        border-radius: 8px;
+      }
+
       header {
         max-width: 1100px;
         margin: 0 auto;
@@ -1515,6 +1554,15 @@ require_admin_ui();
           padding: 1px 2px;
         }
 
+        .account-language-switch {
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .account-language-switch .language-button {
+          padding: 3px 6px;
+        }
+
         .header-actions {
           width: 100%;
           justify-content: flex-end;
@@ -1687,7 +1735,7 @@ require_admin_ui();
             <input id="accountAccentColor" type="color" value="#ff006e" />
           </div>
         </div>
-        <div class="age-language" role="group" aria-label="language selector">
+        <div class="age-language account-language-switch" role="group" aria-label="language selector">
           <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
             <span class="language-flag" aria-hidden="true">
               <svg viewBox="0 0 24 16" role="presentation" focusable="false">
@@ -1718,7 +1766,7 @@ require_admin_ui();
             <span class="language-code">FR</span>
           </button>
         </div>
-        <div class="row">
+        <div class="row account-center-actions">
           <button class="btn" id="saveAccountCenter" type="button">Save account center</button>
           <span class="status" id="accountCenterStatus"></span>
         </div>
@@ -2077,7 +2125,7 @@ require_admin_ui();
           <button class="btn secondary" id="refreshRequests">Refresh</button>
           <select id="statusFilter">
             <option value="all">All</option>
-            <option value="pending" selected>Pending</option>
+            <option value="pending">Pending</option>
             <option value="maybe">Maybe</option>
             <option value="accepted">Accepted</option>
             <option value="paid">Paid</option>
@@ -3181,7 +3229,7 @@ require_admin_ui();
       });
 
       if (statusFilter) {
-        statusFilter.value = "pending";
+        statusFilter.value = "all";
       }
 
       if (adminMenuToggleBtn) {
@@ -5881,7 +5929,7 @@ require_admin_ui();
           const filtered = requests.filter((item) => {
             const { status, paymentStatus } = normalizeStatus(item);
             if (filterValue === "all") {
-              return status !== "declined";
+              return true;
             }
             if (filterValue === "paid") {
               return paymentStatus === "paid";

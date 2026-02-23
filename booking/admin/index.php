@@ -255,6 +255,45 @@ require_admin_ui();
         display: block;
       }
 
+      .account-language-switch {
+        gap: 14px;
+        margin-top: 10px;
+        margin-bottom: 14px;
+      }
+
+      .account-language-switch .language-button {
+        padding: 4px 8px;
+      }
+
+      .account-center-actions {
+        margin-top: 8px;
+        gap: 14px;
+      }
+
+      #accountAccentColor {
+        width: 100%;
+        height: 48px;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        background: #fff;
+        cursor: pointer;
+      }
+
+      #accountAccentColor::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      #accountAccentColor::-webkit-color-swatch {
+        border: none;
+        border-radius: 8px;
+      }
+
+      #accountAccentColor::-moz-color-swatch {
+        border: none;
+        border-radius: 8px;
+      }
+
       header {
         max-width: 1100px;
         margin: 0 auto;
@@ -1515,6 +1554,15 @@ require_admin_ui();
           padding: 1px 2px;
         }
 
+        .account-language-switch {
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .account-language-switch .language-button {
+          padding: 3px 6px;
+        }
+
         .header-actions {
           width: 100%;
           justify-content: flex-end;
@@ -1687,7 +1735,7 @@ require_admin_ui();
             <input id="accountAccentColor" type="color" value="#ff006e" />
           </div>
         </div>
-        <div class="age-language" role="group" aria-label="language selector">
+        <div class="age-language account-language-switch" role="group" aria-label="language selector">
           <button type="button" class="language-button" data-language-choice="en" aria-pressed="false">
             <span class="language-flag" aria-hidden="true">
               <svg viewBox="0 0 24 16" role="presentation" focusable="false">
@@ -1718,7 +1766,7 @@ require_admin_ui();
             <span class="language-code">FR</span>
           </button>
         </div>
-        <div class="row">
+        <div class="row account-center-actions">
           <button class="btn" id="saveAccountCenter" type="button">Save account center</button>
           <span class="status" id="accountCenterStatus"></span>
         </div>
@@ -1799,6 +1847,11 @@ require_admin_ui();
         <div class="row">
           <button class="btn" id="menuTourAddBtn" type="button">Add touring stop</button>
           <span class="status" id="menuTourStatus"></span>
+        </div>
+        <div class="row">
+          <label><input id="menuAutoTemplateBlocks" type="checkbox" /> <span id="menuAutoTemplateBlocksLabel">Auto-block from city rules</span></label>
+          <button class="btn ghost" id="menuClearAutoBlocks" type="button">Disable + clear auto blocks</button>
+          <span class="status" id="menuAutoBlockStatus"></span>
         </div>
         <p class="hint" id="menuTourScheduleHint">Dates are inclusive. You can edit or remove rows before saving.</p>
         <div class="editor-list" id="menuTourScheduleList"></div>
@@ -2077,7 +2130,7 @@ require_admin_ui();
           <button class="btn secondary" id="refreshRequests">Refresh</button>
           <select id="statusFilter">
             <option value="all">All</option>
-            <option value="pending" selected>Pending</option>
+            <option value="pending">Pending</option>
             <option value="maybe">Maybe</option>
             <option value="accepted">Accepted</option>
             <option value="paid">Paid</option>
@@ -2232,6 +2285,9 @@ require_admin_ui();
       const menuTourLastEnd = document.getElementById("menuTourLastEnd");
       const menuTourAddBtn = document.getElementById("menuTourAddBtn");
       const menuTourStatus = document.getElementById("menuTourStatus");
+      const menuAutoTemplateBlocks = document.getElementById("menuAutoTemplateBlocks");
+      const menuClearAutoBlocks = document.getElementById("menuClearAutoBlocks");
+      const menuAutoBlockStatus = document.getElementById("menuAutoBlockStatus");
       const serviceNameInput = document.getElementById("serviceNameInput");
       const serviceDurationList = document.getElementById("serviceDurationList");
       const servicePackageList = document.getElementById("servicePackageList");
@@ -2270,6 +2326,11 @@ require_admin_ui();
           city_wizard_timezone_hint: "",
           save_city_schedule: "Save city schedule",
           clear_template_blocks: "Clear template blocks",
+          auto_template_blocks_label: "Auto-block from city rules",
+          disable_clear_auto_blocks: "Disable + clear auto blocks",
+          auto_blocks_enabled: "Auto blocks enabled.",
+          auto_blocks_disabled: "Auto blocks disabled.",
+          auto_blocks_cleared: "Auto blocks cleared.",
           eye_candy_title: "Eye candy",
           eye_candy_hint: "Use full paths like /photos/heidi15.jpg and a short photo name.",
           add_eye_candy: "Add eye candy",
@@ -2430,6 +2491,11 @@ require_admin_ui();
           city_wizard_timezone_hint: "",
           save_city_schedule: "Sauvegarder le planning ville",
           clear_template_blocks: "Effacer les blocs modele",
+          auto_template_blocks_label: "Auto-blocage selon les regles ville",
+          disable_clear_auto_blocks: "Desactiver + effacer auto blocs",
+          auto_blocks_enabled: "Auto blocs actifs.",
+          auto_blocks_disabled: "Auto blocs desactives.",
+          auto_blocks_cleared: "Auto blocs effaces.",
           eye_candy_title: "Eye candy",
           eye_candy_hint: "Utilisez des chemins complets comme /photos/heidi15.jpg et un court nom de photo.",
           add_eye_candy: "Ajouter eye candy",
@@ -3159,6 +3225,8 @@ require_admin_ui();
         setTextById("menuTourScheduleHint", t("tour_schedule_hint"));
         setTextById("saveAvailability", t("save_city_schedule"));
         setTextById("clearCityTemplates", t("clear_template_blocks"));
+        setTextById("menuAutoTemplateBlocksLabel", t("auto_template_blocks_label"));
+        setTextById("menuClearAutoBlocks", t("disable_clear_auto_blocks"));
         setTextById("gallerySectionTitle", t("eye_candy_title"));
         setTextById("gallerySectionHint", t("eye_candy_hint"));
         setTextById("addGalleryRow", t("add_eye_candy"));
@@ -3224,7 +3292,7 @@ require_admin_ui();
       });
 
       if (statusFilter) {
-        statusFilter.value = "pending";
+        statusFilter.value = "all";
       }
 
       if (adminMenuToggleBtn) {
@@ -3427,6 +3495,7 @@ require_admin_ui();
       let recurringBlocks = [];
       let touringStops = [];
       let citySchedules = [];
+      let autoTemplateBlocksEnabled = false;
       let autoSaveTimer = null;
       let autoSaveInFlight = false;
       let autoSaveQueued = false;
@@ -3701,14 +3770,21 @@ require_admin_ui();
         return generated;
       };
 
+      const clearTemplateSlotsFromBlocked = () => {
+        blockedSlots = normalizeBlockedSlots(blockedSlots.filter((slot) => slot && slot.kind !== "template"));
+      };
+
       const applyCityTemplateBlocks = ({ announce = true } = {}) => {
         const baseSlots = blockedSlots.filter((slot) => slot && slot.kind !== "template");
-        const templateSlots = getTemplateBlocks();
+        const templateSlots = autoTemplateBlocksEnabled ? getTemplateBlocks() : [];
         blockedSlots = normalizeBlockedSlots([...baseSlots, ...templateSlots]);
+        if (menuAutoTemplateBlocks) {
+          menuAutoTemplateBlocks.checked = !!autoTemplateBlocksEnabled;
+        }
         renderBlockedSlots();
         renderCalendarView();
         if (announce && cityScheduleStatus) {
-          cityScheduleStatus.textContent = "City templates applied.";
+          cityScheduleStatus.textContent = autoTemplateBlocksEnabled ? "City templates applied." : t("auto_blocks_disabled");
         }
       };
 
@@ -4481,6 +4557,10 @@ require_admin_ui();
           bufferInput.value = String(normalizeBufferMinutes(data.buffer_minutes, 30));
           blockedSlots = normalizeBlockedSlots(data.blocked);
           recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
+          autoTemplateBlocksEnabled = !!data.auto_template_blocks;
+          if (menuAutoTemplateBlocks) {
+            menuAutoTemplateBlocks.checked = autoTemplateBlocksEnabled;
+          }
           citySchedules = (Array.isArray(data.city_schedules) ? data.city_schedules : [])
             .map((entry) => normalizeCitySchedule(entry))
             .filter((entry) => entry.city && entry.start && entry.end);
@@ -4535,6 +4615,7 @@ require_admin_ui();
           tour_timezone: DEFAULT_TIMEZONE,
           buffer_minutes: defaultBufferMinutes,
           availability_mode: "open",
+          auto_template_blocks: !!autoTemplateBlocksEnabled,
           blocked: blockedSlots,
           recurring: recurringBlocks,
           city_schedules: cityPayload,
@@ -5927,7 +6008,7 @@ require_admin_ui();
           const filtered = requests.filter((item) => {
             const { status, paymentStatus } = normalizeStatus(item);
             if (filterValue === "all") {
-              return status !== "declined";
+              return true;
             }
             if (filterValue === "paid") {
               return paymentStatus === "paid";
@@ -6307,6 +6388,30 @@ require_admin_ui();
       if (saveTourScheduleBtn) {
         saveTourScheduleBtn.addEventListener("click", saveTourSchedule);
       }
+      if (menuAutoTemplateBlocks) {
+        menuAutoTemplateBlocks.addEventListener("change", () => {
+          autoTemplateBlocksEnabled = !!menuAutoTemplateBlocks.checked;
+          applyCityTemplateBlocks({ announce: false });
+          if (menuAutoBlockStatus) {
+            menuAutoBlockStatus.textContent = autoTemplateBlocksEnabled ? t("auto_blocks_enabled") : t("auto_blocks_disabled");
+          }
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+      if (menuClearAutoBlocks) {
+        menuClearAutoBlocks.addEventListener("click", () => {
+          autoTemplateBlocksEnabled = false;
+          if (menuAutoTemplateBlocks) {
+            menuAutoTemplateBlocks.checked = false;
+          }
+          clearTemplateSlotsFromBlocked();
+          applyCityTemplateBlocks({ announce: false });
+          if (menuAutoBlockStatus) {
+            menuAutoBlockStatus.textContent = t("auto_blocks_cleared");
+          }
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
       if (clearCityTemplatesBtn) {
         clearCityTemplatesBtn.addEventListener("click", async () => {
           citySchedules = citySchedules.map((schedule) =>
@@ -6322,7 +6427,7 @@ require_admin_ui();
           );
           renderCityScheduleWizard();
           applyCityTemplateBlocks({ announce: false });
-          blockedSlots = normalizeBlockedSlots(blockedSlots.filter((slot) => slot && slot.kind !== "template"));
+          clearTemplateSlotsFromBlocked();
           renderBlockedSlots();
           renderCalendarView();
           queueAutoSave(t("template_rules_clearing"));

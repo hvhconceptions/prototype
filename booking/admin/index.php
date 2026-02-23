@@ -21,6 +21,37 @@ const ADMIN_RATE_LIMIT_MAX = 3;
 const ADMIN_RATE_LIMIT_WINDOW = 900;
 const ADMIN_RATE_LIMIT_BLOCK = 1800;
 const ADMIN_RATE_LIMIT_FILE = DATA_DIR . '/admin_rate_limit.json';
+const ADMIN_EMPLOYEE_FILE = DATA_DIR . '/admin_employees.json';
+
+function normalize_admin_username(string $value): string
+{
+    return strtolower(trim($value));
+}
+
+function read_admin_employees(): array
+{
+    $store = read_json_file(ADMIN_EMPLOYEE_FILE, ['employees' => []]);
+    $employees = $store['employees'] ?? [];
+    if (!is_array($employees)) {
+        return [];
+    }
+    $clean = [];
+    foreach ($employees as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $username = normalize_admin_username((string) ($entry['username'] ?? ''));
+        $hash = (string) ($entry['password_hash'] ?? '');
+        if ($username === '' || $hash === '') {
+            continue;
+        }
+        $clean[] = [
+            'username' => $username,
+            'password_hash' => $hash,
+        ];
+    }
+    return $clean;
+}
 
 function admin_get_client_ip(): string
 {
@@ -129,7 +160,7 @@ function deny_admin_access(): void
     exit;
 }
 
-function require_admin_ui(): void
+function require_admin_ui(): array
 {
     if (ADMIN_API_KEY === '' || ADMIN_API_KEY === 'change-this-admin-key') {
         http_response_code(500);
@@ -145,26 +176,47 @@ function require_admin_ui(): void
         deny_rate_limit();
     }
     [$user, $pass] = get_basic_auth_credentials();
+    $user = normalize_admin_username((string) $user);
+    $pass = (string) $pass;
     $expectedUser = defined('ADMIN_UI_USER') && ADMIN_UI_USER !== '' ? ADMIN_UI_USER : 'admin';
+    $expectedUser = normalize_admin_username((string) $expectedUser);
     if ($user === '' || $pass === '') {
         deny_admin_access();
     }
+    $isEmployerAuth = false;
     if (defined('ADMIN_UI_PASSWORD_HASH') && ADMIN_UI_PASSWORD_HASH !== '') {
-        if (!hash_equals($expectedUser, (string) $user) || !password_verify($pass, ADMIN_UI_PASSWORD_HASH)) {
-            record_admin_failure($state, $ip, $record, $now);
-            deny_admin_access();
-        }
+        $isEmployerAuth = hash_equals($expectedUser, $user) && password_verify($pass, ADMIN_UI_PASSWORD_HASH);
+    } else {
+        $isEmployerAuth = hash_equals($expectedUser, $user) && hash_equals(ADMIN_API_KEY, $pass);
+    }
+    if ($isEmployerAuth) {
         clear_admin_rate_record($state, $ip);
-        return;
+        return ['username' => $user, 'is_employer' => true];
     }
-    if (!hash_equals($expectedUser, (string) $user) || !hash_equals(ADMIN_API_KEY, (string) $pass)) {
-        record_admin_failure($state, $ip, $record, $now);
-        deny_admin_access();
+
+    $employees = read_admin_employees();
+    foreach ($employees as $employee) {
+        $employeeUser = normalize_admin_username((string) ($employee['username'] ?? ''));
+        $employeeHash = (string) ($employee['password_hash'] ?? '');
+        if ($employeeUser === '' || $employeeHash === '') {
+            continue;
+        }
+        if (!hash_equals($employeeUser, $user)) {
+            continue;
+        }
+        if (password_verify($pass, $employeeHash)) {
+            clear_admin_rate_record($state, $ip);
+            return ['username' => $user, 'is_employer' => false];
+        }
     }
-    clear_admin_rate_record($state, $ip);
+
+    record_admin_failure($state, $ip, $record, $now);
+    deny_admin_access();
 }
 
-require_admin_ui();
+$adminSession = require_admin_ui();
+$currentAdminUser = (string) ($adminSession['username'] ?? '');
+$currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 ?>
 <!doctype html>
 <html lang="en">
@@ -275,7 +327,7 @@ require_admin_ui();
         height: 48px;
         padding: 4px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         cursor: pointer;
       }
@@ -320,19 +372,19 @@ require_admin_ui();
         width: 46px;
         height: 46px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 0, 110, 0.35);
+        border: 1px solid var(--line);
         background: #fff;
         color: #7a1c45;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 10px 20px rgba(255, 0, 110, 0.12);
+        box-shadow: 0 10px 20px var(--shadow);
       }
 
       .icon-menu-btn:focus-visible,
       .icon-menu-btn:hover {
-        border-color: rgba(255, 0, 110, 0.55);
+        border-color: var(--hot);
         outline: none;
       }
 
@@ -370,7 +422,7 @@ require_admin_ui();
         background: #fff;
         border: 1px solid var(--line);
         border-radius: 14px;
-        box-shadow: 0 20px 40px rgba(255, 0, 110, 0.16);
+        box-shadow: 0 20px 40px var(--shadow);
         padding: 10px;
         z-index: 60;
       }
@@ -432,7 +484,7 @@ require_admin_ui();
         width: min(520px, 94vw);
         background: #fff;
         border-left: 1px solid var(--line);
-        box-shadow: -24px 0 48px rgba(255, 0, 110, 0.2);
+        box-shadow: -24px 0 48px var(--shadow);
         z-index: 160;
         overflow: auto;
         transform: translateX(100%);
@@ -477,7 +529,7 @@ require_admin_ui();
       .menu-section-btn {
         width: 100%;
         text-align: left;
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         border-radius: 12px;
         color: #6f1a41;
@@ -490,7 +542,7 @@ require_admin_ui();
 
       .menu-section-btn:hover,
       .menu-section-btn:focus-visible {
-        border-color: rgba(255, 0, 110, 0.55);
+        border-color: var(--hot);
         outline: none;
       }
 
@@ -595,7 +647,7 @@ require_admin_ui();
       }
 
       .folder-button {
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         color: #7a1c45;
         border-radius: 14px 14px 8px 8px;
@@ -610,9 +662,9 @@ require_admin_ui();
       }
 
       .folder-button[aria-pressed="true"] {
-        border-color: rgba(255, 0, 110, 0.55);
-        color: #ff006e;
-        box-shadow: 0 10px 24px rgba(255, 0, 110, 0.15);
+        border-color: var(--hot);
+        color: var(--hot);
+        box-shadow: 0 10px 24px var(--shadow);
         transform: translateY(-1px);
       }
 
@@ -660,7 +712,7 @@ require_admin_ui();
         width: 100%;
         padding: 12px 14px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         color: #2a0d1a;
         font-size: 0.98rem;
@@ -827,7 +879,7 @@ require_admin_ui();
         padding: 10px 16px;
         border-radius: 999px;
         border: none;
-        background: linear-gradient(135deg, #ff2d93, #ff006e);
+        background: linear-gradient(135deg, var(--pink), var(--hot));
         color: #fff;
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -1694,6 +1746,9 @@ require_admin_ui();
         <button class="menu-section-btn" type="button" data-menu-open="touring">Touring</button>
         <button class="menu-section-btn" type="button" data-menu-open="services">Services</button>
         <button class="menu-section-btn" type="button" data-menu-open="photos">Photos</button>
+        <?php if ($currentAdminIsEmployer): ?>
+        <button class="menu-section-btn" type="button" data-menu-open="employees">Employees</button>
+        <?php endif; ?>
       </div>
 
       <section class="menu-group hidden" data-menu-page="account" data-menu-title="Account center">
@@ -1922,6 +1977,30 @@ require_admin_ui();
           <span class="status" id="photoStatus"></span>
         </div>
       </section>
+      <?php if ($currentAdminIsEmployer): ?>
+      <section class="menu-group hidden" data-menu-page="employees" data-menu-title="Employees">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Employees</h3>
+        </div>
+        <p class="hint">Only employer can add/remove employee logins.</p>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="employeeUsername">Employee username</label>
+            <input id="employeeUsername" type="text" placeholder="employee01" />
+          </div>
+          <div class="field">
+            <label for="employeePassword">Employee password</label>
+            <input id="employeePassword" type="password" placeholder="Minimum 8 characters" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="addEmployeeBtn" type="button">Add employee</button>
+          <span class="status" id="employeeStatus"></span>
+        </div>
+        <div id="employeeList" class="editor-list"></div>
+      </section>
+      <?php endif; ?>
     </aside>
 
     <main>
@@ -2150,6 +2229,8 @@ require_admin_ui();
 
     <script>
       const ADMIN_KEY = <?php echo json_encode(ADMIN_API_KEY); ?>;
+      const CURRENT_ADMIN_USER = <?php echo json_encode($currentAdminUser); ?>;
+      const CURRENT_ADMIN_IS_EMPLOYER = <?php echo $currentAdminIsEmployer ? 'true' : 'false'; ?>;
       const DEFAULT_TIMEZONE = "America/Toronto";
       const TIMEZONES = [
         "America/Toronto",
@@ -2268,6 +2349,11 @@ require_admin_ui();
       const accountAccentColorInput = document.getElementById("accountAccentColor");
       const saveAccountCenterBtn = document.getElementById("saveAccountCenter");
       const accountCenterStatus = document.getElementById("accountCenterStatus");
+      const employeeUsernameInput = document.getElementById("employeeUsername");
+      const employeePasswordInput = document.getElementById("employeePassword");
+      const addEmployeeBtn = document.getElementById("addEmployeeBtn");
+      const employeeStatus = document.getElementById("employeeStatus");
+      const employeeList = document.getElementById("employeeList");
       const menuWorkAllDay = document.getElementById("menuWorkAllDay");
       const menuWorkStart = document.getElementById("menuWorkStart");
       const menuWorkEnd = document.getElementById("menuWorkEnd");
@@ -3452,6 +3538,112 @@ require_admin_ui();
         const key = getKey();
         if (!key) return {};
         return { "X-Admin-Key": key };
+      };
+
+      const renderEmployeeList = (employees) => {
+        if (!employeeList) return;
+        const rows = Array.isArray(employees) ? employees : [];
+        employeeList.innerHTML = "";
+        if (!rows.length) {
+          employeeList.innerHTML = '<p class="hint">No employees yet.</p>';
+          return;
+        }
+        rows.forEach((entry) => {
+          const username = String(entry?.username || "").trim();
+          if (!username) return;
+          const row = document.createElement("div");
+          row.className = "menu-list-row";
+          row.innerHTML = `
+            <input type="text" value="${username}" readonly />
+            <input type="text" value="${String(entry?.created_at || "").trim()}" readonly />
+            <button class="btn ghost" type="button">Remove</button>
+          `;
+          const removeBtn = row.querySelector("button");
+          if (removeBtn) {
+            removeBtn.addEventListener("click", () => removeEmployee(username));
+          }
+          employeeList.appendChild(row);
+        });
+      };
+
+      const loadEmployees = async () => {
+        if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeList) return;
+        if (employeeStatus) employeeStatus.textContent = "";
+        try {
+          const response = await fetch("../api/admin/employees.php", {
+            headers: { ...headersWithKey() },
+            cache: "no-store",
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          renderEmployeeList(result.employees || []);
+        } catch (error) {
+          if (employeeStatus) {
+            employeeStatus.textContent = `Failed to load employees${error?.message ? ` (${error.message})` : ""}.`;
+          }
+        }
+      };
+
+      const addEmployee = async () => {
+        if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeUsernameInput || !employeePasswordInput || !employeeStatus) return;
+        const username = String(employeeUsernameInput.value || "").trim().toLowerCase();
+        const password = String(employeePasswordInput.value || "");
+        employeeStatus.textContent = "";
+        if (!/^[a-z0-9._-]{3,40}$/i.test(username)) {
+          employeeStatus.textContent = "Use 3-40 chars: letters, numbers, dot, dash, underscore.";
+          return;
+        }
+        if (password.length < 8) {
+          employeeStatus.textContent = "Password must be at least 8 characters.";
+          return;
+        }
+        try {
+          const response = await fetch("../api/admin/employees.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headersWithKey(),
+            },
+            body: JSON.stringify({ action: "add", username, password }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          employeePasswordInput.value = "";
+          employeeUsernameInput.value = "";
+          employeeStatus.textContent = "Employee saved.";
+          renderEmployeeList(result.employees || []);
+        } catch (error) {
+          employeeStatus.textContent = `Failed to save employee${error?.message ? ` (${error.message})` : ""}.`;
+        }
+      };
+
+      const removeEmployee = async (username) => {
+        if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeStatus) return;
+        const normalized = String(username || "").trim().toLowerCase();
+        if (!normalized) return;
+        employeeStatus.textContent = "";
+        try {
+          const response = await fetch("../api/admin/employees.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headersWithKey(),
+            },
+            body: JSON.stringify({ action: "delete", username: normalized }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          employeeStatus.textContent = "Employee removed.";
+          renderEmployeeList(result.employees || []);
+        } catch (error) {
+          employeeStatus.textContent = `Failed to remove employee${error?.message ? ` (${error.message})` : ""}.`;
+        }
       };
 
       const populateTimezones = () => {
@@ -6446,6 +6638,17 @@ require_admin_ui();
       if (saveGalleryBtn) {
         saveGalleryBtn.addEventListener("click", saveGallery);
       }
+      if (addEmployeeBtn) {
+        addEmployeeBtn.addEventListener("click", addEmployee);
+      }
+      if (employeePasswordInput) {
+        employeePasswordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addEmployee();
+          }
+        });
+      }
       if (photoDisplayModeSelect) {
         photoDisplayModeSelect.addEventListener("change", updatePhotoModeUi);
       }
@@ -6487,6 +6690,7 @@ require_admin_ui();
       loadTourSchedule();
       loadGallery();
       loadRequests();
+      loadEmployees();
       applyLanguage(initialLanguage, true);
     </script>
   </body>

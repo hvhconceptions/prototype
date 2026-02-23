@@ -14,6 +14,12 @@ $requests = $store['requests'] ?? [];
 if (!is_array($requests)) {
     $requests = [];
 }
+$declinedStore = read_json_file(DATA_DIR . '/declined.json', ['requests' => []]);
+$declinedRequests = $declinedStore['requests'] ?? [];
+if (!is_array($declinedRequests)) {
+    $declinedRequests = [];
+}
+$sourceRequests = array_merge($requests, $declinedRequests);
 
 function request_alias_keys(array $request): array
 {
@@ -52,7 +58,7 @@ function request_alias_keys(array $request): array
 $kept = [];
 $indexByAlias = [];
 
-foreach ($requests as $request) {
+foreach ($sourceRequests as $request) {
     if (!is_array($request)) {
         continue;
     }

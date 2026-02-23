@@ -1374,7 +1374,7 @@
           request_title: "Booking request",
           label_name: "Name",
           label_phone: "Phone number",
-          phone_placeholder: "+ (country code) 555 1234",
+          phone_placeholder: "country code + number (plus optional), e.g. 14389993539",
           followup_phone_title: "Would you like me to contact you about my next trip to this city by phone?",
           followup_email_title: "Would you like me to contact you about my next trip to this city by email?",
           yes: "Yes",
@@ -1383,7 +1383,7 @@
           followup_phone_placeholder: "Optional: Toronto, Vancouver, Paris",
           label_email: "Email",
           invalid_email: "Enter a valid email address.",
-          invalid_phone: "Use a valid phone number with country code, for example +14389993539.",
+          invalid_phone: "Use a valid phone number with country code, for example 14389993539.",
           followup_email_placeholder: "Optional: Montreal, London, Berlin",
           label_notes: "Requests, info, tell me about you if you wish :)",
           notes_placeholder: "Optional. Share requests or any helpful info.",
@@ -1473,7 +1473,8 @@
           step_deposit_confirm: "Confirm the deposit terms",
           step_submit: "Send your booking request",
           complete_step: "Please complete: {step}.",
-          success_request_sent: "Request sent. Your reference: {id}. Check your email to proceed with payment.",
+          success_request_sent:
+            "Request sent. Your reference: {id}. Check your email, then send me a text to say you submitted the form. No appointment is confirmed until I confirm it.",
           send_error_prefix: "Couldn't send that.",
           duration_30m: "30 minutes",
           duration_1h: "1 hour",
@@ -1495,7 +1496,7 @@
           request_title: "Demande de reservation",
           label_name: "Nom",
           label_phone: "Numero de telephone",
-          phone_placeholder: "+ (indicatif pays) 555 1234",
+          phone_placeholder: "indicatif pays + numero (plus optionnel), ex: 14389993539",
           followup_phone_title:
             "Souhaitez-vous que je vous contacte pour mon prochain passage dans cette ville par telephone?",
           followup_email_title:
@@ -1506,7 +1507,7 @@
           followup_phone_placeholder: "Optionnel: Toronto, Vancouver, Paris",
           label_email: "Email",
           invalid_email: "Entrez une adresse email valide.",
-          invalid_phone: "Utilisez un numero valide avec indicatif pays, par exemple +14389993539.",
+          invalid_phone: "Utilisez un numero valide avec indicatif pays, par exemple 14389993539.",
           followup_email_placeholder: "Optionnel: Montreal, Londres, Berlin",
           label_notes: "Demandes, infos, parlez-moi de vous si vous voulez :)",
           notes_placeholder: "Optionnel. Partagez vos demandes ou infos utiles.",
@@ -1596,7 +1597,8 @@
           step_deposit_confirm: "Confirmez les conditions d'acompte",
           step_submit: "Envoyer votre demande",
           complete_step: "Veuillez completer: {step}.",
-          success_request_sent: "Demande envoyee. Votre reference: {id}. Verifiez votre email pour proceder au paiement.",
+          success_request_sent:
+            "Demande envoyee. Votre reference: {id}. Verifiez votre email, puis envoyez-moi un texto pour confirmer l'envoi du formulaire. Aucun rendez-vous n'est confirme sans ma confirmation.",
           send_error_prefix: "Impossible d'envoyer.",
           duration_30m: "30 minutes",
           duration_1h: "1 heure",
@@ -2418,20 +2420,38 @@
         return true;
       };
 
-      const validatePhoneField = () => {
+      const normalizePhoneNumber = (rawValue) => {
+        const value = String(rawValue || "").trim();
+        if (!value) return "";
+        let compact = value.replace(/[\s().-]+/g, "");
+        if (compact.startsWith("00")) {
+          compact = `+${compact.slice(2)}`;
+        }
+        if (compact.startsWith("+")) {
+          const digits = compact.slice(1).replace(/\D/g, "");
+          return digits ? `+${digits}` : "";
+        }
+        const digits = compact.replace(/\D/g, "");
+        return digits ? `+${digits}` : "";
+      };
+
+      const validatePhoneField = ({ normalize = false } = {}) => {
         if (!phoneInput) return true;
         const value = String(phoneInput.value || "").trim();
         phoneInput.setCustomValidity("");
         if (!value) return true;
-        const allowedPattern = /^\+[0-9\s().-]+$/;
-        if (!allowedPattern.test(value)) {
+        const normalized = normalizePhoneNumber(value);
+        if (!normalized) {
           phoneInput.setCustomValidity(t("invalid_phone"));
           return false;
         }
-        const digits = value.replace(/\D/g, "");
+        const digits = normalized.slice(1);
         if (digits.length < 8 || digits.length > 15 || digits.startsWith("0")) {
           phoneInput.setCustomValidity(t("invalid_phone"));
           return false;
+        }
+        if (normalize) {
+          phoneInput.value = normalized;
         }
         return true;
       };
@@ -2943,7 +2963,7 @@
 
       if (phoneInput) {
         phoneInput.addEventListener("input", validatePhoneField);
-        phoneInput.addEventListener("blur", validatePhoneField);
+        phoneInput.addEventListener("blur", () => validatePhoneField({ normalize: true }));
       }
       if (emailInput) {
         emailInput.addEventListener("input", validateEmailField);
@@ -2984,7 +3004,7 @@
           preferredTime.reportValidity();
           return;
         }
-        if (!validatePhoneField()) {
+        if (!validatePhoneField({ normalize: true })) {
           phoneInput?.reportValidity();
           return;
         }

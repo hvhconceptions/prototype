@@ -46,17 +46,41 @@ function is_valid_email_address(string $email): bool
     return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
 }
 
-function is_valid_phone_international(string $phone): bool
+function normalize_phone_international(string $phone): string
 {
     $value = trim($phone);
+    if ($value === '') {
+        return '';
+    }
+    $compact = preg_replace('/[\s().-]+/', '', $value);
+    $compact = is_string($compact) ? $compact : '';
+    if ($compact === '') {
+        return '';
+    }
+    if (strpos($compact, '00') === 0) {
+        $compact = '+' . substr($compact, 2);
+    }
+    if (strpos($compact, '+') === 0) {
+        $digits = preg_replace('/\D+/', '', substr($compact, 1));
+        $digits = is_string($digits) ? $digits : '';
+        return $digits === '' ? '' : '+' . $digits;
+    }
+    $digits = preg_replace('/\D+/', '', $compact);
+    $digits = is_string($digits) ? $digits : '';
+    return $digits === '' ? '' : '+' . $digits;
+}
+
+function is_valid_phone_international(string $phone): bool
+{
+    $value = normalize_phone_international($phone);
     if ($value === '' || strpos($value, '+') !== 0) {
         return false;
     }
-    if (!preg_match('/^\+[0-9\s().-]+$/', $value)) {
+    if (!preg_match('/^\+[0-9]+$/', $value)) {
         return false;
     }
-    $digits = preg_replace('/\D+/', '', $value);
-    if (!is_string($digits) || $digits === '') {
+    $digits = substr($value, 1);
+    if ($digits === '') {
         return false;
     }
     $len = strlen($digits);
@@ -225,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $payload = get_request_body();
 $requestEmail = trim((string) ($payload['email'] ?? ''));
-$requestPhone = trim((string) ($payload['phone'] ?? ''));
+$requestPhone = normalize_phone_international((string) ($payload['phone'] ?? ''));
 $clientIp = get_client_ip();
 if (is_blacklisted($requestEmail, $requestPhone, $clientIp)) {
     json_response(['error' => 'Blocked'], 403);
@@ -254,12 +278,12 @@ foreach ($required as $field) {
 }
 
 $emailValue = trim((string) ($payload['email'] ?? ''));
-$phoneValue = trim((string) ($payload['phone'] ?? ''));
+$phoneValue = normalize_phone_international((string) ($payload['phone'] ?? ''));
 if ($emailValue !== '' && !is_valid_email_address($emailValue)) {
     $errors['email'] = 'Invalid email';
 }
 if ($phoneValue !== '' && !is_valid_phone_international($phoneValue)) {
-    $errors['phone'] = 'Use international format: +countrycode number';
+    $errors['phone'] = 'Use a valid phone number with country code (plus optional), e.g. 14389993539';
 }
 $payload['email'] = $emailValue;
 $payload['phone'] = $phoneValue;
@@ -552,6 +576,8 @@ if ($requestEmail !== '') {
     if ($deposit > 0) {
         $body .= "You will receive a confirmation email once your payment is accepted.\n";
     }
+    $body .= "Please send me a text after submitting this form so I can review it quickly.\n";
+    $body .= "No appointment is confirmed until I personally confirm it.\n";
     $contactPhone = '(your phone number)';
     if (defined('CONTACT_SMS_WHATSAPP')) {
         $configuredPhone = trim((string) CONTACT_SMS_WHATSAPP);

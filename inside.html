@@ -4150,7 +4150,8 @@
       .social-bombacloud {
         color: #ff2c93;
         text-shadow: 0 0 12px rgba(255, 44, 147, 0.45);
-      }`r`n      .social-links a:hover,
+      }
+      .social-links a:hover,
       .social-links a:focus-visible {
         opacity: 0.9;
         transform: translateY(-1px);
@@ -4184,39 +4185,6 @@
           width: 100%;
           justify-content: center;
         }
-      }
-
-      .hvh-phone-fallback {
-        position: fixed;
-        bottom: clamp(20px, 4vw, 36px);
-        right: clamp(20px, 4vw, 36px);
-        z-index: 9999;
-        display: grid;
-        gap: 10px;
-        justify-items: end;
-      }
-
-      .hvh-phone-fallback-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 14px 22px;
-        border: 1px solid rgba(255, 59, 189, 0.85);
-        background: linear-gradient(120deg, rgba(255, 59, 189, 0.95), rgba(255, 120, 205, 0.85));
-        color: #2b0017;
-        font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        text-decoration: none;
-        box-shadow: 0 18px 32px rgba(255, 59, 189, 0.32);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-      }
-
-      .hvh-phone-fallback-link:hover,
-      .hvh-phone-fallback-link:focus-visible {
-        transform: translateY(-2px);
-        box-shadow: 0 22px 38px rgba(255, 59, 189, 0.45);
-        outline: none;
       }
     </style>
     <script>
@@ -6969,49 +6937,6 @@
         };
 
         reveal();
-      })();
-
-      (function ensurePhoneFallback() {
-        const fallbackId = "hvh-phone-fallback";
-
-        const createFallback = () => {
-          if (document.getElementById(fallbackId)) return;
-          const wrapper = document.createElement("div");
-          wrapper.id = fallbackId;
-          wrapper.className = "hvh-phone-fallback";
-          wrapper.innerHTML =
-            '<a class="hvh-phone-fallback-link" href="https://wa.me/15146076253" target="_blank" rel="noopener">whatsapp</a>' +
-            '<a class="hvh-phone-fallback-link" href="sms:+15146076253">sms</a>' +
-            '<a class="hvh-phone-fallback-link" href="/booking/">book now</a>';
-          document.body.appendChild(wrapper);
-        };
-
-        const removeFallback = () => {
-          const existing = document.getElementById(fallbackId);
-          if (existing) existing.remove();
-        };
-
-        const startCheck = () => {
-          let attempts = 0;
-          const timer = window.setInterval(() => {
-            attempts += 1;
-            if (window.hvhPhoneMatrixLoaded && window.hvhPhoneMatrix) {
-              removeFallback();
-              window.clearInterval(timer);
-              return;
-            }
-            if (attempts >= 5) {
-              createFallback();
-              window.clearInterval(timer);
-            }
-          }, 700);
-        };
-
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", startCheck);
-        } else {
-          startCheck();
-        }
       })();
     </script>
   </body>

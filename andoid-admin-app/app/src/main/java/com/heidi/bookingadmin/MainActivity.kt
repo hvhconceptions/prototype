@@ -1,11 +1,15 @@
 ﻿package com.heidi.bookingadmin
 
 import android.Manifest
+import android.app.AlarmManager
 import android.content.Intent
-import android.net.Uri
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.webkit.HttpAuthHandler
 import android.webkit.WebResourceError
@@ -25,10 +29,19 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var offlineMessage: TextView
+    private val syncHandler = Handler(Looper.getMainLooper())
+    private val reminderSyncInProgress = AtomicBoolean(false)
+    private val periodicReminderSync = object : Runnable {
+        override fun run() {
+            syncUpcomingReminders()
+            syncHandler.postDelayed(this, REMINDER_SYNC_INTERVAL_MS)
+        }
+    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -46,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         refreshUnreadBadge()
 
         requestNotificationPermissionIfNeeded()
+        requestExactAlarmPermissionIfNeeded()
         registerFcmToken()
         syncUpcomingReminders()
 
@@ -134,6 +148,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestExactAlarmPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        if (alarmManager.canScheduleExactAlarms()) return
+
+        val prefs = getSharedPreferences(APP_PREFS_NAME, MODE_PRIVATE)
+        if (prefs.getBoolean(KEY_EXACT_ALARM_PROMPTED, false)) return
+        prefs.edit().putBoolean(KEY_EXACT_ALARM_PROMPTED, true).apply()
+
+        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+            data = Uri.parse("package:$packageName")
+        }
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+        }
+    }
+
     private fun registerFcmToken() {
         FirebaseMessaging.getInstance().token
             .addOnSuccessListener { token ->
@@ -159,6 +191,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun syncUpcomingReminders() {
+        if (!reminderSyncInProgress.compareAndSet(false, true)) {
+            return
+        }
         Thread {
             try {
                 val entries = fetchUpcomingBookings()
@@ -170,10 +205,13 @@ class MainActivity : AppCompatActivity() {
                         city = entry.city,
                         preferredDate = entry.preferredDate,
                         preferredTime = entry.preferredTime,
-                        durationHours = entry.durationHours
+                        durationHours = entry.durationHours,
+                        durationLabel = entry.durationLabel
                     )
                 }
             } catch (_: Exception) {
+            } finally {
+                reminderSyncInProgress.set(false)
             }
         }.start()
     }
@@ -227,7 +265,8 @@ class MainActivity : AppCompatActivity() {
                     city = city,
                     preferredDate = preferredDate,
                     preferredTime = preferredTime,
-                    durationHours = item.optString("duration_hours", "").trim()
+                    durationHours = item.optString("duration_hours", "").trim(),
+                    durationLabel = item.optString("duration_label", "").trim()
                 )
             )
         }
@@ -253,7 +292,16 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadAdminUrl(forceFresh = true)
+        NotificationState.clearUnread(this)
+        NotificationManagerCompat.from(this).cancel(PushMessagingService.BADGE_NOTIFICATION_ID)
         refreshUnreadBadge()
+        syncUpcomingReminders()
+        startPeriodicReminderSync()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopPeriodicReminderSync()
     }
 
     private fun loadAdminUrl(forceFresh: Boolean = false) {
@@ -274,9 +322,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun openNotificationsFeed() {
         NotificationState.clearUnread(this)
-        NotificationManagerCompat.from(this).cancel(PushMessagingService.BADGE_NOTIFICATION_ID)
+        NotificationManagerCompat.from(this).cancelAll()
         refreshUnreadBadge()
         startActivity(Intent(this, ClientListActivity::class.java))
+    }
+
+    private fun startPeriodicReminderSync() {
+        syncHandler.removeCallbacks(periodicReminderSync)
+        syncHandler.postDelayed(periodicReminderSync, REMINDER_SYNC_INTERVAL_MS)
+    }
+
+    private fun stopPeriodicReminderSync() {
+        syncHandler.removeCallbacks(periodicReminderSync)
     }
 
     companion object {
@@ -287,6 +344,9 @@ class MainActivity : AppCompatActivity() {
         private const val ADMIN_API_KEY = "Simo.666$$$"
         private const val ADMIN_USER = "capitainecommando"
         private const val ADMIN_PASS = "Simo.666$$$"
+        private const val REMINDER_SYNC_INTERVAL_MS = 60_000L
+        private const val APP_PREFS_NAME = "booking_admin_app"
+        private const val KEY_EXACT_ALARM_PROMPTED = "exact_alarm_prompted"
     }
 
     private data class ReminderBooking(
@@ -295,6 +355,7 @@ class MainActivity : AppCompatActivity() {
         val city: String,
         val preferredDate: String,
         val preferredTime: String,
-        val durationHours: String
+        val durationHours: String,
+        val durationLabel: String
     )
 }

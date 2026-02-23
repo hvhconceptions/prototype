@@ -980,6 +980,30 @@
 
         const startOfDay = (year, monthIndex, day) => new Date(year, monthIndex, day, 0, 0, 0, 0);
         const endOfDay = (year, monthIndex, day) => new Date(year, monthIndex, day, 23, 59, 59, 999);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        const parseIsoDate = (raw, end = false) => {
+          if (typeof raw !== "string") return null;
+          const match = raw.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          if (!match) return null;
+          const year = Number(match[1]);
+          const monthIndex = Number(match[2]) - 1;
+          const day = Number(match[3]);
+          return end ? endOfDay(year, monthIndex, day) : startOfDay(year, monthIndex, day);
+        };
+
+        const formatIsoRange = (startIso, endIso) => {
+          const start = parseIsoDate(startIso, false);
+          const end = parseIsoDate(endIso, true);
+          if (!start || !end) return "";
+          const startDay = start.getDate();
+          const startMonth = monthNames[start.getMonth()];
+          const endDay = end.getDate();
+          const endMonth = monthNames[end.getMonth()];
+          if (startDay === endDay && startMonth === endMonth) return `${startDay} ${startMonth}`;
+          if (startMonth === endMonth) return `${startDay}-${endDay} ${startMonth}`;
+          return `${startDay} ${startMonth} - ${endDay} ${endMonth}`;
+        };
 
         const parseRange = (raw) => {
           if (!raw) return null;
@@ -1088,11 +1112,39 @@
             cityEl.textContent = city;
             const dateEl = document.createElement("span");
             dateEl.className = "touring-date";
-            dateEl.textContent = stop.date;
+            dateEl.textContent = stop.date || "";
             row.appendChild(cityEl);
             row.appendChild(dateEl);
             scheduleList.appendChild(row);
           });
+        };
+
+        const normalizeSchedule = (rawSchedule) => {
+          if (!Array.isArray(rawSchedule)) return [];
+          return rawSchedule
+            .map((entry) => {
+              if (!entry || typeof entry !== "object") return null;
+              const city = typeof entry.city === "string" ? entry.city.trim() : "";
+              if (!city) return null;
+
+              if (typeof entry.start === "string" && typeof entry.end === "string") {
+                const start = parseIsoDate(entry.start, false);
+                const end = parseIsoDate(entry.end, true);
+                if (start && end) {
+                  return {
+                    city,
+                    date: formatIsoRange(entry.start, entry.end),
+                    start,
+                    end,
+                  };
+                }
+              }
+
+              const date = typeof entry.date === "string" ? entry.date.trim() : "";
+              if (!date) return null;
+              return { city, date };
+            })
+            .filter(Boolean);
         };
 
         const applySchedule = (schedule) => {
@@ -1104,7 +1156,10 @@
           renderSchedule(schedule);
           let activeCity = null;
           schedule.forEach((stop) => {
-            const range = parseRange(stop.date);
+            const range =
+              stop.start instanceof Date && stop.end instanceof Date
+                ? { start: stop.start, end: stop.end }
+                : parseRange(stop.date);
             if (!range) return;
             if (now >= range.start && now <= range.end) {
               activeCity = stop.city;
@@ -1140,18 +1195,30 @@
         setMarquee("", true);
         renderSchedule([]);
 
-        fetch("inside.html", { cache: "no-store" })
+        fetch("booking/api/site-content.php", { cache: "no-store" })
           .then((response) => {
             if (!response.ok) throw new Error("fetch");
-            return response.text();
+            return response.json();
           })
-          .then((htmlText) => {
-            const schedule = parseScheduleFromHtml(htmlText);
+          .then((data) => {
+            const schedule = normalizeSchedule(data?.touring);
+            if (!schedule.length) throw new Error("empty");
             applySchedule(schedule);
           })
           .catch(() => {
-            setMarquee("", true);
-            setScheduleMessage("Touring schedule unavailable.");
+            fetch("inside.html", { cache: "no-store" })
+              .then((response) => {
+                if (!response.ok) throw new Error("fetch");
+                return response.text();
+              })
+              .then((htmlText) => {
+                const schedule = normalizeSchedule(parseScheduleFromHtml(htmlText));
+                applySchedule(schedule);
+              })
+              .catch(() => {
+                setMarquee("", true);
+                setScheduleMessage("Touring schedule unavailable.");
+              });
           });
       })();
     </script>

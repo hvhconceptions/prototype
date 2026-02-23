@@ -428,17 +428,22 @@ function read_inside_touring_schedule(): array
 
 function get_effective_touring_schedule(): array
 {
+    $content = read_site_content();
+    $touring = $content['touring'] ?? [];
+    if (is_array($touring)) {
+        $normalized = normalize_touring_entries($touring);
+        if ($normalized) {
+            return $normalized;
+        }
+    }
+
+    // Fallback for legacy/static installs where schedule still lives in inside.html.
     $insideSchedule = read_inside_touring_schedule();
     if ($insideSchedule) {
         return $insideSchedule;
     }
 
-    $content = read_site_content();
-    $touring = $content['touring'] ?? [];
-    if (!is_array($touring)) {
-        return [];
-    }
-    return normalize_touring_entries($touring);
+    return [];
 }
 
 function get_default_gallery_items(): array
@@ -1308,6 +1313,10 @@ function send_booking_push(array $request): bool
         'city' => (string) ($request['city'] ?? ''),
         'preferred_date' => (string) ($request['preferred_date'] ?? ''),
         'preferred_time' => (string) ($request['preferred_time'] ?? ''),
+        'duration_label' => (string) ($request['duration_label'] ?? ''),
+        'duration_hours' => (string) ($request['duration_hours'] ?? ''),
+        'status' => (string) ($request['status'] ?? ''),
+        'payment_status' => (string) ($request['payment_status'] ?? ''),
         'contact_followup' => (string) ($request['contact_followup'] ?? ''),
     ];
     return send_push_to_tokens($tokens, $title, $body, $data);

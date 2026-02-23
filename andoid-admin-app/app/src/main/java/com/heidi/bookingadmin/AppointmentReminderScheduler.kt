@@ -17,7 +17,8 @@ object AppointmentReminderScheduler {
         city: String,
         preferredDate: String,
         preferredTime: String,
-        durationHours: String?
+        durationHours: String?,
+        durationLabel: String? = null
     ) {
         val id = resolveReminderId(requestId, name, preferredDate, preferredTime)
         val appointmentAt = parseLocalDateTime(preferredDate, preferredTime) ?: return
@@ -35,7 +36,7 @@ object AppointmentReminderScheduler {
             )
         }
 
-        val durationMinutes = parseDurationMinutes(durationHours)
+        val durationMinutes = parseDurationMinutes(durationHours, durationLabel)
         if (durationMinutes <= 0) {
             return
         }
@@ -99,24 +100,51 @@ object AppointmentReminderScheduler {
 
     private fun parseLocalDateTime(date: String, time: String): Date? {
         val normalizedDate = date.trim()
-        val normalizedTime = time.trim()
+        val normalizedTime = time.trim().replace('.', ':').uppercase(Locale.US)
         if (normalizedDate.isEmpty() || normalizedTime.isEmpty()) {
             return null
         }
-        return try {
-            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
-            formatter.isLenient = false
-            formatter.parse("$normalizedDate $normalizedTime")
-        } catch (_: ParseException) {
-            null
+        val candidates = listOf(
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd H:mm",
+            "yyyy-MM-dd hh:mm a",
+            "yyyy-MM-dd h:mm a"
+        )
+        for (pattern in candidates) {
+            try {
+                val formatter = SimpleDateFormat(pattern, Locale.US)
+                formatter.isLenient = false
+                val parsed = formatter.parse("$normalizedDate $normalizedTime")
+                if (parsed != null) {
+                    return parsed
+                }
+            } catch (_: ParseException) {
+            }
         }
+        return null
     }
 
-    private fun parseDurationMinutes(durationHours: String?): Int {
-        val hours = durationHours?.trim()?.toDoubleOrNull() ?: return 0
-        if (hours <= 0.0 || !hours.isFinite()) {
+    private fun parseDurationMinutes(durationHours: String?, durationLabel: String?): Int {
+        val normalizedHours = durationHours?.trim()?.replace(',', '.')
+        val fromHours = normalizedHours?.toDoubleOrNull()
+        if (fromHours != null && fromHours > 0.0 && fromHours.isFinite()) {
+            return (fromHours * 60.0).toInt().coerceAtLeast(1)
+        }
+
+        val label = durationLabel?.trim()?.lowercase(Locale.US).orEmpty()
+        if (label.isEmpty()) {
             return 0
         }
-        return (hours * 60.0).toInt()
+
+        val hourRegex = Regex("""(\d+(?:[.,]\d+)?)\s*h""")
+        val minuteRegex = Regex("""(\d+(?:[.,]\d+)?)\s*m""")
+        val hourMatch = hourRegex.find(label)?.groupValues?.getOrNull(1)?.replace(',', '.')?.toDoubleOrNull()
+        val minuteMatch = minuteRegex.find(label)?.groupValues?.getOrNull(1)?.replace(',', '.')?.toDoubleOrNull()
+        val totalMinutes = when {
+            hourMatch != null && hourMatch > 0.0 -> (hourMatch * 60.0).toInt()
+            minuteMatch != null && minuteMatch > 0.0 -> minuteMatch.toInt()
+            else -> 0
+        }
+        return totalMinutes.coerceAtLeast(0)
     }
 }

@@ -24,9 +24,17 @@ class PushMessagingService : FirebaseMessagingService() {
 
         val title = message.notification?.title ?: "New booking"
         val body = message.notification?.body ?: "Open the admin panel to review."
-        val unreadCount = NotificationState.incrementUnread(this)
+        val status = message.data["status"]?.trim()?.lowercase(Locale.US).orEmpty()
+        val paymentStatus = message.data["payment_status"]?.trim()?.lowercase(Locale.US).orEmpty()
+        val isConfirmed = status == "accepted" || status == "paid" || paymentStatus == "paid"
+        val shouldCountUnread = !isConfirmed
+        val unreadCount = if (shouldCountUnread) {
+            NotificationState.incrementUnread(this)
+        } else {
+            NotificationState.getUnread(this)
+        }
         val overviewLines = getOverviewLines()
-        showNotification(title, body, unreadCount, overviewLines)
+        showNotification(title, body, unreadCount, overviewLines, shouldCountUnread)
     }
 
     override fun onNewToken(token: String) {
@@ -35,7 +43,13 @@ class PushMessagingService : FirebaseMessagingService() {
         }.start()
     }
 
-    private fun showNotification(title: String, body: String, unreadCount: Int, overviewLines: List<String>) {
+    private fun showNotification(
+        title: String,
+        body: String,
+        unreadCount: Int,
+        overviewLines: List<String>,
+        shouldCountUnread: Boolean
+    ) {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val soundUri = Uri.parse("android.resource://$packageName/${R.raw.booking_ping}")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -66,7 +80,7 @@ class PushMessagingService : FirebaseMessagingService() {
         )
 
         val style = NotificationCompat.InboxStyle()
-            .setSummaryText("$unreadCount new request(s)")
+            .setSummaryText(if (shouldCountUnread) "$unreadCount new request(s)" else "Booking status updated")
         for (line in overviewLines) {
             style.addLine(line)
         }
@@ -82,7 +96,7 @@ class PushMessagingService : FirebaseMessagingService() {
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setSound(soundUri)
-            .setNumber(unreadCount)
+            .setNumber(if (shouldCountUnread) unreadCount else 0)
             .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
             .build()
 
@@ -113,6 +127,15 @@ class PushMessagingService : FirebaseMessagingService() {
         val preferredDate = data["preferred_date"]?.trim().orEmpty()
         val preferredTime = data["preferred_time"]?.trim().orEmpty()
         val durationHours = data["duration_hours"]?.trim().orEmpty()
+        val durationLabel = data["duration_label"]?.trim().orEmpty()
+        val status = data["status"]?.trim()?.lowercase(Locale.US).orEmpty()
+        val paymentStatus = data["payment_status"]?.trim()?.lowercase(Locale.US).orEmpty()
+        val hasStatusSignal = status.isNotBlank() || paymentStatus.isNotBlank()
+        val isConfirmed = if (hasStatusSignal) {
+            status == "accepted" || status == "paid" || paymentStatus == "paid"
+        } else {
+            false
+        }
         val contactRaw = data["contact_ok"] ?: data["contact_followup"] ?: ""
         val normalized = contactRaw.lowercase(Locale.US)
         val contactOk = normalized == "yes" || normalized == "true"
@@ -132,7 +155,7 @@ class PushMessagingService : FirebaseMessagingService() {
         )
         ClientDatabase.getInstance(this).clientDao().upsert(client)
 
-        if (preferredDate.isNotBlank() && preferredTime.isNotBlank()) {
+        if (isConfirmed && preferredDate.isNotBlank() && preferredTime.isNotBlank()) {
             AppointmentReminderScheduler.scheduleFromBooking(
                 context = this,
                 requestId = entryId,
@@ -140,7 +163,8 @@ class PushMessagingService : FirebaseMessagingService() {
                 city = city,
                 preferredDate = preferredDate,
                 preferredTime = preferredTime,
-                durationHours = durationHours
+                durationHours = durationHours,
+                durationLabel = durationLabel
             )
         }
     }

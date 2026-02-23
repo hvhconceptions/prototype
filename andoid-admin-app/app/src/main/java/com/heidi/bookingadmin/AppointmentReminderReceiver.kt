@@ -52,7 +52,7 @@ class AppointmentReminderReceiver : BroadcastReceiver() {
         )
 
         val isEndEvent = eventType == "end"
-        val title = if (isEndEvent) "Appointment ended" else "Appointment starting now"
+        val title = if (isEndEvent) "It's Britney bitch - Appointment ended" else "It's Britney bitch - Appointment starting now"
         val details = buildString {
             append(clientName)
             if (city.isNotBlank()) {
@@ -82,7 +82,7 @@ class AppointmentReminderReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        private const val CHANNEL_ID = "appointment_reminders_v2"
+        private const val CHANNEL_ID = "appointment_reminders_v3"
         private const val BASE_NOTIFICATION_ID = 410000
     }
 }

@@ -460,4 +460,44 @@ if ($found) {
     write_json_file(DATA_DIR . '/availability.json', $availability);
 }
 
+$statusForPush = strtolower(trim((string) ($request['status'] ?? '')));
+$paymentStatusForPush = strtolower(trim((string) ($request['payment_status'] ?? '')));
+$isConfirmedForPush = $statusForPush === 'accepted' || $paymentStatusForPush === 'paid';
+if ($isConfirmedForPush) {
+    $tokens = get_push_token_strings();
+    if ($tokens) {
+        $pushTitle = 'Booking confirmed';
+        $pushBodyParts = [];
+        $durationLabel = trim((string) ($request['duration_label'] ?? ''));
+        $dateLabel = trim((string) ($request['preferred_date'] ?? ''));
+        $timeLabel = trim((string) ($request['preferred_time'] ?? ''));
+        $cityLabel = trim((string) ($request['city'] ?? ''));
+        if ($durationLabel !== '') {
+            $pushBodyParts[] = $durationLabel;
+        }
+        $dateTimeLabel = trim($dateLabel . ' ' . $timeLabel);
+        if ($dateTimeLabel !== '') {
+            $pushBodyParts[] = $dateTimeLabel;
+        }
+        if ($cityLabel !== '') {
+            $pushBodyParts[] = $cityLabel;
+        }
+        $pushBody = $pushBodyParts ? implode(' - ', $pushBodyParts) : 'Appointment confirmed';
+        $pushData = [
+            'id' => (string) ($request['id'] ?? ''),
+            'name' => (string) ($request['name'] ?? ''),
+            'email' => (string) ($request['email'] ?? ''),
+            'phone' => (string) ($request['phone'] ?? ''),
+            'city' => (string) ($request['city'] ?? ''),
+            'preferred_date' => (string) ($request['preferred_date'] ?? ''),
+            'preferred_time' => (string) ($request['preferred_time'] ?? ''),
+            'duration_label' => (string) ($request['duration_label'] ?? ''),
+            'duration_hours' => (string) ($request['duration_hours'] ?? ''),
+            'status' => (string) ($request['status'] ?? ''),
+            'payment_status' => (string) ($request['payment_status'] ?? ''),
+        ];
+        send_push_to_tokens($tokens, $pushTitle, $pushBody, $pushData);
+    }
+}
+
 json_response(['ok' => true]);

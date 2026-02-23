@@ -173,6 +173,9 @@ function get_base_rate(float $hours, string $experience, string $rateKey): int
     if ($rateKey === 'social') {
         return 1000;
     }
+    if ($hours >= 24) {
+        return 4000;
+    }
     if ($hours >= 8 && $hours <= 12) {
         return 3000;
     }
@@ -449,6 +452,11 @@ if ($hours > 0) {
                         continue;
                     }
                     if (is_template_generated_block_entry($entry)) {
+                        continue;
+                    }
+                    $entryCity = normalize_city_name((string) ($entry['city'] ?? ''));
+                    $requestCityKey = normalize_city_name($requestedCity);
+                    if ($entryCity !== '' && $requestCityKey !== '' && $entryCity !== $requestCityKey) {
                         continue;
                     }
                     if (($entry['date'] ?? '') !== $tourDateKey) {

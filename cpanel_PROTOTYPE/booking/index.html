@@ -1438,7 +1438,7 @@
           city_tba: "TBA",
           availability_selected_date: "Availability shown for the selected date.",
           availability_need_standard:
-            "Select a standard duration to view available times. 24+ hours to be discussed.",
+            "Select a duration to view available times.",
           availability_read_touring: "Read touring dates carefully, or arrange Fly me to you.",
           availability_past_date: "This date is in the past. Pick a future date.",
           availability_none_left: "No start times left for this date and duration.",
@@ -1553,7 +1553,7 @@
           city_tba: "A definir",
           availability_selected_date: "Disponibilites pour la date choisie.",
           availability_need_standard:
-            "Choisissez une duree standard pour voir les heures disponibles. Le 24h+ est a discuter.",
+            "Choisissez une duree pour voir les heures disponibles.",
           availability_read_touring: "Lisez les dates de tournee, ou choisissez Fly me to you.",
           availability_past_date: "Cette date est passee. Choisissez une date future.",
           availability_none_left: "Aucune heure de depart restante pour cette date et duree.",
@@ -1738,6 +1738,8 @@
       const LONG_SESSION_MIN = 8;
       const LONG_SESSION_MAX = 12;
       const LONG_SESSION_RATE = 3000;
+      const DAY_PLUS_HOURS = 24;
+      const DAY_PLUS_RATE = 4000;
       const DURATION_OPTIONS = [
         { labelKey: "duration_30m", hours: 0.5, value: "0.5" },
         { labelKey: "duration_1h", hours: 1, value: "1" },
@@ -1747,7 +1749,7 @@
         { labelKey: "duration_4h", hours: 4, value: "4" },
         { labelKey: "duration_social", hours: 3, value: "social", rateKey: "social" },
         { labelKey: "duration_8_12h", hours: 10, value: "8-12" },
-        { labelKey: "duration_24p", hours: 0, value: "24+", custom: true },
+        { labelKey: "duration_24p", hours: DAY_PLUS_HOURS, value: "24+" },
       ];
       const getDurationLabel = (entry) => t(entry?.labelKey || "");
 
@@ -1924,6 +1926,9 @@
         if (rateKey === "social") {
           return RATE_TABLE.social[3];
         }
+        if (hours >= DAY_PLUS_HOURS) {
+          return DAY_PLUS_RATE;
+        }
         if (hours >= LONG_SESSION_MIN && hours <= LONG_SESSION_MAX) {
           return LONG_SESSION_RATE;
         }
@@ -2003,7 +2008,7 @@
         const rateKey = selected.dataset.rateKey || "";
         const experience = experienceSelect.value || "gfe";
         const currency = currencySelect.value || BASE_CURRENCY;
-        if (selected.dataset.custom === "true" || selected.value === "24+") {
+        if (selected.dataset.custom === "true") {
           baseRateDisplay.textContent = t("discuss_whatsapp_short");
           totalRateDisplay.textContent = t("discuss_whatsapp_short");
           depositRateDisplay.textContent = "--";
@@ -2413,6 +2418,10 @@
         }
         return blockedSlots.some((entry) => {
           if (!entry || entry.date !== dateKey) return false;
+          const blockCityKey = normalizeCityName(entry.city || "");
+          const selectedCityValue = citySelect?.value || getCityForDate(dateKey) || "";
+          const selectedCityKey = normalizeCityName(selectedCityValue);
+          if (blockCityKey && selectedCityKey && blockCityKey !== selectedCityKey) return false;
           const blockStart = timeToMinutes(entry.start);
           const blockEnd = timeToMinutes(entry.end);
           if (blockStart === null || blockEnd === null) return false;
@@ -2434,12 +2443,15 @@
       const getSelectedDurationMinutes = () => {
         const selected = durationSelect?.selectedOptions?.[0];
         if (!selected) return null;
-        if (selected.dataset.custom === "true" || selected.value === "24+") {
+        if (selected.dataset.custom === "true") {
           return null;
         }
         const hours = Number(selected.dataset.hours || 0);
         if (!Number.isFinite(hours) || hours <= 0) {
           return null;
+        }
+        if (selected.value === "24+") {
+          return 60;
         }
         return Math.max(30, Math.round(hours * 60));
       };
@@ -3129,5 +3141,7 @@
     </script>
   </body>
 </html>
+
+
 
 

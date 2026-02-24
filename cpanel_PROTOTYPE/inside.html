@@ -34,6 +34,7 @@
       type="image/svg+xml"
       href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
     />
+    <script src="country-guard.js" defer></script>
 
     <style>
       :root {
@@ -4152,14 +4153,19 @@
         transform: translateZ(0);
         background: transparent;
       }
+      .social-links a.social-instagram,
+      .social-links a.social-onlyfans,
+      .social-links a.social-bombacloud {
+        overflow: hidden;
+      }
 
       .social-links svg {
         width: 30px;
         height: 30px;
       }
       .social-links img {
-        width: 40px;
-        height: 40px;
+        width: 46px;
+        height: 46px;
         object-fit: contain;
         background: transparent;
       }
@@ -4184,6 +4190,8 @@
         text-shadow: 0 0 12px rgba(255, 44, 147, 0.45);
       }
       .social-bombacloud img {
+        border-radius: 50%;
+        object-fit: cover;
         filter: drop-shadow(0 0 10px rgba(255, 44, 147, 0.45));
       }
       .social-links a:hover,

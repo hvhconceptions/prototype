@@ -35,6 +35,7 @@
       type="image/svg+xml"
       href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><circle cx='256' cy='256' r='248' fill='%23000'/><circle cx='256' cy='256' r='210' fill='none' stroke='%2300ff99' stroke-width='18'/><path d='M140 150c40 0 58-30 58-30M372 150c-40 0-58-30-58-30' stroke='%2300ff99' stroke-width='18' fill='none' stroke-linecap='round'/><text x='256' y='305' text-anchor='middle' font-family='ui-monospace,monospace' font-size='120' fill='%2300ff99' font-weight='700'>HVH</text></svg>"
     />
+    <script src="country-guard.js" defer></script>
 
     <style>
       :root {
@@ -3799,13 +3800,19 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 56px;
-        height: 56px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
-        padding: 10px;
+        padding: 8px;
         text-decoration: none;
         letter-spacing: 1px;
         transform: translateZ(0);
+        background: transparent;
+      }
+      .social-links a.social-instagram,
+      .social-links a.social-onlyfans,
+      .social-links a.social-bombacloud {
+        overflow: hidden;
       }
 
       .social-links svg {
@@ -3813,9 +3820,10 @@
         height: 30px;
       }
       .social-links img {
-        width: 34px;
-        height: 34px;
+        width: 46px;
+        height: 46px;
         object-fit: contain;
+        background: transparent;
       }
 
       .social-instagram {
@@ -3838,6 +3846,8 @@
         text-shadow: 0 0 12px rgba(255, 44, 147, 0.45);
       }
       .social-bombacloud img {
+        border-radius: 50%;
+        object-fit: cover;
         filter: drop-shadow(0 0 10px rgba(255, 44, 147, 0.45));
       }
       .social-links a:hover,

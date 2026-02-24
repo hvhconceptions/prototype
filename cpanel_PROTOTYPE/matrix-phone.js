@@ -111,7 +111,7 @@
       }
       .hvh-phone-fab {
         position: fixed;
-        bottom: clamp(74px, 9vw, 120px);
+        bottom: clamp(96px, 11vw, 152px);
         right: clamp(20px, 4vw, 36px);
         width: 64px;
         height: 64px;
@@ -136,7 +136,7 @@
       }
       .hvh-phone-tag {
         position: fixed;
-        bottom: clamp(82px, 9.6vw, 126px);
+        bottom: clamp(104px, 11.5vw, 160px);
         right: calc(clamp(20px, 4vw, 36px) + 78px);
         padding: 8px 14px;
         border-radius: 999px;
@@ -199,7 +199,7 @@
       }
       .hvh-phone-options {
         position: fixed;
-        bottom: calc(clamp(74px, 9vw, 120px) + 80px);
+        bottom: calc(clamp(96px, 11vw, 152px) + 80px);
         right: clamp(20px, 4vw, 36px);
         display: grid;
         gap: 10px;

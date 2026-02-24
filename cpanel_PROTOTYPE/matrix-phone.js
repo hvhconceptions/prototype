@@ -111,7 +111,7 @@
       }
       .hvh-phone-fab {
         position: fixed;
-        bottom: clamp(20px, 4vw, 36px);
+        bottom: clamp(74px, 9vw, 120px);
         right: clamp(20px, 4vw, 36px);
         width: 64px;
         height: 64px;
@@ -136,7 +136,7 @@
       }
       .hvh-phone-tag {
         position: fixed;
-        bottom: clamp(28px, 4.6vw, 42px);
+        bottom: clamp(82px, 9.6vw, 126px);
         right: calc(clamp(20px, 4vw, 36px) + 78px);
         padding: 8px 14px;
         border-radius: 999px;
@@ -199,7 +199,7 @@
       }
       .hvh-phone-options {
         position: fixed;
-        bottom: calc(clamp(20px, 4vw, 36px) + 80px);
+        bottom: calc(clamp(74px, 9vw, 120px) + 80px);
         right: clamp(20px, 4vw, 36px);
         display: grid;
         gap: 10px;
@@ -444,8 +444,17 @@
         handleSms();
       });
 
+      const bookBtn = document.createElement("button");
+      bookBtn.type = "button";
+      bookBtn.textContent = "book online!";
+      bookBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        window.open("/booking/", "_blank", "noopener,noreferrer");
+      });
+
       phoneOptions.appendChild(waBtn);
       phoneOptions.appendChild(smsBtn);
+      phoneOptions.appendChild(bookBtn);
       document.body.appendChild(phoneOptions);
 
       document.addEventListener("click", (event) => {

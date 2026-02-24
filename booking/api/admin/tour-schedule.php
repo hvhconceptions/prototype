@@ -35,11 +35,53 @@ function normalize_tour_type(string $value): string
     return 'tour';
 }
 
+function normalize_partner_name(string $value): string
+{
+    return trim($value);
+}
+
+function normalize_partner_link(string $value): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '';
+    }
+    if (preg_match('/^https?:\/\//i', $value) || preg_match('/^mailto:/i', $value)) {
+        return $value;
+    }
+    return 'https://' . ltrim($value, '/');
+}
+
+function normalize_partners($partners): array
+{
+    if (!is_array($partners)) {
+        return [];
+    }
+    $clean = [];
+    foreach ($partners as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $friend = normalize_partner_name((string) ($entry['friend'] ?? ''));
+        $link = normalize_partner_link((string) ($entry['link'] ?? ''));
+        if ($friend === '' || $link === '') {
+            continue;
+        }
+        $clean[] = [
+            'friend' => $friend,
+            'link' => $link,
+        ];
+    }
+    return $clean;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $content = read_site_content();
     $touring = get_effective_touring_schedule();
+    $partners = normalize_partners($content['touring_partners'] ?? []);
     json_response([
         'touring' => $touring,
+        'partners' => $partners,
         'updated_at' => $content['updated_at'] ?? gmdate('c'),
     ]);
 }
@@ -50,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $payload = get_request_body();
 $touring = $payload['touring'] ?? [];
+$partners = $payload['partners'] ?? [];
 if (!is_array($touring)) {
     json_response(['error' => 'Invalid touring list'], 422);
 }
@@ -97,6 +140,11 @@ usort($clean, static function (array $a, array $b): int {
 
 $content = read_site_content();
 $content['touring'] = array_values($clean);
+$content['touring_partners'] = normalize_partners($partners);
 write_site_content($content);
 
-json_response(['ok' => true, 'touring' => $content['touring']]);
+json_response([
+    'ok' => true,
+    'touring' => $content['touring'],
+    'partners' => $content['touring_partners'],
+]);

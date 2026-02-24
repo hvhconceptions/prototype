@@ -26,14 +26,62 @@ function normalize_tour_date(string $value): string
     return '';
 }
 
+function normalize_tour_type(string $value): string
+{
+    $type = strtolower(trim($value));
+    if ($type === 'block') {
+        return 'block';
+    }
+    return 'tour';
+}
+
+function normalize_partner_name(string $value): string
+{
+    return trim($value);
+}
+
+function normalize_partner_link(string $value): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '';
+    }
+    if (preg_match('/^https?:\/\//i', $value) || preg_match('/^mailto:/i', $value)) {
+        return $value;
+    }
+    return 'https://' . ltrim($value, '/');
+}
+
+function normalize_partners($partners): array
+{
+    if (!is_array($partners)) {
+        return [];
+    }
+    $clean = [];
+    foreach ($partners as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $friend = normalize_partner_name((string) ($entry['friend'] ?? ''));
+        $link = normalize_partner_link((string) ($entry['link'] ?? ''));
+        if ($friend === '' || $link === '') {
+            continue;
+        }
+        $clean[] = [
+            'friend' => $friend,
+            'link' => $link,
+        ];
+    }
+    return $clean;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $content = read_site_content();
-    $touring = $content['touring'] ?? [];
-    if (!is_array($touring)) {
-        $touring = [];
-    }
+    $touring = get_effective_touring_schedule();
+    $partners = normalize_partners($content['touring_partners'] ?? []);
     json_response([
         'touring' => $touring,
+        'partners' => $partners,
         'updated_at' => $content['updated_at'] ?? gmdate('c'),
     ]);
 }
@@ -44,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $payload = get_request_body();
 $touring = $payload['touring'] ?? [];
+$partners = $payload['partners'] ?? [];
 if (!is_array($touring)) {
     json_response(['error' => 'Invalid touring list'], 422);
 }
@@ -56,6 +105,11 @@ foreach ($touring as $entry) {
     $start = normalize_tour_date((string) ($entry['start'] ?? ''));
     $end = normalize_tour_date((string) ($entry['end'] ?? ''));
     $city = trim((string) ($entry['city'] ?? ''));
+    $type = normalize_tour_type((string) ($entry['type'] ?? 'tour'));
+    $notes = trim((string) ($entry['notes'] ?? ''));
+    if (strlen($notes) > 300) {
+        $notes = substr($notes, 0, 300);
+    }
     if ($start === '' || $end === '' || $city === '') {
         continue;
     }
@@ -69,6 +123,8 @@ foreach ($touring as $entry) {
         'start' => $start,
         'end' => $end,
         'city' => $city,
+        'type' => $type,
+        'notes' => $notes,
     ];
 }
 
@@ -77,13 +133,18 @@ if (!$clean) {
 }
 
 usort($clean, static function (array $a, array $b): int {
-    $left = $a['start'] . '|' . $a['end'] . '|' . strtolower((string) $a['city']);
-    $right = $b['start'] . '|' . $b['end'] . '|' . strtolower((string) $b['city']);
+    $left = $a['start'] . '|' . $a['end'] . '|' . strtolower((string) $a['city']) . '|' . strtolower((string) ($a['type'] ?? 'tour'));
+    $right = $b['start'] . '|' . $b['end'] . '|' . strtolower((string) $b['city']) . '|' . strtolower((string) ($b['type'] ?? 'tour'));
     return strcmp($left, $right);
 });
 
 $content = read_site_content();
 $content['touring'] = array_values($clean);
+$content['touring_partners'] = normalize_partners($partners);
 write_site_content($content);
 
-json_response(['ok' => true, 'touring' => $content['touring']]);
+json_response([
+    'ok' => true,
+    'touring' => $content['touring'],
+    'partners' => $content['touring_partners'],
+]);

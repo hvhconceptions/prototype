@@ -6,25 +6,12 @@ require __DIR__ . '/config.php';
 function normalize_experience(string $experience): string
 {
     $normalized = strtolower(trim($experience));
-    if (in_array($normalized, ['gfe', 'pse', 'filming'], true)) {
-        return $normalized;
-    }
-    return 'gfe';
+    return $normalized === 'duo_gfe' ? 'duo_gfe' : 'duo_gfe';
 }
 
 function format_experience_label(string $experience): string
 {
-    $normalized = strtolower(trim($experience));
-    if ($normalized === 'gfe') {
-        return 'GFE';
-    }
-    if ($normalized === 'pse') {
-        return 'PSE';
-    }
-    if ($normalized === 'filming') {
-        return 'Filming';
-    }
-    return $normalized !== '' ? strtoupper($normalized) : 'GFE';
+    return 'Duo GFE';
 }
 
 function normalize_city_name(string $city): string
@@ -194,53 +181,13 @@ function get_base_rate(float $hours, string $experience, string $rateKey): int
     if ($hours <= 0) {
         return 0;
     }
-    if ($rateKey === 'social') {
+    if ($hours <= 0.5) {
+        return 550;
+    }
+    if ($hours <= 1.0) {
         return 1000;
     }
-    if ($hours >= 24) {
-        return 4000;
-    }
-    if ($hours >= 8 && $hours <= 12) {
-        return 3000;
-    }
-
-    $entries = [
-        ['hours' => 0.5, 'amount' => 400],
-        ['hours' => 1.0, 'amount' => 700],
-        ['hours' => 1.5, 'amount' => 1000],
-        ['hours' => 2.0, 'amount' => 1300],
-        ['hours' => 3.0, 'amount' => 1600],
-        ['hours' => 4.0, 'amount' => 2000],
-        ['hours' => 12.0, 'amount' => 3000],
-    ];
-    foreach ($entries as $entry) {
-        if (abs($hours - $entry['hours']) < 0.001) {
-            return (int) $entry['amount'];
-        }
-    }
-
-    $lower = null;
-    $upper = null;
-    foreach ($entries as $entry) {
-        if ($entry['hours'] < $hours) {
-            $lower = $entry;
-            continue;
-        }
-        if ($entry['hours'] > $hours) {
-            $upper = $entry;
-            break;
-        }
-    }
-
-    if ($lower === null) {
-        return (int) $entries[0]['amount'];
-    }
-    if ($upper === null) {
-        return (int) $entries[count($entries) - 1]['amount'];
-    }
-
-    $ratio = ($hours - $lower['hours']) / ($upper['hours'] - $lower['hours']);
-    return (int) round($lower['amount'] + ($upper['amount'] - $lower['amount']) * $ratio);
+    return (int) round(1000 + (($hours - 1.0) * 900));
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -283,7 +230,7 @@ if ($emailValue !== '' && !is_valid_email_address($emailValue)) {
     $errors['email'] = 'Invalid email';
 }
 if ($phoneValue !== '' && !is_valid_phone_international($phoneValue)) {
-    $errors['phone'] = 'Use a valid phone number with country code (plus optional), e.g. 14389993539';
+    $errors['phone'] = 'Use a valid phone number with country code (plus optional), e.g. +14389993539';
 }
 $payload['email'] = $emailValue;
 $payload['phone'] = $phoneValue;
@@ -357,10 +304,6 @@ if (!in_array($paymentMethod, $allowedMethods, true)) {
 }
 
 $depositPercent = 20.0;
-$serviceAddons = [
-    'pse' => 100,
-    'filming' => 500,
-];
 $displayRate = 1.0;
 $fiatOverrides = [
     'USD' => 1.0,
@@ -375,13 +318,10 @@ if (in_array($depositCurrency, ['USDC', 'BTC', 'LTC'], true)) {
 }
 
 $hours = is_numeric($payload['duration_hours']) ? (float) $payload['duration_hours'] : 0.0;
-$rateKey = strtolower(trim((string) ($payload['duration_rate_key'] ?? '')));
-if ($rateKey !== 'social') {
-    $rateKey = '';
-}
+$rateKey = '';
 $experience = normalize_experience((string) ($payload['experience'] ?? ''));
 $baseRate = get_base_rate($hours, $experience, $rateKey);
-$serviceAddonAmount = ($baseRate > 0 && isset($serviceAddons[$experience])) ? (int) $serviceAddons[$experience] : 0;
+$serviceAddonAmount = 0;
 $totalRate = $baseRate + $serviceAddonAmount;
 $deposit = $totalRate > 0 ? (int) round(($totalRate * ($depositPercent / 100)) * $displayRate) : 0;
 $billingCurrency = $depositCurrency !== '' ? $depositCurrency : ($currency !== '' ? $currency : 'CAD');
@@ -389,11 +329,6 @@ $displayTotalRate = (int) round($totalRate * $displayRate);
 $displayServiceAddonAmount = (int) round($serviceAddonAmount * $displayRate);
 $displayBaseRate = max(0, $displayTotalRate - $displayServiceAddonAmount);
 $serviceAddonLabel = '';
-if ($experience === 'pse') {
-    $serviceAddonLabel = 'PSE add-on';
-} elseif ($experience === 'filming') {
-    $serviceAddonLabel = 'Filming add-on';
-}
 
 $availability = read_json_file(DATA_DIR . '/availability.json', [
     'availability_mode' => 'open',
@@ -625,7 +560,7 @@ $request = [
     'deposit_currency' => $depositCurrency,
     'deposit_percent' => (string) $depositPercent,
     'base_rate' => $baseRate,
-    'pse_addon' => ($experience === 'pse') ? $serviceAddonAmount : 0,
+    'pse_addon' => 0,
     'service_addon' => $serviceAddonAmount,
     'service_addon_label' => $serviceAddonLabel,
     'total_rate' => $totalRate,

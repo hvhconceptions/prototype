@@ -1341,6 +1341,25 @@
         pointer-events: auto;
       }
 
+      #rates-services.section-panel {
+        border-color: rgba(0, 255, 153, 0.14);
+        background: rgba(0, 10, 7, 0.5);
+        box-shadow: 0 14px 26px rgba(0, 255, 153, 0.1);
+        padding: clamp(16px, 3vw, 24px);
+      }
+
+      #rates-services .section-header {
+        margin-bottom: clamp(10px, 2vw, 16px);
+      }
+
+      #rates-services .embed-frame {
+        width: 100%;
+        max-width: none;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
       @media (max-width: 900px) {
         .embed-frame iframe {
           height: clamp(400px, 76vh, 760px);
@@ -4151,6 +4170,12 @@
         color: #ff2c93;
         text-shadow: 0 0 12px rgba(255, 44, 147, 0.45);
       }
+      .social-bombacloud img {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+        filter: drop-shadow(0 0 10px rgba(255, 44, 147, 0.45));
+      }
       .social-links a:hover,
       .social-links a:focus-visible {
         opacity: 0.9;
@@ -4295,13 +4320,7 @@
               rel="noopener noreferrer"
               aria-label="BombaCLOUD"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="12" fill="#ff2c93"></circle>
-                <path
-                  d="M8.5 15.8h7a2.4 2.4 0 000-4.8h-.3A3.3 3.3 0 009 10a2.9 2.9 0 00-.5 5.8z"
-                  fill="#ffd27a"
-                ></path>
-              </svg>
+              <img src="/bombacloudlogo.png" alt="" loading="lazy" />
             </a>
           </nav>
         </div>
@@ -4368,12 +4387,7 @@
             aria-labelledby="rates-services-title"
           >
             <div class="section-header">
-              <h2 id="rates-services-title">rates &amp; services</h2>
-              <p class="section-intro">
-                full menu, currency selector, and service details in one place.
-              </p>
-              <p id="rates-acronyms" class="section-acronyms">gfe · pse (+100) · filming (+500)</p>
-            </div>
+              <h2 id="rates-services-title">rates &amp; services</h2></div>
             <div class="embed-frame">
               <iframe
                 src="rates-menu.html"
@@ -4748,13 +4762,7 @@
             rel="noopener noreferrer"
             aria-label="BombaCLOUD"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="12" fill="#ff2c93"></circle>
-              <path
-                d="M8.5 15.8h7a2.4 2.4 0 000-4.8h-.3A3.3 3.3 0 009 10a2.9 2.9 0 00-.5 5.8z"
-                fill="#ffd27a"
-              ></path>
-            </svg>
+            <img src="/bombacloudlogo.png" alt="" loading="lazy" />
           </a>
         </nav>
       </footer>
@@ -4972,8 +4980,8 @@
           "touring.cities": "<strong>Touring cities</strong><br />Montreal &middot; Toronto &middot; Vancouver &middot; London (UK) &middot; Berlin &middot; Paris",
           "touring.note": "",
           "rates.title": "Rates & services",
-          "rates.intro": "Full menu, currency selector, and service details in one place.",
-          "rates.acronyms": "GFE · PSE (+100) · Filming (+500)",
+          "rates.intro": "",
+          "rates.acronyms": "",
           "rates.currencyNote": "Rates display in CAD by default.",
           "rates.footer": "Available &amp; negotiable for longer appointments.",
           "rates.note.native": "Showing native rates in {currency}{approx}.",
@@ -5082,8 +5090,8 @@
           "touring.cities": "<strong>Villes de tournée</strong><br />Montréal &middot; Toronto &middot; Vancouver &middot; Londres (UK) &middot; Berlin &middot; Paris",
           "touring.note": "",
           "rates.title": "Tarifs & services",
-          "rates.intro": "Menu complet, selection de devise et details des services au meme endroit.",
-          "rates.acronyms": "GFE · PSE (+100) · Filming (+500)",
+          "rates.intro": "",
+          "rates.acronyms": "",
           "rates.currencyNote": "Tarifs affichés en CAD par défaut.",
           "rates.footer": "Disponible et negociable pour les rendez-vous plus longs.",
           "rates.note.native": "Affichage des tarifs natifs en {currency}{approx}.",

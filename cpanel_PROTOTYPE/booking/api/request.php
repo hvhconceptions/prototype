@@ -6,19 +6,12 @@ require __DIR__ . '/config.php';
 function normalize_experience(string $experience): string
 {
     $normalized = strtolower(trim($experience));
-    return $normalized === 'gfe' ? 'gfe' : 'pse';
+    return $normalized === 'duo_gfe' ? 'duo_gfe' : 'duo_gfe';
 }
 
 function format_experience_label(string $experience): string
 {
-    $normalized = strtolower(trim($experience));
-    if ($normalized === 'gfe') {
-        return 'GFE';
-    }
-    if ($normalized === 'pse') {
-        return 'PSE';
-    }
-    return $normalized !== '' ? strtoupper($normalized) : 'PSE';
+    return 'Duo GFE';
 }
 
 function normalize_city_name(string $city): string
@@ -26,6 +19,62 @@ function normalize_city_name(string $city): string
     $city = strtolower(trim($city));
     $city = preg_replace('/\s+/', ' ', $city);
     return is_string($city) ? $city : '';
+}
+
+function is_valid_email_address(string $email): bool
+{
+    $value = trim($email);
+    if ($value === '' || strlen($value) > 254) {
+        return false;
+    }
+    if (preg_match('/\s/', $value)) {
+        return false;
+    }
+    return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+function normalize_phone_international(string $phone): string
+{
+    $value = trim($phone);
+    if ($value === '') {
+        return '';
+    }
+    $compact = preg_replace('/[\s().-]+/', '', $value);
+    $compact = is_string($compact) ? $compact : '';
+    if ($compact === '') {
+        return '';
+    }
+    if (strpos($compact, '00') === 0) {
+        $compact = '+' . substr($compact, 2);
+    }
+    if (strpos($compact, '+') === 0) {
+        $digits = preg_replace('/\D+/', '', substr($compact, 1));
+        $digits = is_string($digits) ? $digits : '';
+        return $digits === '' ? '' : '+' . $digits;
+    }
+    $digits = preg_replace('/\D+/', '', $compact);
+    $digits = is_string($digits) ? $digits : '';
+    return $digits === '' ? '' : '+' . $digits;
+}
+
+function is_valid_phone_international(string $phone): bool
+{
+    $value = normalize_phone_international($phone);
+    if ($value === '' || strpos($value, '+') !== 0) {
+        return false;
+    }
+    if (!preg_match('/^\+[0-9]+$/', $value)) {
+        return false;
+    }
+    $digits = substr($value, 1);
+    if ($digits === '') {
+        return false;
+    }
+    $len = strlen($digits);
+    if ($len < 8 || $len > 15) {
+        return false;
+    }
+    return $digits[0] !== '0';
 }
 
 function parse_city_list(string $raw): array
@@ -54,31 +103,12 @@ function is_fly_me_city(string $city): bool
     return normalize_city_name($city) === 'fly me to you';
 }
 
-function get_fallback_tour_city(): string
-{
-    $availability = read_json_file(DATA_DIR . '/availability.json', [
-        'tour_city' => DEFAULT_TOUR_CITY,
-    ]);
-    $fallbackCity = trim((string) ($availability['tour_city'] ?? ''));
-    if ($fallbackCity === '') {
-        return '';
-    }
-    if (normalize_city_name($fallbackCity) === normalize_city_name(DEFAULT_TOUR_CITY)) {
-        return '';
-    }
-    return $fallbackCity;
-}
-
 function get_touring_city_for_date(string $dateKey): string
 {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateKey)) {
-        return get_fallback_tour_city();
+        return '';
     }
-    $siteContent = read_site_content();
-    $touring = $siteContent['touring'] ?? [];
-    if (!is_array($touring)) {
-        return get_fallback_tour_city();
-    }
+    $touring = get_effective_touring_schedule();
     foreach ($touring as $entry) {
         if (!is_array($entry)) {
             continue;
@@ -96,7 +126,7 @@ function get_touring_city_for_date(string $dateKey): string
             return $city;
         }
     }
-    return get_fallback_tour_city();
+    return '';
 }
 
 function get_city_schedule_for_request(array $availability, string $city, string $dateKey): array
@@ -132,58 +162,32 @@ function get_city_schedule_for_request(array $availability, string $city, string
     return [];
 }
 
+function is_template_generated_block_entry(array $entry): bool
+{
+    $kind = strtolower(trim((string) ($entry['kind'] ?? '')));
+    if ($kind === 'template') {
+        return true;
+    }
+    $bookingId = trim((string) ($entry['booking_id'] ?? ''));
+    if ($bookingId !== '') {
+        return false;
+    }
+    $reason = strtolower(trim((string) ($entry['reason'] ?? '')));
+    return in_array($reason, ['after leave-day end', 'sleep', 'break'], true);
+}
+
 function get_base_rate(float $hours, string $experience, string $rateKey): int
 {
     if ($hours <= 0) {
         return 0;
     }
-    if ($rateKey === 'social') {
+    if ($hours <= 0.5) {
+        return 550;
+    }
+    if ($hours <= 1.0) {
         return 1000;
     }
-    if ($hours >= 24) {
-        return 4000;
-    }
-    if ($hours >= 8 && $hours <= 12) {
-        return 3000;
-    }
-
-    $entries = [
-        ['hours' => 0.5, 'amount' => 400],
-        ['hours' => 1.0, 'amount' => 700],
-        ['hours' => 1.5, 'amount' => 1000],
-        ['hours' => 2.0, 'amount' => 1300],
-        ['hours' => 3.0, 'amount' => 1600],
-        ['hours' => 4.0, 'amount' => 2000],
-        ['hours' => 12.0, 'amount' => 3000],
-    ];
-    foreach ($entries as $entry) {
-        if (abs($hours - $entry['hours']) < 0.001) {
-            return (int) $entry['amount'];
-        }
-    }
-
-    $lower = null;
-    $upper = null;
-    foreach ($entries as $entry) {
-        if ($entry['hours'] < $hours) {
-            $lower = $entry;
-            continue;
-        }
-        if ($entry['hours'] > $hours) {
-            $upper = $entry;
-            break;
-        }
-    }
-
-    if ($lower === null) {
-        return (int) $entries[0]['amount'];
-    }
-    if ($upper === null) {
-        return (int) $entries[count($entries) - 1]['amount'];
-    }
-
-    $ratio = ($hours - $lower['hours']) / ($upper['hours'] - $lower['hours']);
-    return (int) round($lower['amount'] + ($upper['amount'] - $lower['amount']) * $ratio);
+    return (int) round(1000 + (($hours - 1.0) * 900));
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -191,8 +195,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $payload = get_request_body();
-$requestEmail = (string) ($payload['email'] ?? '');
-$requestPhone = (string) ($payload['phone'] ?? '');
+$requestEmail = trim((string) ($payload['email'] ?? ''));
+$requestPhone = normalize_phone_international((string) ($payload['phone'] ?? ''));
 $clientIp = get_client_ip();
 if (is_blacklisted($requestEmail, $requestPhone, $clientIp)) {
     json_response(['error' => 'Blocked'], 403);
@@ -219,6 +223,17 @@ foreach ($required as $field) {
         $errors[$field] = 'Required';
     }
 }
+
+$emailValue = trim((string) ($payload['email'] ?? ''));
+$phoneValue = normalize_phone_international((string) ($payload['phone'] ?? ''));
+if ($emailValue !== '' && !is_valid_email_address($emailValue)) {
+    $errors['email'] = 'Invalid email';
+}
+if ($phoneValue !== '' && !is_valid_phone_international($phoneValue)) {
+    $errors['phone'] = 'Use a valid phone number with country code (plus optional), e.g. +14389993539';
+}
+$payload['email'] = $emailValue;
+$payload['phone'] = $phoneValue;
 
 if (($payload['booking_type'] ?? '') === 'outcall' && empty($payload['outcall_address'])) {
     $errors['outcall_address'] = 'Required for outcall';
@@ -289,7 +304,6 @@ if (!in_array($paymentMethod, $allowedMethods, true)) {
 }
 
 $depositPercent = 20.0;
-$pseBillAddon = 100;
 $displayRate = 1.0;
 $fiatOverrides = [
     'USD' => 1.0,
@@ -304,19 +318,17 @@ if (in_array($depositCurrency, ['USDC', 'BTC', 'LTC'], true)) {
 }
 
 $hours = is_numeric($payload['duration_hours']) ? (float) $payload['duration_hours'] : 0.0;
-$rateKey = strtolower(trim((string) ($payload['duration_rate_key'] ?? '')));
-if ($rateKey !== 'social') {
-    $rateKey = '';
-}
+$rateKey = '';
 $experience = normalize_experience((string) ($payload['experience'] ?? ''));
 $baseRate = get_base_rate($hours, $experience, $rateKey);
-$pseAddonAmount = ($baseRate > 0 && $experience === 'pse') ? $pseBillAddon : 0;
-$totalRate = $baseRate + $pseAddonAmount;
+$serviceAddonAmount = 0;
+$totalRate = $baseRate + $serviceAddonAmount;
 $deposit = $totalRate > 0 ? (int) round(($totalRate * ($depositPercent / 100)) * $displayRate) : 0;
 $billingCurrency = $depositCurrency !== '' ? $depositCurrency : ($currency !== '' ? $currency : 'CAD');
 $displayTotalRate = (int) round($totalRate * $displayRate);
-$displayPseAddonAmount = (int) round($pseAddonAmount * $displayRate);
-$displayBaseRate = max(0, $displayTotalRate - $displayPseAddonAmount);
+$displayServiceAddonAmount = (int) round($serviceAddonAmount * $displayRate);
+$displayBaseRate = max(0, $displayTotalRate - $displayServiceAddonAmount);
+$serviceAddonLabel = '';
 
 $availability = read_json_file(DATA_DIR . '/availability.json', [
     'availability_mode' => 'open',
@@ -396,6 +408,9 @@ if ($hours > 0) {
                 }
                 foreach ($blockedSlots as $entry) {
                     if (!is_array($entry)) {
+                        continue;
+                    }
+                    if (is_template_generated_block_entry($entry)) {
                         continue;
                     }
                     $entryCity = normalize_city_name((string) ($entry['city'] ?? ''));
@@ -485,8 +500,8 @@ if ($requestEmail !== '') {
     $body .= "Base rate: " . $displayBaseRate . " " . $currencyLabel . "\n";
     $body .= "Service: " . $experienceLabel . "\n";
     $body .= "Duration: " . ($payload['duration_label'] ?? '') . "\n";
-    if ($displayPseAddonAmount > 0) {
-        $body .= "PSE add-on: +" . $displayPseAddonAmount . " " . $currencyLabel . "\n";
+    if ($displayServiceAddonAmount > 0) {
+        $body .= ($serviceAddonLabel !== '' ? $serviceAddonLabel : 'Service add-on') . ": +" . $displayServiceAddonAmount . " " . $currencyLabel . "\n";
     }
     $body .= "Total rate: " . $displayTotalRate . " " . $currencyLabel . "\n";
     if ($deposit > 0) {
@@ -496,6 +511,8 @@ if ($requestEmail !== '') {
     if ($deposit > 0) {
         $body .= "You will receive a confirmation email once your payment is accepted.\n";
     }
+    $body .= "Please send me a text after submitting this form so I can review it quickly.\n";
+    $body .= "No appointment is confirmed until I personally confirm it.\n";
     $contactPhone = '(your phone number)';
     if (defined('CONTACT_SMS_WHATSAPP')) {
         $configuredPhone = trim((string) CONTACT_SMS_WHATSAPP);
@@ -522,7 +539,7 @@ $request = [
     'currency' => $currency,
     'booking_type' => (string) $payload['booking_type'],
     'outcall_address' => trim((string) ($payload['outcall_address'] ?? '')),
-    'experience' => (string) $payload['experience'],
+    'experience' => $experience,
     'duration_label' => (string) $payload['duration_label'],
     'duration_hours' => (string) $payload['duration_hours'],
     'preferred_date' => (string) $payload['preferred_date'],
@@ -543,10 +560,20 @@ $request = [
     'deposit_currency' => $depositCurrency,
     'deposit_percent' => (string) $depositPercent,
     'base_rate' => $baseRate,
-    'pse_addon' => $pseAddonAmount,
+    'pse_addon' => 0,
+    'service_addon' => $serviceAddonAmount,
+    'service_addon_label' => $serviceAddonLabel,
     'total_rate' => $totalRate,
     'payment_link' => $paymentLink,
     'payment_email_sent_at' => $paymentEmailSentAt,
+    'history' => [
+        [
+            'at' => gmdate('c'),
+            'action' => 'created',
+            'source' => 'booking_form',
+            'summary' => 'Request created',
+        ],
+    ],
 ];
 
 $requests[] = $request;
@@ -557,6 +584,9 @@ $adminBody = "New booking request\n\n";
 $adminBody .= "Name: " . ($request['name'] ?? '') . "\n";
 $adminBody .= "Email: " . ($request['email'] ?? '') . "\n";
 $adminBody .= "Phone: " . ($request['phone'] ?? '') . "\n";
+$adminBody .= "Future contact by phone: " . (($request['contact_followup_phone'] ?? 'no') === 'yes' ? 'yes' : 'no') . "\n";
+$adminBody .= "Future contact by email: " . (($request['contact_followup_email'] ?? 'no') === 'yes' ? 'yes' : 'no') . "\n";
+$adminBody .= "Future-contact cities: " . (is_array($request['followup_cities'] ?? null) ? implode(', ', $request['followup_cities']) : '') . "\n";
 $adminBody .= "City: " . ($request['city'] ?? '') . "\n";
 $adminBody .= "Currency: " . ($request['currency'] ?? '') . "\n";
 $adminBody .= "Type: " . ($request['booking_type'] ?? '') . "\n";
@@ -564,8 +594,8 @@ $adminBody .= "Service: " . $experienceLabel . "\n";
 $adminBody .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
 $adminBody .= "Preferred: " . ($request['preferred_date'] ?? '') . " " . ($request['preferred_time'] ?? '') . "\n";
 $adminBody .= "Base rate (CAD): " . $baseRate . "\n";
-if ($pseAddonAmount > 0) {
-    $adminBody .= "PSE add-on (CAD): +" . $pseAddonAmount . "\n";
+if ($serviceAddonAmount > 0) {
+    $adminBody .= ($serviceAddonLabel !== '' ? $serviceAddonLabel : 'Service add-on') . " (CAD): +" . $serviceAddonAmount . "\n";
 }
 $adminBody .= "Total rate (CAD): " . $totalRate . "\n";
 $adminBody .= "Payment method: " . format_payment_method($paymentMethod) . "\n";

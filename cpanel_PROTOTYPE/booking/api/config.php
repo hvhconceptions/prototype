@@ -201,11 +201,12 @@ function get_default_site_content(): array
             ['start' => '2026-02-08', 'end' => '2026-02-14', 'city' => 'Montreal'],
             ['start' => '2026-02-15', 'end' => '2026-02-18', 'city' => 'Toronto'],
             ['start' => '2026-02-19', 'end' => '2026-02-21', 'city' => 'Vancouver'],
-            ['start' => '2026-02-22', 'end' => '2026-03-04', 'city' => 'β mode'],
+            ['start' => '2026-02-22', 'end' => '2026-03-04', 'city' => 'Montreal'],
             ['start' => '2026-03-05', 'end' => '2026-03-09', 'city' => 'London (UK)'],
             ['start' => '2026-03-10', 'end' => '2026-03-13', 'city' => 'Berlin'],
             ['start' => '2026-03-14', 'end' => '2026-03-19', 'city' => 'Paris'],
         ],
+        'touring_partners' => [],
         'rates' => [
             'gfe' => [
                 ['hours' => 0.5, 'amount' => 400],
@@ -257,6 +258,195 @@ function write_site_content(array $data): void
     write_json_file(SITE_CONTENT_FILE, $data);
 }
 
+function normalize_touring_city_label(string $value): string
+{
+    $city = trim(html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    if ($city === '') {
+        return '';
+    }
+
+    $normalized = strtolower($city);
+    $normalized = str_replace(['ß', 'β'], ['ss', 'b'], $normalized);
+    $normalized = preg_replace('/[^a-z0-9]+/i', ' ', $normalized);
+    $normalized = is_string($normalized) ? trim($normalized) : '';
+    if ($normalized === 'tba' || $normalized === 'to be announced') {
+        return '';
+    }
+    if ($normalized !== '' && preg_match('/(^| )((b|ss) mode)( |$)/', $normalized)) {
+        return 'Montreal';
+    }
+    return $city;
+}
+
+function normalize_touring_entries(array $touring): array
+{
+    $clean = [];
+    foreach ($touring as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $start = trim((string) ($entry['start'] ?? ''));
+        $end = trim((string) ($entry['end'] ?? ''));
+        $city = normalize_touring_city_label((string) ($entry['city'] ?? ''));
+        if ($city === '') {
+            continue;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+            continue;
+        }
+        if ($start > $end) {
+            continue;
+        }
+        $clean[] = [
+            'start' => $start,
+            'end' => $end,
+            'city' => $city,
+        ];
+    }
+    usort($clean, static function (array $a, array $b): int {
+        return strcmp($a['start'] . '|' . $a['end'] . '|' . strtolower($a['city']), $b['start'] . '|' . $b['end'] . '|' . strtolower($b['city']));
+    });
+    return $clean;
+}
+
+function parse_inside_month_token(string $token): int
+{
+    $token = strtolower(trim($token));
+    if ($token === '') {
+        return 0;
+    }
+    $token = substr($token, 0, 3);
+    $map = [
+        'jan' => 1,
+        'feb' => 2,
+        'mar' => 3,
+        'apr' => 4,
+        'may' => 5,
+        'jun' => 6,
+        'jul' => 7,
+        'aug' => 8,
+        'sep' => 9,
+        'oct' => 10,
+        'nov' => 11,
+        'dec' => 12,
+    ];
+    return $map[$token] ?? 0;
+}
+
+function parse_inside_touring_schedule(string $html): array
+{
+    if ($html === '') {
+        return [];
+    }
+
+    if (!preg_match_all('/<div[^>]*class="[^"]*\btouring-row\b[^"]*"[^>]*>(.*?)<\/div>/is', $html, $rowMatches)) {
+        return [];
+    }
+
+    $pending = [];
+    foreach ($rowMatches[1] as $rowHtml) {
+        if (!is_string($rowHtml)) {
+            continue;
+        }
+        if (!preg_match('/<span[^>]*class="[^"]*\btouring-city\b[^"]*"[^>]*>(.*?)<\/span>/is', $rowHtml, $cityMatch)) {
+            continue;
+        }
+        $city = normalize_touring_city_label((string) ($cityMatch[1] ?? ''));
+        if ($city === '') {
+            continue;
+        }
+
+        $dateText = html_entity_decode(strip_tags($rowHtml), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $dateText = strtolower(trim(preg_replace('/\s+/', ' ', $dateText) ?? ''));
+        if ($dateText === '') {
+            continue;
+        }
+
+        if (!preg_match('/(\d{1,2})\s*([a-z]{3,9})\s*-\s*(\d{1,2})\s*([a-z]{3,9})/i', $dateText, $range)) {
+            continue;
+        }
+
+        $startDay = (int) $range[1];
+        $startMonth = parse_inside_month_token((string) $range[2]);
+        $endDay = (int) $range[3];
+        $endMonth = parse_inside_month_token((string) $range[4]);
+        if ($startDay < 1 || $startDay > 31 || $endDay < 1 || $endDay > 31 || $startMonth < 1 || $endMonth < 1) {
+            continue;
+        }
+
+        $pending[] = [
+            'city' => $city,
+            'start_day' => $startDay,
+            'start_month' => $startMonth,
+            'end_day' => $endDay,
+            'end_month' => $endMonth,
+        ];
+    }
+
+    if (!$pending) {
+        return [];
+    }
+
+    $year = (int) gmdate('Y');
+    $previousStartMonth = null;
+    $clean = [];
+    foreach ($pending as $row) {
+        $startMonth = (int) $row['start_month'];
+        $endMonth = (int) $row['end_month'];
+        if ($previousStartMonth !== null && $startMonth < $previousStartMonth) {
+            $year += 1;
+        }
+        $previousStartMonth = $startMonth;
+        $startYear = $year;
+        $endYear = $endMonth < $startMonth ? ($startYear + 1) : $startYear;
+        $start = sprintf('%04d-%02d-%02d', $startYear, $startMonth, (int) $row['start_day']);
+        $end = sprintf('%04d-%02d-%02d', $endYear, $endMonth, (int) $row['end_day']);
+        if ($start > $end) {
+            continue;
+        }
+        $clean[] = [
+            'start' => $start,
+            'end' => $end,
+            'city' => (string) $row['city'],
+        ];
+    }
+
+    return normalize_touring_entries($clean);
+}
+
+function read_inside_touring_schedule(): array
+{
+    $insidePath = dirname(dirname(__DIR__)) . '/inside.html';
+    if (!is_file($insidePath)) {
+        return [];
+    }
+    $html = file_get_contents($insidePath);
+    if (!is_string($html) || $html === '') {
+        return [];
+    }
+    return parse_inside_touring_schedule($html);
+}
+
+function get_effective_touring_schedule(): array
+{
+    $content = read_site_content();
+    $touring = $content['touring'] ?? [];
+    if (is_array($touring)) {
+        $normalized = normalize_touring_entries($touring);
+        if ($normalized) {
+            return $normalized;
+        }
+    }
+
+    // Fallback for legacy/static installs where schedule still lives in inside.html.
+    $insideSchedule = read_inside_touring_schedule();
+    if ($insideSchedule) {
+        return $insideSchedule;
+    }
+
+    return [];
+}
+
 function get_default_gallery_items(): array
 {
     return [
@@ -277,14 +467,93 @@ function get_default_gallery_items(): array
     ];
 }
 
-function read_gallery_data(): array
+function normalize_gallery_mode(string $mode): string
 {
-    return read_json_file(GALLERY_FILE, ['items' => get_default_gallery_items(), 'updated_at' => gmdate('c')]);
+    $normalized = strtolower(trim($mode));
+    if ($normalized === 'album') {
+        return 'album';
+    }
+    if ($normalized === 'carousel') {
+        return 'carousel';
+    }
+    return 'next';
 }
 
-function write_gallery_data(array $items): void
+function normalize_gallery_seconds($value): int
 {
-    write_json_file(GALLERY_FILE, ['items' => $items, 'updated_at' => gmdate('c')]);
+    $seconds = (int) $value;
+    if ($seconds < 2) {
+        return 2;
+    }
+    if ($seconds > 30) {
+        return 30;
+    }
+    return $seconds;
+}
+
+function normalize_gallery_items(array $items): array
+{
+    $clean = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $src = trim((string) ($item['src'] ?? ''));
+        if ($src === '') {
+            continue;
+        }
+        $clean[] = [
+            'src' => $src,
+            'alt' => trim((string) ($item['alt'] ?? '')),
+        ];
+    }
+    return $clean ?: get_default_gallery_items();
+}
+
+function normalize_gallery_payload(array $raw): array
+{
+    $items = $raw['items'] ?? [];
+    if (!is_array($items)) {
+        $items = [];
+    }
+    return [
+        'items' => normalize_gallery_items($items),
+        'display_mode' => normalize_gallery_mode((string) ($raw['display_mode'] ?? 'next')),
+        'carousel_seconds' => normalize_gallery_seconds($raw['carousel_seconds'] ?? 5),
+        'updated_at' => (string) ($raw['updated_at'] ?? gmdate('c')),
+    ];
+}
+
+function read_gallery_data(): array
+{
+    $default = [
+        'items' => get_default_gallery_items(),
+        'display_mode' => 'next',
+        'carousel_seconds' => 5,
+        'updated_at' => gmdate('c'),
+    ];
+    $raw = read_json_file(GALLERY_FILE, $default);
+    return normalize_gallery_payload($raw);
+}
+
+function write_gallery_data(array $data): void
+{
+    // Backward compatibility: allow write_gallery_data($itemsOnly)
+    $isList = true;
+    $expectedIndex = 0;
+    foreach ($data as $key => $_value) {
+        if ($key !== $expectedIndex) {
+            $isList = false;
+            break;
+        }
+        $expectedIndex++;
+    }
+    if ($isList) {
+        $data = ['items' => $data];
+    }
+    $payload = normalize_gallery_payload($data);
+    $payload['updated_at'] = gmdate('c');
+    write_json_file(GALLERY_FILE, $payload);
 }
 
 function require_admin(): void
@@ -412,6 +681,33 @@ function escape_html(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function email_link_label_for_url(string $url): string
+{
+    $lower = strtolower(trim($url));
+    if ($lower === '') {
+        return 'Open link';
+    }
+    if (strpos($lower, 'google.com/calendar/render') !== false) {
+        return 'Add to Google Calendar';
+    }
+    if (strpos($lower, 'outlook.live.com/calendar') !== false) {
+        return 'Add to Samsung / Microsoft Calendar';
+    }
+    if (strpos($lower, '/api/calendar.php') !== false) {
+        return 'Add to iCloud / Apple Calendar';
+    }
+    $path = parse_url($url, PHP_URL_PATH);
+    if (is_string($path) && strtolower(substr($path, -4)) === '.ics') {
+        return 'Add to iCloud / Apple Calendar';
+    }
+    $host = parse_url($url, PHP_URL_HOST);
+    if (is_string($host) && $host !== '') {
+        $host = preg_replace('/^www\./i', '', $host) ?: $host;
+        return 'Open link (' . $host . ')';
+    }
+    return 'Open link';
+}
+
 function linkify_text_for_email(string $plainText): string
 {
     $escaped = escape_html($plainText);
@@ -420,7 +716,8 @@ function linkify_text_for_email(string $plainText): string
         static function (array $matches): string {
             $url = $matches[1];
             $safeUrl = escape_html($url);
-            return '<a href="' . $safeUrl . '" target="_blank" rel="noopener noreferrer" style="color:#e0006d;text-decoration:underline;">' . $safeUrl . '</a>';
+            $label = escape_html(email_link_label_for_url($url));
+            return '<a href="' . $safeUrl . '" title="' . $safeUrl . '" target="_blank" rel="noopener noreferrer" style="color:#e0006d;text-decoration:underline;">' . $label . '</a>';
         },
         $escaped
     );
@@ -1017,6 +1314,10 @@ function send_booking_push(array $request): bool
         'city' => (string) ($request['city'] ?? ''),
         'preferred_date' => (string) ($request['preferred_date'] ?? ''),
         'preferred_time' => (string) ($request['preferred_time'] ?? ''),
+        'duration_label' => (string) ($request['duration_label'] ?? ''),
+        'duration_hours' => (string) ($request['duration_hours'] ?? ''),
+        'status' => (string) ($request['status'] ?? ''),
+        'payment_status' => (string) ($request['payment_status'] ?? ''),
         'contact_followup' => (string) ($request['contact_followup'] ?? ''),
     ];
     return send_push_to_tokens($tokens, $title, $body, $data);

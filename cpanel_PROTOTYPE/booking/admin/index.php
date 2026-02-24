@@ -21,6 +21,37 @@ const ADMIN_RATE_LIMIT_MAX = 3;
 const ADMIN_RATE_LIMIT_WINDOW = 900;
 const ADMIN_RATE_LIMIT_BLOCK = 1800;
 const ADMIN_RATE_LIMIT_FILE = DATA_DIR . '/admin_rate_limit.json';
+const ADMIN_EMPLOYEE_FILE = DATA_DIR . '/admin_employees.json';
+
+function normalize_admin_username(string $value): string
+{
+    return strtolower(trim($value));
+}
+
+function read_admin_employees(): array
+{
+    $store = read_json_file(ADMIN_EMPLOYEE_FILE, ['employees' => []]);
+    $employees = $store['employees'] ?? [];
+    if (!is_array($employees)) {
+        return [];
+    }
+    $clean = [];
+    foreach ($employees as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $username = normalize_admin_username((string) ($entry['username'] ?? ''));
+        $hash = (string) ($entry['password_hash'] ?? '');
+        if ($username === '' || $hash === '') {
+            continue;
+        }
+        $clean[] = [
+            'username' => $username,
+            'password_hash' => $hash,
+        ];
+    }
+    return $clean;
+}
 
 function admin_get_client_ip(): string
 {
@@ -129,7 +160,7 @@ function deny_admin_access(): void
     exit;
 }
 
-function require_admin_ui(): void
+function require_admin_ui(): array
 {
     if (ADMIN_API_KEY === '' || ADMIN_API_KEY === 'change-this-admin-key') {
         http_response_code(500);
@@ -145,26 +176,47 @@ function require_admin_ui(): void
         deny_rate_limit();
     }
     [$user, $pass] = get_basic_auth_credentials();
+    $user = normalize_admin_username((string) $user);
+    $pass = (string) $pass;
     $expectedUser = defined('ADMIN_UI_USER') && ADMIN_UI_USER !== '' ? ADMIN_UI_USER : 'admin';
+    $expectedUser = normalize_admin_username((string) $expectedUser);
     if ($user === '' || $pass === '') {
         deny_admin_access();
     }
+    $isEmployerAuth = false;
     if (defined('ADMIN_UI_PASSWORD_HASH') && ADMIN_UI_PASSWORD_HASH !== '') {
-        if (!hash_equals($expectedUser, (string) $user) || !password_verify($pass, ADMIN_UI_PASSWORD_HASH)) {
-            record_admin_failure($state, $ip, $record, $now);
-            deny_admin_access();
-        }
+        $isEmployerAuth = hash_equals($expectedUser, $user) && password_verify($pass, ADMIN_UI_PASSWORD_HASH);
+    } else {
+        $isEmployerAuth = hash_equals($expectedUser, $user) && hash_equals(ADMIN_API_KEY, $pass);
+    }
+    if ($isEmployerAuth) {
         clear_admin_rate_record($state, $ip);
-        return;
+        return ['username' => $user, 'is_employer' => true];
     }
-    if (!hash_equals($expectedUser, (string) $user) || !hash_equals(ADMIN_API_KEY, (string) $pass)) {
-        record_admin_failure($state, $ip, $record, $now);
-        deny_admin_access();
+
+    $employees = read_admin_employees();
+    foreach ($employees as $employee) {
+        $employeeUser = normalize_admin_username((string) ($employee['username'] ?? ''));
+        $employeeHash = (string) ($employee['password_hash'] ?? '');
+        if ($employeeUser === '' || $employeeHash === '') {
+            continue;
+        }
+        if (!hash_equals($employeeUser, $user)) {
+            continue;
+        }
+        if (password_verify($pass, $employeeHash)) {
+            clear_admin_rate_record($state, $ip);
+            return ['username' => $user, 'is_employer' => false];
+        }
     }
-    clear_admin_rate_record($state, $ip);
+
+    record_admin_failure($state, $ip, $record, $now);
+    deny_admin_access();
 }
 
-require_admin_ui();
+$adminSession = require_admin_ui();
+$currentAdminUser = (string) ($adminSession['username'] ?? '');
+$currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 ?>
 <!doctype html>
 <html lang="en">
@@ -275,7 +327,7 @@ require_admin_ui();
         height: 48px;
         padding: 4px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         cursor: pointer;
       }
@@ -320,19 +372,19 @@ require_admin_ui();
         width: 46px;
         height: 46px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 0, 110, 0.35);
+        border: 1px solid var(--line);
         background: #fff;
         color: #7a1c45;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 10px 20px rgba(255, 0, 110, 0.12);
+        box-shadow: 0 10px 20px var(--shadow);
       }
 
       .icon-menu-btn:focus-visible,
       .icon-menu-btn:hover {
-        border-color: rgba(255, 0, 110, 0.55);
+        border-color: var(--hot);
         outline: none;
       }
 
@@ -370,7 +422,7 @@ require_admin_ui();
         background: #fff;
         border: 1px solid var(--line);
         border-radius: 14px;
-        box-shadow: 0 20px 40px rgba(255, 0, 110, 0.16);
+        box-shadow: 0 20px 40px var(--shadow);
         padding: 10px;
         z-index: 60;
       }
@@ -432,7 +484,7 @@ require_admin_ui();
         width: min(520px, 94vw);
         background: #fff;
         border-left: 1px solid var(--line);
-        box-shadow: -24px 0 48px rgba(255, 0, 110, 0.2);
+        box-shadow: -24px 0 48px var(--shadow);
         z-index: 160;
         overflow: auto;
         transform: translateX(100%);
@@ -477,7 +529,7 @@ require_admin_ui();
       .menu-section-btn {
         width: 100%;
         text-align: left;
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         border-radius: 12px;
         color: #6f1a41;
@@ -490,7 +542,7 @@ require_admin_ui();
 
       .menu-section-btn:hover,
       .menu-section-btn:focus-visible {
-        border-color: rgba(255, 0, 110, 0.55);
+        border-color: var(--hot);
         outline: none;
       }
 
@@ -595,7 +647,7 @@ require_admin_ui();
       }
 
       .folder-button {
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         color: #7a1c45;
         border-radius: 14px 14px 8px 8px;
@@ -610,9 +662,9 @@ require_admin_ui();
       }
 
       .folder-button[aria-pressed="true"] {
-        border-color: rgba(255, 0, 110, 0.55);
-        color: #ff006e;
-        box-shadow: 0 10px 24px rgba(255, 0, 110, 0.15);
+        border-color: var(--hot);
+        color: var(--hot);
+        box-shadow: 0 10px 24px var(--shadow);
         transform: translateY(-1px);
       }
 
@@ -660,7 +712,7 @@ require_admin_ui();
         width: 100%;
         padding: 12px 14px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 0, 110, 0.3);
+        border: 1px solid var(--line);
         background: #fff;
         color: #2a0d1a;
         font-size: 0.98rem;
@@ -827,7 +879,7 @@ require_admin_ui();
         padding: 10px 16px;
         border-radius: 999px;
         border: none;
-        background: linear-gradient(135deg, #ff2d93, #ff006e);
+        background: linear-gradient(135deg, var(--pink), var(--hot));
         color: #fff;
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -1666,7 +1718,7 @@ require_admin_ui();
         <h1 id="adminMainTitle">BombaCLOUD!</h1>
         <div class="header-actions header-anchor">
           <button class="icon-menu-btn" id="notifToggleBtn" type="button" aria-label="Notifications">
-            <span>🔔</span>
+            <span>ðŸ””</span>
             <span id="notifUnreadCount" class="notif-badge hidden">0</span>
           </button>
           <div id="notifPanel" class="notif-panel hidden">
@@ -1694,6 +1746,9 @@ require_admin_ui();
         <button class="menu-section-btn" type="button" data-menu-open="touring">Touring</button>
         <button class="menu-section-btn" type="button" data-menu-open="services">Services</button>
         <button class="menu-section-btn" type="button" data-menu-open="photos">Photos</button>
+        <?php if ($currentAdminIsEmployer): ?>
+        <button class="menu-section-btn" type="button" data-menu-open="employees">Employees</button>
+        <?php endif; ?>
       </div>
 
       <section class="menu-group hidden" data-menu-page="account" data-menu-title="Account center">
@@ -1848,9 +1903,20 @@ require_admin_ui();
           <button class="btn" id="menuTourAddBtn" type="button">Add touring stop</button>
           <span class="status" id="menuTourStatus"></span>
         </div>
+        <div class="row">
+          <label><input id="menuAutoTemplateBlocks" type="checkbox" /> <span id="menuAutoTemplateBlocksLabel">Auto-block from city rules</span></label>
+          <button class="btn ghost" id="menuClearAutoBlocks" type="button">Disable + clear auto blocks</button>
+          <span class="status" id="menuAutoBlockStatus"></span>
+        </div>
         <p class="hint" id="menuTourScheduleHint">Dates are inclusive. You can edit or remove rows before saving.</p>
         <div class="editor-list" id="menuTourScheduleList"></div>
+        <div class="field">
+          <label id="menuTourPartnersTitle">Partners</label>
+          <p class="hint" id="menuTourPartnersHint">Add friend name and link shown in touring section.</p>
+          <div class="editor-list" id="menuTourPartnersList"></div>
+        </div>
         <div class="row">
+          <button class="btn secondary" id="menuAddTourPartnerRow" type="button">Add partner</button>
           <button class="btn secondary" id="menuAddTourRow" type="button">Add stop</button>
           <button class="btn" id="menuSaveTourSchedule" type="button">Save tour schedule</button>
           <span class="status" id="menuTourScheduleStatus"></span>
@@ -1917,6 +1983,30 @@ require_admin_ui();
           <span class="status" id="photoStatus"></span>
         </div>
       </section>
+      <?php if ($currentAdminIsEmployer): ?>
+      <section class="menu-group hidden" data-menu-page="employees" data-menu-title="Employees">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Employees</h3>
+        </div>
+        <p class="hint">Only employer can add/remove employee logins.</p>
+        <div class="menu-inline-grid">
+          <div class="field">
+            <label for="employeeUsername">Employee username</label>
+            <input id="employeeUsername" type="text" placeholder="employee01" />
+          </div>
+          <div class="field">
+            <label for="employeePassword">Employee password</label>
+            <input id="employeePassword" type="password" placeholder="Minimum 8 characters" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn" id="addEmployeeBtn" type="button">Add employee</button>
+          <span class="status" id="employeeStatus"></span>
+        </div>
+        <div id="employeeList" class="editor-list"></div>
+      </section>
+      <?php endif; ?>
     </aside>
 
     <main>
@@ -2145,6 +2235,8 @@ require_admin_ui();
 
     <script>
       const ADMIN_KEY = <?php echo json_encode(ADMIN_API_KEY); ?>;
+      const CURRENT_ADMIN_USER = <?php echo json_encode($currentAdminUser); ?>;
+      const CURRENT_ADMIN_IS_EMPLOYER = <?php echo $currentAdminIsEmployer ? 'true' : 'false'; ?>;
       const DEFAULT_TIMEZONE = "America/Toronto";
       const TIMEZONES = [
         "America/Toronto",
@@ -2226,9 +2318,11 @@ require_admin_ui();
       const quickAddSubmitBtn = document.getElementById("quickAddSubmit");
       const quickAddStatus = document.getElementById("quickAddStatus");
       const tourScheduleList = document.getElementById("menuTourScheduleList") || document.getElementById("tourScheduleList");
+      const tourPartnersList = document.getElementById("menuTourPartnersList");
       const tourScheduleStatus =
         document.getElementById("menuTourScheduleStatus") || document.getElementById("tourScheduleStatus");
       const addTourRowBtn = document.getElementById("menuAddTourRow") || document.getElementById("addTourRow");
+      const addTourPartnerRowBtn = document.getElementById("menuAddTourPartnerRow");
       const saveTourScheduleBtn = document.getElementById("menuSaveTourSchedule") || document.getElementById("saveTourSchedule");
       const cityScheduleWizard = document.getElementById("cityScheduleWizard");
       const cityScheduleStatus = document.getElementById("cityScheduleStatus");
@@ -2263,6 +2357,11 @@ require_admin_ui();
       const accountAccentColorInput = document.getElementById("accountAccentColor");
       const saveAccountCenterBtn = document.getElementById("saveAccountCenter");
       const accountCenterStatus = document.getElementById("accountCenterStatus");
+      const employeeUsernameInput = document.getElementById("employeeUsername");
+      const employeePasswordInput = document.getElementById("employeePassword");
+      const addEmployeeBtn = document.getElementById("addEmployeeBtn");
+      const employeeStatus = document.getElementById("employeeStatus");
+      const employeeList = document.getElementById("employeeList");
       const menuWorkAllDay = document.getElementById("menuWorkAllDay");
       const menuWorkStart = document.getElementById("menuWorkStart");
       const menuWorkEnd = document.getElementById("menuWorkEnd");
@@ -2280,6 +2379,9 @@ require_admin_ui();
       const menuTourLastEnd = document.getElementById("menuTourLastEnd");
       const menuTourAddBtn = document.getElementById("menuTourAddBtn");
       const menuTourStatus = document.getElementById("menuTourStatus");
+      const menuAutoTemplateBlocks = document.getElementById("menuAutoTemplateBlocks");
+      const menuClearAutoBlocks = document.getElementById("menuClearAutoBlocks");
+      const menuAutoBlockStatus = document.getElementById("menuAutoBlockStatus");
       const serviceNameInput = document.getElementById("serviceNameInput");
       const serviceDurationList = document.getElementById("serviceDurationList");
       const servicePackageList = document.getElementById("servicePackageList");
@@ -2297,7 +2399,7 @@ require_admin_ui();
       const ACCOUNT_CENTER_KEY = "hvh_admin_account_center";
       const SCHEDULE_MENU_KEY = "hvh_admin_schedule_menu";
       const SERVICES_MENU_KEY = "hvh_admin_services_menu";
-      const NOTIFICATIONS_READ_KEY = "hvh_admin_read_notifications";
+      const NOTIFICATIONS_READ_LOCAL_KEY = "hvh_admin_read_notifications";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
       const DEFAULT_ACCENT_COLOR = "#ff006e";
       let currentLanguage = "en";
@@ -2318,6 +2420,11 @@ require_admin_ui();
           city_wizard_timezone_hint: "",
           save_city_schedule: "Save city schedule",
           clear_template_blocks: "Clear template blocks",
+          auto_template_blocks_label: "Auto-block from city rules",
+          disable_clear_auto_blocks: "Disable + clear auto blocks",
+          auto_blocks_enabled: "Auto blocks enabled.",
+          auto_blocks_disabled: "Auto blocks disabled.",
+          auto_blocks_cleared: "Auto blocks cleared.",
           eye_candy_title: "Eye candy",
           eye_candy_hint: "Use full paths like /photos/heidi15.jpg and a short photo name.",
           add_eye_candy: "Add eye candy",
@@ -2334,6 +2441,9 @@ require_admin_ui();
           quick_add_submit: "Add",
           quick_add_type_tour: "Tour date (website + admin)",
           quick_add_type_block: "Block days (admin only)",
+          tour_partners_title: "Partners",
+          tour_partners_hint: "Add friend name and link shown in touring section.",
+          add_partner: "Add partner",
           quick_add_missing_fields: "Type, city, start, and end are required.",
           quick_add_invalid_range: "End date must be after or equal to start date.",
           quick_add_blocked_saved: "Block range saved to calendar.",
@@ -2478,6 +2588,11 @@ require_admin_ui();
           city_wizard_timezone_hint: "",
           save_city_schedule: "Sauvegarder le planning ville",
           clear_template_blocks: "Effacer les blocs modele",
+          auto_template_blocks_label: "Auto-blocage selon les regles ville",
+          disable_clear_auto_blocks: "Desactiver + effacer auto blocs",
+          auto_blocks_enabled: "Auto blocs actifs.",
+          auto_blocks_disabled: "Auto blocs desactives.",
+          auto_blocks_cleared: "Auto blocs effaces.",
           eye_candy_title: "Eye candy",
           eye_candy_hint: "Utilisez des chemins complets comme /photos/heidi15.jpg et un court nom de photo.",
           add_eye_candy: "Ajouter eye candy",
@@ -2494,6 +2609,9 @@ require_admin_ui();
           quick_add_submit: "Ajouter",
           quick_add_type_tour: "Date tournee (site + admin)",
           quick_add_type_block: "Bloquer des jours (admin)",
+          tour_partners_title: "Partenaires",
+          tour_partners_hint: "Ajoutez un nom ami et un lien dans la section tournee.",
+          add_partner: "Ajouter partenaire",
           quick_add_missing_fields: "Type, ville, debut et fin sont obligatoires.",
           quick_add_invalid_range: "La date de fin doit etre apres ou egale au debut.",
           quick_add_blocked_saved: "Plage bloquee sauvegardee dans le calendrier.",
@@ -3075,13 +3193,55 @@ require_admin_ui();
         }
       };
 
-      const getReadNotificationIds = () => {
-        const data = readStoredObject(NOTIFICATIONS_READ_KEY, { ids: [] });
-        return new Set(Array.isArray(data.ids) ? data.ids.map((value) => String(value)) : []);
-      };
+      let readNotificationIdsCache = new Set();
+      let readNotificationIdsLoaded = false;
+
+      const getReadNotificationIds = () => new Set(readNotificationIdsCache);
 
       const setReadNotificationIds = (set) => {
-        writeStoredObject(NOTIFICATIONS_READ_KEY, { ids: Array.from(set).slice(-800) });
+        const ids = Array.from(set).map((value) => String(value)).filter(Boolean).slice(-2000);
+        readNotificationIdsCache = new Set(ids);
+        writeStoredObject(NOTIFICATIONS_READ_LOCAL_KEY, { ids: ids.slice(-800) });
+      };
+
+      const loadNotificationReadState = async () => {
+        if (readNotificationIdsLoaded) return;
+        const key = getKey();
+        const local = readStoredObject(NOTIFICATIONS_READ_LOCAL_KEY, { ids: [] });
+        const localIds = Array.isArray(local.ids) ? local.ids.map((value) => String(value)).filter(Boolean) : [];
+        if (!key) {
+          readNotificationIdsCache = new Set(localIds);
+          readNotificationIdsLoaded = true;
+          return;
+        }
+        try {
+          const response = await fetch("../api/admin/notifications-state.php", {
+            headers: { ...headersWithKey() },
+            cache: "no-store",
+          });
+          const data = await response.json().catch(() => ({}));
+          const remoteIds = Array.isArray(data.read_ids) ? data.read_ids.map((value) => String(value)).filter(Boolean) : [];
+          const merged = new Set([...localIds, ...remoteIds]);
+          setReadNotificationIds(merged);
+        } catch (_error) {
+          readNotificationIdsCache = new Set(localIds);
+        }
+        readNotificationIdsLoaded = true;
+      };
+
+      const syncNotificationReadState = async () => {
+        const key = getKey();
+        if (!key) return;
+        try {
+          await fetch("../api/admin/notifications-state.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headersWithKey(),
+            },
+            body: JSON.stringify({ read_ids: Array.from(readNotificationIdsCache) }),
+          });
+        } catch (_error) {}
       };
 
       const requestNotificationId = (item) => {
@@ -3112,11 +3272,12 @@ require_admin_ui();
           const button = document.createElement("button");
           button.type = "button";
           button.className = "notif-item";
-          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} • ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
+          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} â€¢ ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
           button.addEventListener("click", () => {
             const latestRead = getReadNotificationIds();
             latestRead.add(id);
             setReadNotificationIds(latestRead);
+            syncNotificationReadState();
             setAdminPanel("clients", true);
             const cards = Array.from(requestsList.querySelectorAll("[data-request-id]"));
             const match = cards.find((card) => card.getAttribute("data-request-id") === String(item.id || ""));
@@ -3156,6 +3317,9 @@ require_admin_ui();
         setTextById("quickAddSubmit", t("quick_add_submit"));
         setTextById("addTourRow", t("add_stop"));
         setTextById("menuAddTourRow", t("add_stop"));
+        setTextById("menuTourPartnersTitle", t("tour_partners_title"));
+        setTextById("menuTourPartnersHint", t("tour_partners_hint"));
+        setTextById("menuAddTourPartnerRow", t("add_partner"));
         setTextById("saveTourSchedule", t("save_tour_schedule"));
         setTextById("menuSaveTourSchedule", t("save_tour_schedule"));
         setTextById("cityWizardTitle", t("city_wizard_title"));
@@ -3164,6 +3328,8 @@ require_admin_ui();
         setTextById("menuTourScheduleHint", t("tour_schedule_hint"));
         setTextById("saveAvailability", t("save_city_schedule"));
         setTextById("clearCityTemplates", t("clear_template_blocks"));
+        setTextById("menuAutoTemplateBlocksLabel", t("auto_template_blocks_label"));
+        setTextById("menuClearAutoBlocks", t("disable_clear_auto_blocks"));
         setTextById("gallerySectionTitle", t("eye_candy_title"));
         setTextById("gallerySectionHint", t("eye_candy_hint"));
         setTextById("addGalleryRow", t("add_eye_candy"));
@@ -3211,6 +3377,7 @@ require_admin_ui();
         }
 
         renderTourSchedule(touringStops);
+        renderTourPartners(tourPartners);
         renderGallery(readGalleryFromUI().length ? readGalleryFromUI() : []);
         renderCityScheduleWizard();
         await loadRequests();
@@ -3391,6 +3558,112 @@ require_admin_ui();
         return { "X-Admin-Key": key };
       };
 
+      const renderEmployeeList = (employees) => {
+        if (!employeeList) return;
+        const rows = Array.isArray(employees) ? employees : [];
+        employeeList.innerHTML = "";
+        if (!rows.length) {
+          employeeList.innerHTML = '<p class="hint">No employees yet.</p>';
+          return;
+        }
+        rows.forEach((entry) => {
+          const username = String(entry?.username || "").trim();
+          if (!username) return;
+          const row = document.createElement("div");
+          row.className = "menu-list-row";
+          row.innerHTML = `
+            <input type="text" value="${username}" readonly />
+            <input type="text" value="${String(entry?.created_at || "").trim()}" readonly />
+            <button class="btn ghost" type="button">Remove</button>
+          `;
+          const removeBtn = row.querySelector("button");
+          if (removeBtn) {
+            removeBtn.addEventListener("click", () => removeEmployee(username));
+          }
+          employeeList.appendChild(row);
+        });
+      };
+
+      const loadEmployees = async () => {
+        if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeList) return;
+        if (employeeStatus) employeeStatus.textContent = "";
+        try {
+          const response = await fetch("../api/admin/employees.php", {
+            headers: { ...headersWithKey() },
+            cache: "no-store",
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          renderEmployeeList(result.employees || []);
+        } catch (error) {
+          if (employeeStatus) {
+            employeeStatus.textContent = `Failed to load employees${error?.message ? ` (${error.message})` : ""}.`;
+          }
+        }
+      };
+
+      const addEmployee = async () => {
+        if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeUsernameInput || !employeePasswordInput || !employeeStatus) return;
+        const username = String(employeeUsernameInput.value || "").trim().toLowerCase();
+        const password = String(employeePasswordInput.value || "");
+        employeeStatus.textContent = "";
+        if (!/^[a-z0-9._-]{3,40}$/i.test(username)) {
+          employeeStatus.textContent = "Use 3-40 chars: letters, numbers, dot, dash, underscore.";
+          return;
+        }
+        if (password.length < 8) {
+          employeeStatus.textContent = "Password must be at least 8 characters.";
+          return;
+        }
+        try {
+          const response = await fetch("../api/admin/employees.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headersWithKey(),
+            },
+            body: JSON.stringify({ action: "add", username, password }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          employeePasswordInput.value = "";
+          employeeUsernameInput.value = "";
+          employeeStatus.textContent = "Employee saved.";
+          renderEmployeeList(result.employees || []);
+        } catch (error) {
+          employeeStatus.textContent = `Failed to save employee${error?.message ? ` (${error.message})` : ""}.`;
+        }
+      };
+
+      const removeEmployee = async (username) => {
+        if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeStatus) return;
+        const normalized = String(username || "").trim().toLowerCase();
+        if (!normalized) return;
+        employeeStatus.textContent = "";
+        try {
+          const response = await fetch("../api/admin/employees.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headersWithKey(),
+            },
+            body: JSON.stringify({ action: "delete", username: normalized }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          employeeStatus.textContent = "Employee removed.";
+          renderEmployeeList(result.employees || []);
+        } catch (error) {
+          employeeStatus.textContent = `Failed to remove employee${error?.message ? ` (${error.message})` : ""}.`;
+        }
+      };
+
       const populateTimezones = () => {
         if (!tourTzSelect) return;
         tourTzSelect.innerHTML = "";
@@ -3431,7 +3704,9 @@ require_admin_ui();
       let loadRequestsToken = 0;
       let recurringBlocks = [];
       let touringStops = [];
+      let tourPartners = [];
       let citySchedules = [];
+      let autoTemplateBlocksEnabled = false;
       let autoSaveTimer = null;
       let autoSaveInFlight = false;
       let autoSaveQueued = false;
@@ -3706,14 +3981,21 @@ require_admin_ui();
         return generated;
       };
 
+      const clearTemplateSlotsFromBlocked = () => {
+        blockedSlots = normalizeBlockedSlots(blockedSlots.filter((slot) => slot && slot.kind !== "template"));
+      };
+
       const applyCityTemplateBlocks = ({ announce = true } = {}) => {
         const baseSlots = blockedSlots.filter((slot) => slot && slot.kind !== "template");
-        const templateSlots = getTemplateBlocks();
+        const templateSlots = autoTemplateBlocksEnabled ? getTemplateBlocks() : [];
         blockedSlots = normalizeBlockedSlots([...baseSlots, ...templateSlots]);
+        if (menuAutoTemplateBlocks) {
+          menuAutoTemplateBlocks.checked = !!autoTemplateBlocksEnabled;
+        }
         renderBlockedSlots();
         renderCalendarView();
         if (announce && cityScheduleStatus) {
-          cityScheduleStatus.textContent = "City templates applied.";
+          cityScheduleStatus.textContent = autoTemplateBlocksEnabled ? "City templates applied." : t("auto_blocks_disabled");
         }
       };
 
@@ -4486,6 +4768,10 @@ require_admin_ui();
           bufferInput.value = String(normalizeBufferMinutes(data.buffer_minutes, 30));
           blockedSlots = normalizeBlockedSlots(data.blocked);
           recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
+          autoTemplateBlocksEnabled = !!data.auto_template_blocks;
+          if (menuAutoTemplateBlocks) {
+            menuAutoTemplateBlocks.checked = autoTemplateBlocksEnabled;
+          }
           citySchedules = (Array.isArray(data.city_schedules) ? data.city_schedules : [])
             .map((entry) => normalizeCitySchedule(entry))
             .filter((entry) => entry.city && entry.start && entry.end);
@@ -4540,6 +4826,7 @@ require_admin_ui();
           tour_timezone: DEFAULT_TIMEZONE,
           buffer_minutes: defaultBufferMinutes,
           availability_mode: "open",
+          auto_template_blocks: !!autoTemplateBlocksEnabled,
           blocked: blockedSlots,
           recurring: recurringBlocks,
           city_schedules: cityPayload,
@@ -4644,6 +4931,28 @@ require_admin_ui();
         return row;
       };
 
+      const normalizePartnerLink = (raw) => {
+        const value = String(raw || "").trim();
+        if (!value) return "";
+        if (/^https?:\/\//i.test(value) || /^mailto:/i.test(value)) {
+          return value;
+        }
+        return `https://${value.replace(/^\/+/, "")}`;
+      };
+
+      const createTourPartnerRow = (entry = {}) => {
+        const row = document.createElement("div");
+        row.className = "editor-row";
+        row.dataset.partnerRow = "1";
+        const friendField = createField("Friend", "text", entry.friend || "", "Name");
+        const linkField = createField("Link", "text", entry.link || "", "https://...");
+        const removeBtn = createActionButton(t("remove"), () => row.remove(), "btn ghost");
+        row.appendChild(friendField.wrapper);
+        row.appendChild(linkField.wrapper);
+        row.appendChild(removeBtn);
+        return row;
+      };
+
       const createGalleryRow = (item = {}) => {
         const row = document.createElement("div");
         row.className = "editor-row gallery";
@@ -4685,6 +4994,19 @@ require_admin_ui();
         }
         list.forEach((entry) => {
           tourScheduleList.appendChild(createTourRow(entry));
+        });
+      };
+
+      const renderTourPartners = (entries) => {
+        if (!tourPartnersList) return;
+        tourPartnersList.innerHTML = "";
+        const list = Array.isArray(entries) ? entries : [];
+        if (!list.length) {
+          tourPartnersList.appendChild(createTourPartnerRow());
+          return;
+        }
+        list.forEach((entry) => {
+          tourPartnersList.appendChild(createTourPartnerRow(entry));
         });
       };
 
@@ -4747,6 +5069,18 @@ require_admin_ui();
           .filter((entry) => entry.start && entry.end && entry.city);
       };
 
+      const readTourPartnersFromUI = () => {
+        if (!tourPartnersList) return [];
+        return Array.from(tourPartnersList.querySelectorAll("[data-partner-row]"))
+          .map((row) => {
+            const inputs = row.querySelectorAll("input");
+            const friend = String(inputs[0]?.value || "").trim();
+            const link = normalizePartnerLink(inputs[1]?.value || "");
+            return { friend, link };
+          })
+          .filter((entry) => entry.friend && entry.link);
+      };
+
       const normalizeTouringEntries = (entries) =>
         (Array.isArray(entries) ? entries : [])
           .map((entry) => ({
@@ -4768,6 +5102,14 @@ require_admin_ui();
               entry.start <= entry.end
           )
           .sort((a, b) => (a.start + a.city).localeCompare(b.start + b.city));
+
+      const normalizePartnerEntries = (entries) =>
+        (Array.isArray(entries) ? entries : [])
+          .map((entry) => ({
+            friend: String(entry?.friend || "").trim(),
+            link: normalizePartnerLink(entry?.link || ""),
+          }))
+          .filter((entry) => entry.friend && entry.link);
 
       const readCitySchedulePayload = () =>
         citySchedules.map((schedule) => ({
@@ -5167,7 +5509,9 @@ require_admin_ui();
           }
           if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
           touringStops = normalizeTouringEntries(data.touring || []);
+          tourPartners = normalizePartnerEntries(data.partners || []);
           renderTourSchedule(touringStops);
+          renderTourPartners(tourPartners);
           syncCitySchedulesWithTouring();
         } catch (error) {
           const message = error && error.message ? ` (${error.message})` : "";
@@ -5187,6 +5531,7 @@ require_admin_ui();
           return false;
         }
         const list = normalizeTouringEntries(entries);
+        const partners = normalizePartnerEntries(readTourPartnersFromUI());
         if (!list.length) {
           if (statusNode) {
             statusNode.textContent = t("add_entry_min");
@@ -5200,7 +5545,7 @@ require_admin_ui();
               "Content-Type": "application/json",
               "X-Admin-Key": key,
             },
-            body: JSON.stringify({ touring: list }),
+            body: JSON.stringify({ touring: list, partners }),
           });
           const payloadText = await response.text();
           let result = {};
@@ -5209,7 +5554,9 @@ require_admin_ui();
           }
           if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
           touringStops = normalizeTouringEntries(result.touring || list);
+          tourPartners = normalizePartnerEntries(result.partners || partners);
           renderTourSchedule(touringStops);
+          renderTourPartners(tourPartners);
           syncCitySchedulesWithTouring();
           if (statusNode) {
             statusNode.textContent = t("tour_schedule_saved");
@@ -5513,17 +5860,13 @@ require_admin_ui();
           max: 24,
           step: 0.5,
         });
-        const experienceField = createEditField(t("experience"), "select", item.experience || "gfe", {
+        const experienceField = createEditField(t("experience"), "select", item.experience || "duo_gfe", {
           required: true,
           selectOptions: [
-            { value: "gfe", label: "GFE" },
-            { value: "pse", label: "PSE" },
-            { value: "filming", label: "Filming" },
+            { value: "duo_gfe", label: "Duo GFE" },
           ],
         });
-        experienceField.input.value = ["gfe", "pse", "filming"].includes(String(item.experience || "").toLowerCase())
-          ? String(item.experience || "").toLowerCase()
-          : "gfe";
+        experienceField.input.value = "duo_gfe";
 
         const notesField = createEditField(t("notes"), "textarea", item.notes || "", { full: true });
 
@@ -5629,8 +5972,10 @@ require_admin_ui();
               throw new Error(fieldError || "update");
             }
             statusNode.textContent = t("appointment_updated");
+            panel.classList.add("hidden");
             await loadRequests();
             await loadAvailability();
+            setAdminPanel("schedule", true);
           } catch (error) {
             statusNode.textContent = `${t("failed_update_appointment")} ${error?.message ? `(${error.message})` : ""}`;
           } finally {
@@ -5857,6 +6202,7 @@ require_admin_ui();
           renderCalendarView();
           return;
         }
+        await loadNotificationReadState();
         try {
           const response = await fetch("../api/admin/requests.php", {
             headers: { ...headersWithKey() },
@@ -6288,6 +6634,12 @@ require_admin_ui();
           tourScheduleList.appendChild(createTourRow());
         });
       }
+      if (addTourPartnerRowBtn) {
+        addTourPartnerRowBtn.addEventListener("click", () => {
+          if (!tourPartnersList) return;
+          tourPartnersList.appendChild(createTourPartnerRow());
+        });
+      }
       if (quickAddSubmitBtn) {
         quickAddSubmitBtn.addEventListener("click", addQuickEntry);
       }
@@ -6309,6 +6661,30 @@ require_admin_ui();
       if (saveTourScheduleBtn) {
         saveTourScheduleBtn.addEventListener("click", saveTourSchedule);
       }
+      if (menuAutoTemplateBlocks) {
+        menuAutoTemplateBlocks.addEventListener("change", () => {
+          autoTemplateBlocksEnabled = !!menuAutoTemplateBlocks.checked;
+          applyCityTemplateBlocks({ announce: false });
+          if (menuAutoBlockStatus) {
+            menuAutoBlockStatus.textContent = autoTemplateBlocksEnabled ? t("auto_blocks_enabled") : t("auto_blocks_disabled");
+          }
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+      if (menuClearAutoBlocks) {
+        menuClearAutoBlocks.addEventListener("click", () => {
+          autoTemplateBlocksEnabled = false;
+          if (menuAutoTemplateBlocks) {
+            menuAutoTemplateBlocks.checked = false;
+          }
+          clearTemplateSlotsFromBlocked();
+          applyCityTemplateBlocks({ announce: false });
+          if (menuAutoBlockStatus) {
+            menuAutoBlockStatus.textContent = t("auto_blocks_cleared");
+          }
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
       if (clearCityTemplatesBtn) {
         clearCityTemplatesBtn.addEventListener("click", async () => {
           citySchedules = citySchedules.map((schedule) =>
@@ -6324,7 +6700,7 @@ require_admin_ui();
           );
           renderCityScheduleWizard();
           applyCityTemplateBlocks({ announce: false });
-          blockedSlots = normalizeBlockedSlots(blockedSlots.filter((slot) => slot && slot.kind !== "template"));
+          clearTemplateSlotsFromBlocked();
           renderBlockedSlots();
           renderCalendarView();
           queueAutoSave(t("template_rules_clearing"));
@@ -6342,6 +6718,17 @@ require_admin_ui();
       }
       if (saveGalleryBtn) {
         saveGalleryBtn.addEventListener("click", saveGallery);
+      }
+      if (addEmployeeBtn) {
+        addEmployeeBtn.addEventListener("click", addEmployee);
+      }
+      if (employeePasswordInput) {
+        employeePasswordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addEmployee();
+          }
+        });
       }
       if (photoDisplayModeSelect) {
         photoDisplayModeSelect.addEventListener("change", updatePhotoModeUi);
@@ -6384,6 +6771,7 @@ require_admin_ui();
       loadTourSchedule();
       loadGallery();
       loadRequests();
+      loadEmployees();
       applyLanguage(initialLanguage, true);
     </script>
   </body>

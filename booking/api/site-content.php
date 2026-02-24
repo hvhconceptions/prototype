@@ -8,5 +8,6 @@ $touring = get_effective_touring_schedule();
 
 json_response([
     'touring' => $touring,
+    'touring_partners' => is_array($content['touring_partners'] ?? null) ? array_values($content['touring_partners']) : [],
     'updated_at' => $content['updated_at'] ?? gmdate('c'),
 ]);

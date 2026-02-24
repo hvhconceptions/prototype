@@ -1718,7 +1718,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         <h1 id="adminMainTitle">BombaCLOUD!</h1>
         <div class="header-actions header-anchor">
           <button class="icon-menu-btn" id="notifToggleBtn" type="button" aria-label="Notifications">
-            <span>🔔</span>
+            <span>ðŸ””</span>
             <span id="notifUnreadCount" class="notif-badge hidden">0</span>
           </button>
           <div id="notifPanel" class="notif-panel hidden">
@@ -1910,7 +1910,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         </div>
         <p class="hint" id="menuTourScheduleHint">Dates are inclusive. You can edit or remove rows before saving.</p>
         <div class="editor-list" id="menuTourScheduleList"></div>
+        <div class="field">
+          <label id="menuTourPartnersTitle">Partners</label>
+          <p class="hint" id="menuTourPartnersHint">Add friend name and link shown in touring section.</p>
+          <div class="editor-list" id="menuTourPartnersList"></div>
+        </div>
         <div class="row">
+          <button class="btn secondary" id="menuAddTourPartnerRow" type="button">Add partner</button>
           <button class="btn secondary" id="menuAddTourRow" type="button">Add stop</button>
           <button class="btn" id="menuSaveTourSchedule" type="button">Save tour schedule</button>
           <span class="status" id="menuTourScheduleStatus"></span>
@@ -2312,9 +2318,11 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const quickAddSubmitBtn = document.getElementById("quickAddSubmit");
       const quickAddStatus = document.getElementById("quickAddStatus");
       const tourScheduleList = document.getElementById("menuTourScheduleList") || document.getElementById("tourScheduleList");
+      const tourPartnersList = document.getElementById("menuTourPartnersList");
       const tourScheduleStatus =
         document.getElementById("menuTourScheduleStatus") || document.getElementById("tourScheduleStatus");
       const addTourRowBtn = document.getElementById("menuAddTourRow") || document.getElementById("addTourRow");
+      const addTourPartnerRowBtn = document.getElementById("menuAddTourPartnerRow");
       const saveTourScheduleBtn = document.getElementById("menuSaveTourSchedule") || document.getElementById("saveTourSchedule");
       const cityScheduleWizard = document.getElementById("cityScheduleWizard");
       const cityScheduleStatus = document.getElementById("cityScheduleStatus");
@@ -2433,6 +2441,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           quick_add_submit: "Add",
           quick_add_type_tour: "Tour date (website + admin)",
           quick_add_type_block: "Block days (admin only)",
+          tour_partners_title: "Partners",
+          tour_partners_hint: "Add friend name and link shown in touring section.",
+          add_partner: "Add partner",
           quick_add_missing_fields: "Type, city, start, and end are required.",
           quick_add_invalid_range: "End date must be after or equal to start date.",
           quick_add_blocked_saved: "Block range saved to calendar.",
@@ -2598,6 +2609,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           quick_add_submit: "Ajouter",
           quick_add_type_tour: "Date tournee (site + admin)",
           quick_add_type_block: "Bloquer des jours (admin)",
+          tour_partners_title: "Partenaires",
+          tour_partners_hint: "Ajoutez un nom ami et un lien dans la section tournee.",
+          add_partner: "Ajouter partenaire",
           quick_add_missing_fields: "Type, ville, debut et fin sont obligatoires.",
           quick_add_invalid_range: "La date de fin doit etre apres ou egale au debut.",
           quick_add_blocked_saved: "Plage bloquee sauvegardee dans le calendrier.",
@@ -3258,7 +3272,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           const button = document.createElement("button");
           button.type = "button";
           button.className = "notif-item";
-          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} • ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
+          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} â€¢ ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
           button.addEventListener("click", () => {
             const latestRead = getReadNotificationIds();
             latestRead.add(id);
@@ -3303,6 +3317,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         setTextById("quickAddSubmit", t("quick_add_submit"));
         setTextById("addTourRow", t("add_stop"));
         setTextById("menuAddTourRow", t("add_stop"));
+        setTextById("menuTourPartnersTitle", t("tour_partners_title"));
+        setTextById("menuTourPartnersHint", t("tour_partners_hint"));
+        setTextById("menuAddTourPartnerRow", t("add_partner"));
         setTextById("saveTourSchedule", t("save_tour_schedule"));
         setTextById("menuSaveTourSchedule", t("save_tour_schedule"));
         setTextById("cityWizardTitle", t("city_wizard_title"));
@@ -3360,6 +3377,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         }
 
         renderTourSchedule(touringStops);
+        renderTourPartners(tourPartners);
         renderGallery(readGalleryFromUI().length ? readGalleryFromUI() : []);
         renderCityScheduleWizard();
         await loadRequests();
@@ -3686,6 +3704,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       let loadRequestsToken = 0;
       let recurringBlocks = [];
       let touringStops = [];
+      let tourPartners = [];
       let citySchedules = [];
       let autoTemplateBlocksEnabled = false;
       let autoSaveTimer = null;
@@ -4912,6 +4931,28 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         return row;
       };
 
+      const normalizePartnerLink = (raw) => {
+        const value = String(raw || "").trim();
+        if (!value) return "";
+        if (/^https?:\/\//i.test(value) || /^mailto:/i.test(value)) {
+          return value;
+        }
+        return `https://${value.replace(/^\/+/, "")}`;
+      };
+
+      const createTourPartnerRow = (entry = {}) => {
+        const row = document.createElement("div");
+        row.className = "editor-row";
+        row.dataset.partnerRow = "1";
+        const friendField = createField("Friend", "text", entry.friend || "", "Name");
+        const linkField = createField("Link", "text", entry.link || "", "https://...");
+        const removeBtn = createActionButton(t("remove"), () => row.remove(), "btn ghost");
+        row.appendChild(friendField.wrapper);
+        row.appendChild(linkField.wrapper);
+        row.appendChild(removeBtn);
+        return row;
+      };
+
       const createGalleryRow = (item = {}) => {
         const row = document.createElement("div");
         row.className = "editor-row gallery";
@@ -4953,6 +4994,19 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         }
         list.forEach((entry) => {
           tourScheduleList.appendChild(createTourRow(entry));
+        });
+      };
+
+      const renderTourPartners = (entries) => {
+        if (!tourPartnersList) return;
+        tourPartnersList.innerHTML = "";
+        const list = Array.isArray(entries) ? entries : [];
+        if (!list.length) {
+          tourPartnersList.appendChild(createTourPartnerRow());
+          return;
+        }
+        list.forEach((entry) => {
+          tourPartnersList.appendChild(createTourPartnerRow(entry));
         });
       };
 
@@ -5015,6 +5069,18 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           .filter((entry) => entry.start && entry.end && entry.city);
       };
 
+      const readTourPartnersFromUI = () => {
+        if (!tourPartnersList) return [];
+        return Array.from(tourPartnersList.querySelectorAll("[data-partner-row]"))
+          .map((row) => {
+            const inputs = row.querySelectorAll("input");
+            const friend = String(inputs[0]?.value || "").trim();
+            const link = normalizePartnerLink(inputs[1]?.value || "");
+            return { friend, link };
+          })
+          .filter((entry) => entry.friend && entry.link);
+      };
+
       const normalizeTouringEntries = (entries) =>
         (Array.isArray(entries) ? entries : [])
           .map((entry) => ({
@@ -5036,6 +5102,14 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               entry.start <= entry.end
           )
           .sort((a, b) => (a.start + a.city).localeCompare(b.start + b.city));
+
+      const normalizePartnerEntries = (entries) =>
+        (Array.isArray(entries) ? entries : [])
+          .map((entry) => ({
+            friend: String(entry?.friend || "").trim(),
+            link: normalizePartnerLink(entry?.link || ""),
+          }))
+          .filter((entry) => entry.friend && entry.link);
 
       const readCitySchedulePayload = () =>
         citySchedules.map((schedule) => ({
@@ -5435,7 +5509,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           }
           if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
           touringStops = normalizeTouringEntries(data.touring || []);
+          tourPartners = normalizePartnerEntries(data.partners || []);
           renderTourSchedule(touringStops);
+          renderTourPartners(tourPartners);
           syncCitySchedulesWithTouring();
         } catch (error) {
           const message = error && error.message ? ` (${error.message})` : "";
@@ -5455,6 +5531,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           return false;
         }
         const list = normalizeTouringEntries(entries);
+        const partners = normalizePartnerEntries(readTourPartnersFromUI());
         if (!list.length) {
           if (statusNode) {
             statusNode.textContent = t("add_entry_min");
@@ -5468,7 +5545,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               "Content-Type": "application/json",
               "X-Admin-Key": key,
             },
-            body: JSON.stringify({ touring: list }),
+            body: JSON.stringify({ touring: list, partners }),
           });
           const payloadText = await response.text();
           let result = {};
@@ -5477,7 +5554,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           }
           if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
           touringStops = normalizeTouringEntries(result.touring || list);
+          tourPartners = normalizePartnerEntries(result.partners || partners);
           renderTourSchedule(touringStops);
+          renderTourPartners(tourPartners);
           syncCitySchedulesWithTouring();
           if (statusNode) {
             statusNode.textContent = t("tour_schedule_saved");
@@ -5781,17 +5860,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           max: 24,
           step: 0.5,
         });
-        const experienceField = createEditField(t("experience"), "select", item.experience || "gfe", {
+        const experienceField = createEditField(t("experience"), "select", item.experience || "duo_gfe", {
           required: true,
           selectOptions: [
-            { value: "gfe", label: "GFE" },
-            { value: "pse", label: "PSE" },
-            { value: "filming", label: "Filming" },
+            { value: "duo_gfe", label: "Duo GFE" },
           ],
         });
-        experienceField.input.value = ["gfe", "pse", "filming"].includes(String(item.experience || "").toLowerCase())
-          ? String(item.experience || "").toLowerCase()
-          : "gfe";
+        experienceField.input.value = "duo_gfe";
 
         const notesField = createEditField(t("notes"), "textarea", item.notes || "", { full: true });
 
@@ -6557,6 +6632,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         addTourRowBtn.addEventListener("click", () => {
           if (!tourScheduleList) return;
           tourScheduleList.appendChild(createTourRow());
+        });
+      }
+      if (addTourPartnerRowBtn) {
+        addTourPartnerRowBtn.addEventListener("click", () => {
+          if (!tourPartnersList) return;
+          tourPartnersList.appendChild(createTourPartnerRow());
         });
       }
       if (quickAddSubmitBtn) {

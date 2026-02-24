@@ -206,6 +206,7 @@ function get_default_site_content(): array
             ['start' => '2026-03-10', 'end' => '2026-03-13', 'city' => 'Berlin'],
             ['start' => '2026-03-14', 'end' => '2026-03-19', 'city' => 'Paris'],
         ],
+        'touring_partners' => [],
         'rates' => [
             'gfe' => [
                 ['hours' => 0.5, 'amount' => 400],

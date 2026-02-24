@@ -1,7 +1,12 @@
 DirectoryIndex index.html index.php
+ErrorDocument 404 /404.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteCond %{HTTP:CF-IPCountry} ^MA$ [NC,OR]
+  RewriteCond %{ENV:GEOIP_COUNTRY_CODE} ^MA$ [NC,OR]
+  RewriteCond %{ENV:MM_COUNTRY_CODE} ^MA$ [NC]
+  RewriteRule ^ - [F,L]
   RewriteRule ^$ /index.html [L]
 </IfModule>
 

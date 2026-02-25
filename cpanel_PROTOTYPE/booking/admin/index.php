@@ -401,6 +401,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         display: block;
       }
 
+      .icon-menu-btn .notif-icon {
+        font-size: 20px;
+        line-height: 1;
+        display: inline-block;
+        transform: translateY(-1px);
+      }
+
       .notif-badge {
         min-width: 18px;
         height: 18px;
@@ -1720,7 +1727,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         <h1 id="adminMainTitle">BombaCLOUD!</h1>
         <div class="header-actions header-anchor">
           <button class="icon-menu-btn" id="notifToggleBtn" type="button" aria-label="Notifications">
-            <span>ðŸ””</span>
+            <span class="notif-icon" aria-hidden="true">&#128276;</span>
             <span id="notifUnreadCount" class="notif-badge hidden">0</span>
           </button>
           <div id="notifPanel" class="notif-panel hidden">
@@ -3274,7 +3281,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           const button = document.createElement("button");
           button.type = "button";
           button.className = "notif-item";
-          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} â€¢ ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
+          button.innerHTML = `<strong>${item.name || t("unknown")}</strong><br /><small>${item.city || t("no_city")} &bull; ${item.preferred_date || ""} ${item.preferred_time || ""}</small>`;
           button.addEventListener("click", () => {
             const latestRead = getReadNotificationIds();
             latestRead.add(id);

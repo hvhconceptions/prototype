@@ -5955,13 +5955,22 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           max: 24,
           step: 0.5,
         });
-        const experienceField = createEditField(t("experience"), "select", item.experience || "duo_gfe", {
+        const normalizeExperienceValue = (value) => {
+          const normalized = String(value || "").trim().toLowerCase();
+          if (normalized === "duo_gfe") return "gfe";
+          if (["gfe", "pse", "filming", "social"].includes(normalized)) return normalized;
+          return "gfe";
+        };
+        const experienceField = createEditField(t("experience"), "select", normalizeExperienceValue(item.experience), {
           required: true,
           selectOptions: [
-            { value: "duo_gfe", label: "Duo GFE" },
+            { value: "gfe", label: "GFE" },
+            { value: "pse", label: "PSE" },
+            { value: "filming", label: "Filming" },
+            { value: "social", label: "Social introduction" },
           ],
         });
-        experienceField.input.value = "duo_gfe";
+        experienceField.input.value = normalizeExperienceValue(item.experience);
 
         const notesField = createEditField(t("notes"), "textarea", item.notes || "", { full: true });
 

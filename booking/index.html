@@ -1283,16 +1283,6 @@
                 />
               </div>
             </div>
-            <div class="field span-2" id="notesField">
-              <label for="notes">Requests, info, tell me about you if you wish :)</label>
-              <textarea
-                id="notes"
-                name="notes"
-                autocomplete="off"
-                placeholder="Optional. Share requests or any helpful info."
-              ></textarea>
-              <p class="hint">Optional. Keep it respectful.</p>
-            </div>
             <div class="field">
               <label for="preferred_date">Date of booking</label>
               <input id="preferred_date" name="preferred_date" type="date" required />
@@ -1349,7 +1339,10 @@
               <label for="experience">Service</label>
               <select id="experience" name="experience" required>
                 <option value="" disabled selected>chose an option</option>
-                <option value="duo_gfe">Duo GFE</option>
+                <option value="gfe">GFE</option>
+                <option value="pse">PSE</option>
+                <option value="filming">Filming</option>
+                <option value="social">Social introduction</option>
               </select>
             </div>
             <div class="field span-2" id="bookingTypeField">
@@ -1396,6 +1389,16 @@
             <div class="deposit-total">20% deposit: <strong id="depositRateDisplay">--</strong></div>
             <p class="hint" id="totalRateNote"></p>
             <p class="hint" id="depositRateNote">Deposit is 20% of total.</p>
+          </div>
+          <div class="field span-2" id="notesField">
+            <label for="notes">Would you like to add any details?</label>
+            <textarea
+              id="notes"
+              name="notes"
+              autocomplete="off"
+              placeholder="Optional. Share requests or any helpful info."
+            ></textarea>
+            <p class="hint">Optional. Keep it respectful.</p>
           </div>
           <div class="grid" id="paymentGrid">
             <div class="field" id="paymentMethodField">
@@ -1540,7 +1543,7 @@
           invalid_email: "Enter a valid email address.",
           invalid_phone: "Use a valid phone number with country code, for example +14389993539.",
           followup_email_placeholder: "Optional: Montreal, London, Berlin",
-          label_notes: "Requests, info, tell me about you if you wish :)",
+          label_notes: "Would you like to add any details?",
           notes_placeholder: "Optional. Share requests or any helpful info.",
           notes_hint: "Optional. Keep it respectful.",
           label_date: "Date of booking",
@@ -1554,7 +1557,10 @@
           discuss_whatsapp: "Discuss it with me on WhatsApp",
           label_service: "Service",
           service_choose_option: "chose an option",
-          service_duo_gfe: "Duo GFE",
+          service_gfe: "GFE",
+          service_pse: "PSE",
+          service_filming: "Filming",
+          service_social: "Social introduction",
           label_location: "Location",
           incall: "Incall",
           outcall: "Outcall",
@@ -1567,6 +1573,8 @@
           payment_title: "Payment confirmation",
           base_rate: "Base rate:",
           service_addon: "Service add-on:",
+          pse_addon: "PSE add-on:",
+          filming_addon: "Filming add-on:",
           total_rate: "Total:",
           deposit_rate: "20% deposit:",
           deposit_note: "Deposit is 20% of total.",
@@ -1628,7 +1636,7 @@
           step_contact: "Phone and email",
           step_phone: "What phone number can I reach?",
           step_email: "What email should receive payment details?",
-          step_notes: "Requests, info, tell me about you if you wish :)",
+          step_notes: "Would you like to add any details?",
           step_payment_method: "How will you send deposit?",
           step_deposit_confirm: "Confirm the deposit terms",
           step_submit: "Send your booking request",
@@ -1669,7 +1677,7 @@
           invalid_email: "Entrez une adresse email valide.",
           invalid_phone: "Utilisez un numero valide avec indicatif pays, par exemple +14389993539.",
           followup_email_placeholder: "Optionnel: Montreal, Londres, Berlin",
-          label_notes: "Demandes, infos, parlez-moi de vous si vous voulez :)",
+          label_notes: "Voulez-vous ajouter des details?",
           notes_placeholder: "Optionnel. Partagez vos demandes ou infos utiles.",
           notes_hint: "Optionnel. Restez respectueux.",
           label_date: "Date de reservation",
@@ -1683,7 +1691,10 @@
           discuss_whatsapp: "Discuter avec moi sur WhatsApp",
           label_service: "Service",
           service_choose_option: "choisir une option",
-          service_duo_gfe: "Duo GFE",
+          service_gfe: "GFE",
+          service_pse: "PSE",
+          service_filming: "Filming",
+          service_social: "Introduction sociale",
           label_location: "Lieu",
           incall: "Incall",
           outcall: "Outcall",
@@ -1696,6 +1707,8 @@
           payment_title: "Confirmation de paiement",
           base_rate: "Tarif de base:",
           service_addon: "Supplement service:",
+          pse_addon: "Supplement PSE:",
+          filming_addon: "Supplement filming:",
           total_rate: "Total:",
           deposit_rate: "Acompte 20%:",
           deposit_note: "L'acompte est de 20% du total.",
@@ -1757,7 +1770,7 @@
           step_contact: "Telephone et email",
           step_phone: "Quel numero pour vous joindre?",
           step_email: "Quel email doit recevoir les details de paiement?",
-          step_notes: "Demandes, infos, parlez-moi de vous si vous voulez :)",
+          step_notes: "Voulez-vous ajouter des details?",
           step_payment_method: "Comment enverrez-vous l'acompte?",
           step_deposit_confirm: "Confirmez les conditions d'acompte",
           step_submit: "Envoyer votre demande",
@@ -1895,6 +1908,8 @@
       );
       const BASE_CURRENCY = "CAD";
       const DEPOSIT_PERCENT = 20;
+      const PSE_BILL_ADDON = 100;
+      const FILMING_BILL_ADDON = 500;
       const FIAT_CURRENCIES = ["CAD", "USD", "EUR", "GBP"];
       const CRYPTO_CURRENCIES = ["USDC", "BTC", "LTC"];
       const FX_OVERRIDES = {
@@ -1903,15 +1918,35 @@
       };
       const RATE_API = `https://api.exchangerate.host/latest?base=${BASE_CURRENCY}&symbols=${FIAT_CURRENCIES.join(",")}`;
       const currencyCache = { rates: null };
-      const BASE_30MIN_RATE = 550;
-      const BASE_1H_RATE = 1000;
-      const EXTRA_HOUR_RATE = 900;
+      const RATE_BRACKETS = [0.5, 1, 1.5, 2, 3, 4, 12];
+      const RATE_TABLE = {
+        gfe: {
+          0.5: 400,
+          1: 700,
+          1.5: 1000,
+          2: 1300,
+          3: 1600,
+          4: 2000,
+          12: 3000,
+        },
+        social: {
+          3: 1000,
+        },
+      };
+      const LONG_SESSION_MIN = 8;
+      const LONG_SESSION_MAX = 12;
+      const LONG_SESSION_RATE = 3000;
+      const DAY_PLUS_HOURS = 24;
+      const DAY_PLUS_RATE = 4000;
       const DURATION_OPTIONS = [
         { labelKey: "duration_30m", hours: 0.5, value: "0.5" },
         { labelKey: "duration_1h", hours: 1, value: "1" },
+        { labelKey: "duration_1_5h", hours: 1.5, value: "1.5" },
         { labelKey: "duration_2h", hours: 2, value: "2" },
         { labelKey: "duration_3h", hours: 3, value: "3" },
         { labelKey: "duration_4h", hours: 4, value: "4" },
+        { labelKey: "duration_8_12h", hours: 10, value: "8-12" },
+        { labelKey: "duration_24p", hours: DAY_PLUS_HOURS, value: "24+" },
       ];
       const getDurationLabel = (entry) => t(entry?.labelKey || "");
 
@@ -2086,27 +2121,60 @@
       };
 
       const normalizeExperience = (value) => {
-        return value === "duo_gfe" ? "duo_gfe" : "duo_gfe";
+        if (value === "pse") return "pse";
+        if (value === "filming") return "filming";
+        if (value === "social") return "social";
+        return "gfe";
       };
 
       const getServiceAddonBase = (experience, baseRate) => {
         if (!Number.isFinite(baseRate) || baseRate <= 0) return 0;
+        const normalized = normalizeExperience(experience);
+        if (normalized === "pse") return PSE_BILL_ADDON;
+        if (normalized === "filming") return FILMING_BILL_ADDON;
         return 0;
       };
 
       const getServiceAddonLabel = (experience) => {
+        const normalized = normalizeExperience(experience);
+        if (normalized === "pse") return t("pse_addon");
+        if (normalized === "filming") return t("filming_addon");
         return t("service_addon");
       };
 
       const getBaseRate = (hours, experience, rateKey) => {
         if (!Number.isFinite(hours) || hours <= 0) return 0;
-        if (hours <= 0.5) {
-          return BASE_30MIN_RATE;
+        const normalized = normalizeExperience(experience);
+        if (normalized === "social") {
+          return RATE_TABLE.social[3];
         }
-        if (hours <= 1) {
-          return BASE_1H_RATE;
+        if (hours >= DAY_PLUS_HOURS) {
+          return DAY_PLUS_RATE;
         }
-        return Math.round(BASE_1H_RATE + (hours - 1) * EXTRA_HOUR_RATE);
+        if (hours >= LONG_SESSION_MIN && hours <= LONG_SESSION_MAX) {
+          return LONG_SESSION_RATE;
+        }
+        const rates = RATE_TABLE.gfe;
+        if (rates[hours]) return rates[hours];
+        let lower = null;
+        let upper = null;
+        const sorted = RATE_BRACKETS.slice().sort((a, b) => a - b);
+        for (const bracket of sorted) {
+          if (bracket < hours) {
+            lower = bracket;
+            continue;
+          }
+          if (bracket > hours) {
+            upper = bracket;
+            break;
+          }
+        }
+        if (lower === null) return rates[sorted[0]] || 0;
+        if (upper === null) return rates[sorted[sorted.length - 1]] || 0;
+        const lowerRate = rates[lower];
+        const upperRate = rates[upper];
+        const ratio = (hours - lower) / (upper - lower);
+        return Math.round(lowerRate + (upperRate - lowerRate) * ratio);
       };
 
       const getFiatRates = async () => {
@@ -2163,7 +2231,7 @@
         }
         const hours = Number(selected.dataset.hours || 0);
         const rateKey = selected.dataset.rateKey || "";
-        const experience = experienceSelect.value || "duo_gfe";
+        const experience = experienceSelect.value || "gfe";
         const currency = currencySelect.value || BASE_CURRENCY;
         if (selected.dataset.custom === "true") {
           baseRateDisplay.textContent = t("discuss_whatsapp_short");
@@ -2238,7 +2306,7 @@
       const updateDurationOptions = async () => {
         const requestId = ++durationOptionsRequestId;
         const currentCurrency = currencySelect.value || BASE_CURRENCY;
-        const currentExperience = experienceSelect.value || "duo_gfe";
+        const currentExperience = experienceSelect.value || "gfe";
         const previousValue = durationSelect.value;
         durationSelect.innerHTML = "";
         const placeholder = document.createElement("option");
@@ -2250,6 +2318,9 @@
 
         for (const entry of DURATION_OPTIONS) {
           if (requestId !== durationOptionsRequestId) return;
+          if (currentExperience === "social" && Number(entry.hours) !== 3) {
+            continue;
+          }
           const option = document.createElement("option");
           option.value = entry.value;
           option.dataset.hours = String(entry.hours);
@@ -3407,7 +3478,10 @@
         syncCityOptions();
         setOptionText("currency", "", t("choose_option"));
         setOptionText("experience", "", t("service_choose_option"));
-        setOptionText("experience", "duo_gfe", t("service_duo_gfe"));
+        setOptionText("experience", "gfe", t("service_gfe"));
+        setOptionText("experience", "pse", t("service_pse"));
+        setOptionText("experience", "filming", t("service_filming"));
+        setOptionText("experience", "social", t("service_social"));
         setOptionText("payment_method", "", t("choose_option"));
         setOptionText("payment_method", "interac", t("etransfer_canada"));
 

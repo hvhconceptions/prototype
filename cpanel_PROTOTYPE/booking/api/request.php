@@ -6,12 +6,52 @@ require __DIR__ . '/config.php';
 function normalize_experience(string $experience): string
 {
     $normalized = strtolower(trim($experience));
-    return $normalized === 'duo_gfe' ? 'duo_gfe' : 'duo_gfe';
+    if ($normalized === 'duo_gfe') {
+        return 'gfe';
+    }
+    if (in_array($normalized, ['gfe', 'pse', 'filming', 'social'], true)) {
+        return $normalized;
+    }
+    return 'gfe';
 }
 
 function format_experience_label(string $experience): string
 {
-    return 'Duo GFE';
+    $normalized = normalize_experience($experience);
+    if ($normalized === 'pse') {
+        return 'PSE';
+    }
+    if ($normalized === 'filming') {
+        return 'Filming';
+    }
+    if ($normalized === 'social') {
+        return 'Social introduction';
+    }
+    return 'GFE';
+}
+
+function get_service_addon_amount(string $experience): int
+{
+    $normalized = normalize_experience($experience);
+    if ($normalized === 'pse') {
+        return 100;
+    }
+    if ($normalized === 'filming') {
+        return 500;
+    }
+    return 0;
+}
+
+function get_service_addon_label(string $experience): string
+{
+    $normalized = normalize_experience($experience);
+    if ($normalized === 'pse') {
+        return 'PSE add-on';
+    }
+    if ($normalized === 'filming') {
+        return 'Filming add-on';
+    }
+    return '';
 }
 
 function normalize_city_name(string $city): string
@@ -181,13 +221,55 @@ function get_base_rate(float $hours, string $experience, string $rateKey): int
     if ($hours <= 0) {
         return 0;
     }
-    if ($hours <= 0.5) {
-        return 550;
-    }
-    if ($hours <= 1.0) {
+    $normalized = normalize_experience($experience);
+    if ($normalized === 'social') {
         return 1000;
     }
-    return (int) round(1000 + (($hours - 1.0) * 900));
+    if ($hours >= 24) {
+        return 4000;
+    }
+    if ($hours >= 8 && $hours <= 12) {
+        return 3000;
+    }
+
+    $rates = [
+        0.5 => 400,
+        1.0 => 700,
+        1.5 => 1000,
+        2.0 => 1300,
+        3.0 => 1600,
+        4.0 => 2000,
+        12.0 => 3000,
+    ];
+    $brackets = array_keys($rates);
+    sort($brackets);
+    foreach ($brackets as $bracket) {
+        if (abs($hours - $bracket) < 0.0001) {
+            return (int) $rates[$bracket];
+        }
+    }
+    $lower = null;
+    $upper = null;
+    foreach ($brackets as $bracket) {
+        if ($bracket < $hours) {
+            $lower = $bracket;
+            continue;
+        }
+        if ($bracket > $hours) {
+            $upper = $bracket;
+            break;
+        }
+    }
+    if ($lower === null) {
+        return (int) $rates[$brackets[0]];
+    }
+    if ($upper === null) {
+        return (int) $rates[$brackets[count($brackets) - 1]];
+    }
+    $lowerRate = (float) $rates[$lower];
+    $upperRate = (float) $rates[$upper];
+    $ratio = ($hours - $lower) / ($upper - $lower);
+    return (int) round($lowerRate + (($upperRate - $lowerRate) * $ratio));
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -321,14 +403,14 @@ $hours = is_numeric($payload['duration_hours']) ? (float) $payload['duration_hou
 $rateKey = '';
 $experience = normalize_experience((string) ($payload['experience'] ?? ''));
 $baseRate = get_base_rate($hours, $experience, $rateKey);
-$serviceAddonAmount = 0;
+$serviceAddonAmount = get_service_addon_amount($experience);
 $totalRate = $baseRate + $serviceAddonAmount;
 $deposit = $totalRate > 0 ? (int) round(($totalRate * ($depositPercent / 100)) * $displayRate) : 0;
 $billingCurrency = $depositCurrency !== '' ? $depositCurrency : ($currency !== '' ? $currency : 'CAD');
 $displayTotalRate = (int) round($totalRate * $displayRate);
 $displayServiceAddonAmount = (int) round($serviceAddonAmount * $displayRate);
 $displayBaseRate = max(0, $displayTotalRate - $displayServiceAddonAmount);
-$serviceAddonLabel = '';
+$serviceAddonLabel = get_service_addon_label($experience);
 
 $availability = read_json_file(DATA_DIR . '/availability.json', [
     'availability_mode' => 'open',
@@ -483,7 +565,7 @@ $followupCities = array_values($followupCitiesUnique);
 $paymentLink = build_payment_details($paymentMethod, $deposit);
 $paymentEmailSentAt = '';
 $requestEmail = trim((string) ($payload['email'] ?? ''));
-$experienceLabel = format_experience_label((string) ($payload['experience'] ?? ''));
+$experienceLabel = format_experience_label($experience);
 if ($requestEmail !== '') {
     $methodLabel = format_payment_method($paymentMethod);
     $currencyLabel = $billingCurrency !== '' ? $billingCurrency : 'CAD';
@@ -560,7 +642,7 @@ $request = [
     'deposit_currency' => $depositCurrency,
     'deposit_percent' => (string) $depositPercent,
     'base_rate' => $baseRate,
-    'pse_addon' => 0,
+    'pse_addon' => $experience === 'pse' ? $serviceAddonAmount : 0,
     'service_addon' => $serviceAddonAmount,
     'service_addon_label' => $serviceAddonLabel,
     'total_rate' => $totalRate,

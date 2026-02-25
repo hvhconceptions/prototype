@@ -40,7 +40,10 @@ function is_valid_phone_international(string $phone): bool
 function normalize_experience(string $experience): string
 {
     $normalized = strtolower(trim($experience));
-    if (in_array($normalized, ['gfe', 'pse', 'filming'], true)) {
+    if ($normalized === 'duo_gfe') {
+        return 'gfe';
+    }
+    if (in_array($normalized, ['gfe', 'pse', 'filming', 'social'], true)) {
         return $normalized;
     }
     return 'gfe';

@@ -4224,12 +4224,14 @@
 
       .footer-socials {
         justify-content: flex-start;
+        padding-right: clamp(170px, 22vw, 280px);
       }
 
       @media (max-width: 640px) {
         .footer-socials {
           width: 100%;
           justify-content: flex-start;
+          padding-right: clamp(140px, 36vw, 220px);
         }
 
         .language-bar {
@@ -4339,7 +4341,13 @@
               rel="noopener noreferrer"
               aria-label="OnlyFans"
             >
-              <img src="/OF.jpeg" alt="" loading="lazy" />
+              <img
+                src="/OF.jpeg"
+                data-fallback-srcs="/OF.jpg,/OF.webp,OF.jpeg,OF.jpg,OF.webp"
+                alt=""
+                loading="lazy"
+                onerror="window.hvhSwapOnlyfansLogo && window.hvhSwapOnlyfansLogo(this)"
+              />
             </a>
             <a
               class="social-bombacloud"
@@ -4775,7 +4783,13 @@
             rel="noopener noreferrer"
             aria-label="OnlyFans"
           >
-            <img src="/OF.jpeg" alt="" loading="lazy" />
+            <img
+              src="/OF.jpeg"
+              data-fallback-srcs="/OF.jpg,/OF.webp,OF.jpeg,OF.jpg,OF.webp"
+              alt=""
+              loading="lazy"
+              onerror="window.hvhSwapOnlyfansLogo && window.hvhSwapOnlyfansLogo(this)"
+            />
           </a>
           <a
             class="social-bombacloud"
@@ -4815,6 +4829,29 @@
       if (yearTarget) {
         yearTarget.textContent = String(new Date().getFullYear());
       }
+
+      window.hvhSwapOnlyfansLogo =
+        window.hvhSwapOnlyfansLogo ||
+        function (img) {
+          if (!img) return;
+          const options = (img.getAttribute("data-fallback-srcs") || "")
+            .split(",")
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+          const tried = (img.dataset.ofTried || "")
+            .split("|")
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+          const current = img.getAttribute("src");
+          const nextSrc = options.find((candidate) => candidate !== current && !tried.includes(candidate));
+          if (nextSrc) {
+            tried.push(nextSrc);
+            img.dataset.ofTried = tried.join("|");
+            img.src = nextSrc;
+            return;
+          }
+          img.onerror = null;
+        };
 
       const safeStorage = {
         get(key) {

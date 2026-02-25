@@ -12,12 +12,15 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.View
 import android.webkit.HttpAuthHandler
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -33,7 +36,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var offlineMessage: TextView
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private val syncHandler = Handler(Looper.getMainLooper())
     private val reminderSyncInProgress = AtomicBoolean(false)
     private val periodicReminderSync = object : Runnable {
@@ -47,14 +52,41 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
 
+    private val fileChooserLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val callback = filePathCallback
+        filePathCallback = null
+        if (callback == null) return@registerForActivityResult
+        if (result.resultCode != RESULT_OK) {
+            callback.onReceiveValue(null)
+            return@registerForActivityResult
+        }
+        val data = result.data
+        val clipData = data?.clipData
+        if (clipData != null && clipData.itemCount > 0) {
+            val uris = Array(clipData.itemCount) { index -> clipData.getItemAt(index).uri }
+            callback.onReceiveValue(uris)
+            return@registerForActivityResult
+        }
+        val uri = data?.data
+        if (uri != null) {
+            callback.onReceiveValue(arrayOf(uri))
+        } else {
+            callback.onReceiveValue(null)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        swipeRefresh = findViewById(R.id.swipeRefresh)
         webView = findViewById(R.id.adminWebView)
         offlineMessage = findViewById(R.id.offlineMessage)
 
         setupWebView()
+        setupSwipeRefresh()
         loadAdminUrl(forceFresh = true)
         refreshUnreadBadge()
 
@@ -78,6 +110,28 @@ class MainActivity : AppCompatActivity() {
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
 
         webView.clearCache(true)
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                view: WebView?,
+                filePathCallback: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                if (filePathCallback == null) return false
+                this@MainActivity.filePathCallback?.onReceiveValue(null)
+                this@MainActivity.filePathCallback = filePathCallback
+                return try {
+                    val chooserIntent = fileChooserParams?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "image/*"
+                    }
+                    fileChooserLauncher.launch(chooserIntent)
+                    true
+                } catch (_: Exception) {
+                    this@MainActivity.filePathCallback = null
+                    false
+                }
+            }
+        }
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
@@ -105,14 +159,17 @@ class MainActivity : AppCompatActivity() {
                 error: WebResourceError
             ) {
                 if (request.isForMainFrame) {
+                    swipeRefresh.isRefreshing = false
                     offlineMessage.visibility = View.VISIBLE
                     webView.visibility = View.GONE
                 }
             }
 
             override fun onPageFinished(view: WebView, url: String) {
+                swipeRefresh.isRefreshing = false
                 offlineMessage.visibility = View.GONE
                 webView.visibility = View.VISIBLE
+                swipeRefresh.isEnabled = !webView.canScrollVertically(-1)
             }
         }
 
@@ -121,6 +178,17 @@ class MainActivity : AppCompatActivity() {
                 openExternalLink(Uri.parse(url))
             }
         }
+
+        webView.setOnScrollChangeListener { _, _, _, _, _ ->
+            swipeRefresh.isEnabled = !webView.canScrollVertically(-1)
+        }
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefresh.setOnRefreshListener {
+            loadAdminUrl(forceFresh = true)
+        }
+        swipeRefresh.isEnabled = !webView.canScrollVertically(-1)
     }
 
     private fun shouldOpenExternally(url: String): Boolean {
@@ -302,6 +370,12 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         stopPeriodicReminderSync()
+    }
+
+    override fun onDestroy() {
+        filePathCallback?.onReceiveValue(null)
+        filePathCallback = null
+        super.onDestroy()
     }
 
     private fun loadAdminUrl(forceFresh: Boolean = false) {

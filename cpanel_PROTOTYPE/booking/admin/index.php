@@ -2571,6 +2571,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_decline: "Decline",
           action_cancel: "Cancel",
           action_edit: "Edit",
+          action_remove_grid: "Remove from grid",
+          action_show_grid: "Show on grid",
+          grid_hidden: "Booking removed from schedule grid.",
+          grid_visible: "Booking shown on schedule grid.",
           save_changes: "Save changes",
           invalid_email: "Invalid email address.",
           invalid_phone: "Use phone with country code, for example +14389993539.",
@@ -2739,6 +2743,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_decline: "Refuser",
           action_cancel: "Annuler",
           action_edit: "Modifier",
+          action_remove_grid: "Retirer du planning",
+          action_show_grid: "Afficher sur planning",
+          grid_hidden: "Reservation retiree du planning.",
+          grid_visible: "Reservation affichee dans le planning.",
           save_changes: "Sauvegarder",
           invalid_email: "Adresse email invalide.",
           invalid_phone: "Utilisez un numero avec indicatif pays, ex: +14389993539.",
@@ -3716,6 +3724,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       let blockedSlots = [];
       let maybeSlots = [];
       let requestSlots = [];
+      let latestRequests = [];
+      let hiddenBookingIds = new Set();
       let loadRequestsToken = 0;
       let recurringBlocks = [];
       let touringStops = [];
@@ -4065,6 +4075,17 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         return normalized;
       };
 
+      const sanitizeHiddenBookingIds = (values) => {
+        const cleaned = new Set();
+        (Array.isArray(values) ? values : []).forEach((value) => {
+          const id = String(value || "").trim();
+          if (id) {
+            cleaned.add(id);
+          }
+        });
+        return cleaned;
+      };
+
       const getDateKey = (date) => {
         const parts = new Intl.DateTimeFormat("en-CA", {
           timeZone: getActiveTimezone(),
@@ -4167,29 +4188,29 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const getSlotEntry = (dateKey, timeValue) => {
         const targetMinutes = timeToMinutes(timeValue);
         if (targetMinutes === null) return null;
-        let entry = null;
-        blockedSlots.forEach((slot) => {
-          if (!slot || slot.date !== dateKey) return;
+        let bookingEntry = null;
+        requestSlots.forEach((slot) => {
+          if (!slot || slot.date !== dateKey || slot.kind !== "booking") return;
           const startMinutes = timeToMinutes(slot.start);
           const endMinutes = timeToMinutes(slot.end);
           if (startMinutes === null || endMinutes === null) return;
           if (targetMinutes >= startMinutes && targetMinutes < endMinutes) {
-            if (!entry || (entry.kind !== "booking" && slot.kind === "booking")) {
-              entry = slot;
-            }
+            bookingEntry = slot;
           }
         });
-        if (!entry || entry.kind !== "booking") {
-          requestSlots.forEach((slot) => {
-            if (!slot || slot.date !== dateKey || slot.kind !== "booking") return;
-            const startMinutes = timeToMinutes(slot.start);
-            const endMinutes = timeToMinutes(slot.end);
-            if (startMinutes === null || endMinutes === null) return;
-            if (targetMinutes >= startMinutes && targetMinutes < endMinutes) {
-              entry = slot;
-            }
-          });
+        if (bookingEntry) {
+          return bookingEntry;
         }
+        let entry = null;
+        blockedSlots.forEach((slot) => {
+          if (!slot || slot.date !== dateKey || slot.kind === "booking") return;
+          const startMinutes = timeToMinutes(slot.start);
+          const endMinutes = timeToMinutes(slot.end);
+          if (startMinutes === null || endMinutes === null) return;
+          if (targetMinutes >= startMinutes && targetMinutes < endMinutes) {
+            entry = slot;
+          }
+        });
         return entry;
       };
 
@@ -4237,7 +4258,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       const buildBookingStartMap = () => {
         const map = {};
-        [...blockedSlots, ...requestSlots].forEach((slot) => {
+        requestSlots.forEach((slot) => {
           if (!slot || slot.kind !== "booking") return;
           const key = getBookingGroupId(slot);
           if (!key) return;
@@ -4531,6 +4552,18 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               renderCalendarView();
               queueAutoSave(t("saving_city_schedule"), { persist: true });
             });
+            slotButton.addEventListener("dblclick", (event) => {
+              if (!entry || entry.kind !== "booking") return;
+              const bookingId = String(entry.booking_id || "").trim();
+              if (!bookingId) return;
+              event.preventDefault();
+              hiddenBookingIds.add(bookingId);
+              requestSlots = buildConfirmedSlotsFromRequests(latestRequests);
+              maybeSlots = buildMaybeSlotsFromRequests(latestRequests);
+              renderCalendarView();
+              requestsStatus.textContent = t("grid_hidden");
+              queueAutoSave(t("saving_city_schedule"), { persist: true });
+            });
             calendarGrid.appendChild(slotButton);
           });
         });
@@ -4575,14 +4608,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           if (city) {
             cities.add(city);
           }
-          if (slot.kind === "booking") {
-            const key = slot.booking_id || `${slot.label}-${slot.start}`;
-            bookingIds.add(key);
-            if (slot.booking_status === "paid") {
-              paidIds.add(key);
-            }
-            return;
-          }
+          if (slot.kind === "booking") return;
           hasManual = true;
         });
         requestSlots.forEach((slot) => {
@@ -4831,8 +4857,11 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           tourCityInput.value = data.tour_city || "";
           applyTimezoneValue(data.tour_timezone);
           bufferInput.value = String(normalizeBufferMinutes(data.buffer_minutes, 30));
-          blockedSlots = normalizeBlockedSlots(data.blocked);
+          blockedSlots = normalizeBlockedSlots(data.blocked).filter((slot) => slot && slot.kind !== "booking");
           recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
+          hiddenBookingIds = sanitizeHiddenBookingIds(data.hidden_booking_ids);
+          requestSlots = buildConfirmedSlotsFromRequests(latestRequests);
+          maybeSlots = buildMaybeSlotsFromRequests(latestRequests);
           autoTemplateBlocksEnabled = !!data.auto_template_blocks;
           if (menuAutoTemplateBlocks) {
             menuAutoTemplateBlocks.checked = autoTemplateBlocksEnabled;
@@ -4892,6 +4921,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           buffer_minutes: defaultBufferMinutes,
           availability_mode: "open",
           auto_template_blocks: !!autoTemplateBlocksEnabled,
+          hidden_booking_ids: Array.from(hiddenBookingIds),
           blocked: blockedSlots,
           recurring: recurringBlocks,
           city_schedules: cityPayload,
@@ -6165,6 +6195,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const buildConfirmedSlotsFromRequests = (requests) => {
         const slots = [];
         (Array.isArray(requests) ? requests : []).forEach((item) => {
+          const bookingId = String(item?.id || "").trim();
+          if (bookingId && hiddenBookingIds.has(bookingId)) return;
           const { status, paymentStatus } = normalizeStatus(item);
           const confirmed = status === "accepted" || paymentStatus === "paid";
           if (!confirmed) return;
@@ -6180,7 +6212,6 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           if (endMinutes <= startMinutes) return;
           const labelRaw = String(item?.name || "").trim();
           const label = labelRaw ? labelRaw.split(/\s+/)[0] : "Booking";
-          const bookingId = String(item?.id || "").trim();
           const city = String(item?.city || "").trim();
           const bookingType = String(item?.booking_type || "").trim();
           const bookingStatus = paymentStatus === "paid" ? "paid" : "accepted";
@@ -6204,6 +6235,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const buildMaybeSlotsFromRequests = (requests) => {
         const slots = [];
         (Array.isArray(requests) ? requests : []).forEach((item) => {
+          const requestId = String(item?.id || "").trim();
+          if (requestId && hiddenBookingIds.has(requestId)) return;
           const { status, paymentStatus } = normalizeStatus(item);
           const maybeLike = status === "maybe" || status === "pending";
           if (!maybeLike || paymentStatus === "paid") return;
@@ -6224,7 +6257,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               date,
               start: minutesToTime(minutes),
               end: minutesToTime(Math.min(minutes + SLOT_MINUTES, endMinutes)),
-              id: String(item?.id || "").trim(),
+              id: requestId,
               label: label || t("unknown"),
               city,
               status,
@@ -6375,6 +6408,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           });
           if (requestToken !== loadRequestsToken) return;
           requestsList.innerHTML = "";
+          latestRequests = requests;
           renderNotifications(requests);
           requestSlots = buildConfirmedSlotsFromRequests(requests);
           maybeSlots = buildMaybeSlotsFromRequests(requests);
@@ -6514,6 +6548,32 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                   createActionButton(t("action_cancel"), () => updateStatus(item.id, "cancelled"), "btn ghost")
                 );
               }
+              const requestId = String(item.id || "").trim();
+              if (requestId) {
+                const toggleGridVisibility = () => {
+                  const isHidden = hiddenBookingIds.has(requestId);
+                  if (isHidden) {
+                    hiddenBookingIds.delete(requestId);
+                    requestsStatus.textContent = t("grid_visible");
+                  } else {
+                    hiddenBookingIds.add(requestId);
+                    requestsStatus.textContent = t("grid_hidden");
+                  }
+                  requestSlots = buildConfirmedSlotsFromRequests(latestRequests);
+                  maybeSlots = buildMaybeSlotsFromRequests(latestRequests);
+                  renderCalendarView();
+                  queueAutoSave(t("saving_city_schedule"), { persist: true });
+                  gridToggleBtn.textContent = hiddenBookingIds.has(requestId)
+                    ? t("action_show_grid")
+                    : t("action_remove_grid");
+                };
+                const gridToggleBtn = createActionButton(
+                  hiddenBookingIds.has(requestId) ? t("action_show_grid") : t("action_remove_grid"),
+                  toggleGridVisibility,
+                  "btn ghost"
+                );
+                actions.appendChild(gridToggleBtn);
+              }
               const calendarUrl = buildGoogleCalendarUrl(item);
               if (calendarUrl) {
                 actions.appendChild(
@@ -6550,6 +6610,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             requestsList.innerHTML = `<p class="hint">${t("no_requests_found")}</p>`;
           }
         } catch (_error) {
+          latestRequests = [];
           requestSlots = [];
           maybeSlots = [];
           renderCalendarView();

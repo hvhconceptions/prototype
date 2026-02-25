@@ -41,6 +41,24 @@ android {
     }
 }
 
+val exportDebugApk by tasks.registering {
+    dependsOn("assembleDebug")
+    doNotTrackState("Copies debug APK to a fixed root filename.")
+    doLast {
+        val debugOutputDir = layout.buildDirectory.dir("outputs/apk/debug").get().asFile
+        val sourceApk = debugOutputDir
+            .listFiles()
+            ?.firstOrNull { it.isFile && it.extension.equals("apk", ignoreCase = true) }
+            ?: error("No debug APK found in ${debugOutputDir.absolutePath}")
+        val targetApk = rootProject.layout.projectDirectory.file("app-debug.apk").asFile
+        sourceApk.copyTo(targetApk, overwrite = true)
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    finalizedBy(exportDebugApk)
+}
+
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
     implementation("com.google.firebase:firebase-analytics")
@@ -56,6 +74,7 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("com.google.android.material:material:1.12.0")
 }
 

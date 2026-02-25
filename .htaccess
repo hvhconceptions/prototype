@@ -3,6 +3,8 @@ ErrorDocument 404 /404.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteRule ^admin/?$ /booking/admin/ [R=302,L,NC]
+  RewriteRule ^admin/index\.php$ /booking/admin/ [R=302,L,NC]
   RewriteCond %{HTTP:CF-IPCountry} ^MA$ [NC,OR]
   RewriteCond %{ENV:GEOIP_COUNTRY_CODE} ^MA$ [NC,OR]
   RewriteCond %{ENV:MM_COUNTRY_CODE} ^MA$ [NC]

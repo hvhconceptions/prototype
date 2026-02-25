@@ -14,6 +14,8 @@ $tourCity = trim((string) ($payload['tour_city'] ?? ''));
 $tourTz = trim((string) ($payload['tour_timezone'] ?? ''));
 $buffer = isset($payload['buffer_minutes']) ? (int) $payload['buffer_minutes'] : DEFAULT_BUFFER_MINUTES;
 $mode = (string) ($payload['availability_mode'] ?? 'open');
+$autoTemplateBlocks = !empty($payload['auto_template_blocks']);
+$hiddenBookingIds = $payload['hidden_booking_ids'] ?? [];
 $blocked = $payload['blocked'] ?? [];
 $recurring = $payload['recurring'] ?? [];
 $citySchedules = $payload['city_schedules'] ?? [];
@@ -30,6 +32,21 @@ if (!is_array($recurring)) {
 }
 if (!is_array($citySchedules)) {
     $citySchedules = [];
+}
+if (!is_array($hiddenBookingIds)) {
+    $hiddenBookingIds = [];
+}
+
+$cleanHiddenBookingIds = [];
+foreach ($hiddenBookingIds as $id) {
+    if (!is_scalar($id)) {
+        continue;
+    }
+    $value = trim((string) $id);
+    if ($value === '') {
+        continue;
+    }
+    $cleanHiddenBookingIds[$value] = true;
 }
 
 $cleanCitySchedules = [];
@@ -133,6 +150,8 @@ $data = [
     'tour_timezone' => $tourTz,
     'buffer_minutes' => max(0, min(240, $buffer)),
     'availability_mode' => $mode,
+    'auto_template_blocks' => $autoTemplateBlocks,
+    'hidden_booking_ids' => array_values(array_keys($cleanHiddenBookingIds)),
     'blocked' => $blocked,
     'recurring' => $recurring,
     'city_schedules' => $cleanCitySchedules,

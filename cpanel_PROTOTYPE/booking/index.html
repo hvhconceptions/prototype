@@ -2176,6 +2176,22 @@
 
       const isFlyMeCity = (value) => normalizeCityName(value) === "fly me to you";
 
+      const CITY_TIMEZONE_FALLBACKS = {
+        montreal: "America/Toronto",
+        toronto: "America/Toronto",
+        vancouver: "America/Vancouver",
+        "london (uk)": "Europe/London",
+        london: "Europe/London",
+        berlin: "Europe/Berlin",
+        paris: "Europe/Paris",
+        rome: "Europe/Rome",
+      };
+
+      const getTimezoneForCity = (city, fallbackTz = tourTz) => {
+        const cityKey = normalizeCityName(sanitizeCityLabel(city));
+        return CITY_TIMEZONE_FALLBACKS[cityKey] || fallbackTz;
+      };
+
       const defaultCityOptions = citySelect
         ? Array.from(citySelect.options)
             .map((option) => String(option.value || "").trim())
@@ -2251,7 +2267,10 @@
         const dateKey = preferredDate?.value || "";
         const cityValue = citySelect?.value || "";
         const schedule = getCityScheduleForDate(dateKey, cityValue);
-        selectedTourTimezone = schedule?.timezone || tourTz;
+        const contextCity = sanitizeCityLabel(
+          cityValue && !isFlyMeCity(cityValue) ? cityValue : getCityForDate(dateKey)
+        );
+        selectedTourTimezone = String(schedule?.timezone || "").trim() || getTimezoneForCity(contextCity, tourTz);
         const scheduleBuffer = Number(schedule?.buffer_minutes);
         selectedBufferMinutes = Number.isFinite(scheduleBuffer) ? Math.max(0, scheduleBuffer) : bufferMinutes;
         if (tourTzEl) {

@@ -24,6 +24,20 @@
       android:textSize="16sp" />
 
     <TextView
+      android:id="@+id/clientSaveContact"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginEnd="8dp"
+      android:text="Save"
+      android:textAllCaps="true"
+      android:textColor="#ffffff"
+      android:paddingStart="12dp"
+      android:paddingEnd="12dp"
+      android:paddingTop="6dp"
+      android:paddingBottom="6dp"
+      android:background="#0077c8" />
+
+    <TextView
       android:id="@+id/clientDelete"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"

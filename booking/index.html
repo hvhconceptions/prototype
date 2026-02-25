@@ -1321,6 +1321,16 @@
               </select>
             </div>
             <div class="field">
+              <label for="experience">Service</label>
+              <select id="experience" name="experience" required>
+                <option value="" disabled selected>chose an option</option>
+                <option value="gfe">GFE</option>
+                <option value="pse">PSE</option>
+                <option value="filming">Filming</option>
+                <option value="social">Social introduction</option>
+              </select>
+            </div>
+            <div class="field">
               <label for="duration">Duration</label>
               <select id="duration" name="duration" required></select>
               <p class="hint" id="durationHint">Rates update with currency. Crypto shown in CAD.</p>
@@ -1334,16 +1344,6 @@
                 hidden
                 >Discuss it with me on WhatsApp</a
               >
-            </div>
-            <div class="field">
-              <label for="experience">Service</label>
-              <select id="experience" name="experience" required>
-                <option value="" disabled selected>chose an option</option>
-                <option value="gfe">GFE</option>
-                <option value="pse">PSE</option>
-                <option value="filming">Filming</option>
-                <option value="social">Social introduction</option>
-              </select>
             </div>
             <div class="field span-2" id="bookingTypeField">
               <label>Location</label>
@@ -2307,6 +2307,7 @@
         const requestId = ++durationOptionsRequestId;
         const currentCurrency = currencySelect.value || BASE_CURRENCY;
         const currentExperience = experienceSelect.value || "gfe";
+        const previousExperience = updateDurationOptions.lastExperience || "";
         const previousValue = durationSelect.value;
         durationSelect.innerHTML = "";
         const placeholder = document.createElement("option");
@@ -2318,7 +2319,7 @@
 
         for (const entry of DURATION_OPTIONS) {
           if (requestId !== durationOptionsRequestId) return;
-          if (currentExperience === "social" && Number(entry.hours) !== 3) {
+          if (currentExperience === "social" && Number(entry.hours) < 3) {
             continue;
           }
           const option = document.createElement("option");
@@ -2339,14 +2340,19 @@
         }
 
         if (requestId !== durationOptionsRequestId) return;
-        if (
+        const hasPreviousValue =
           previousValue &&
-          Array.from(durationSelect.options).some((option) => option.value === previousValue)
-        ) {
+          Array.from(durationSelect.options).some((option) => option.value === previousValue);
+        const changedToSocial = currentExperience === "social" && previousExperience !== "social";
+        if (changedToSocial) {
+          const hasThreeHours = Array.from(durationSelect.options).some((option) => option.value === "3");
+          durationSelect.value = hasThreeHours ? "3" : "";
+        } else if (hasPreviousValue) {
           durationSelect.value = previousValue;
         } else {
           durationSelect.value = "";
         }
+        updateDurationOptions.lastExperience = currentExperience;
         await updatePaymentSummary();
         renderDayCalendar();
       };
@@ -2935,7 +2941,7 @@
           key: "location-duration-service",
           titleKey: "step_location_duration_service",
           panels: [panelRequest, panelAvailability],
-          requestFields: [bookingTypeField, outcallField, durationField, experienceField],
+          requestFields: [bookingTypeField, outcallField, experienceField, durationField],
           validate: () => {
             toggleOutcall();
             const selected = document.querySelector('input[name="booking_type"]:checked');

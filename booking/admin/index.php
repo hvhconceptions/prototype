@@ -515,15 +515,17 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       .menu-group {
         border: 1px solid var(--line);
         border-radius: 14px;
-        padding: 12px;
+        padding: 14px;
         margin-bottom: 12px;
         background: #fff9fd;
+        display: grid;
+        gap: 12px;
       }
 
       .menu-section-list {
         display: grid;
-        gap: 10px;
-        margin-bottom: 12px;
+        gap: 12px;
+        margin-bottom: 14px;
       }
 
       .menu-section-btn {
@@ -551,7 +553,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 0;
       }
 
       .menu-page-head h3 {
@@ -569,7 +571,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       .menu-inline-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
       }
 
       .menu-day-choices {

@@ -925,6 +925,11 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         background: #fffafb;
       }
 
+      .request-card.flash-focus {
+        border-color: rgba(255, 0, 110, 0.68);
+        box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.22);
+      }
+
       .request-header {
         display: flex;
         flex-wrap: wrap;
@@ -3710,6 +3715,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       let blockedSlots = [];
       let maybeSlots = [];
+      let requestSlots = [];
       let loadRequestsToken = 0;
       let recurringBlocks = [];
       let touringStops = [];
@@ -4173,6 +4179,17 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             }
           }
         });
+        if (!entry || entry.kind !== "booking") {
+          requestSlots.forEach((slot) => {
+            if (!slot || slot.date !== dateKey || slot.kind !== "booking") return;
+            const startMinutes = timeToMinutes(slot.start);
+            const endMinutes = timeToMinutes(slot.end);
+            if (startMinutes === null || endMinutes === null) return;
+            if (targetMinutes >= startMinutes && targetMinutes < endMinutes) {
+              entry = slot;
+            }
+          });
+        }
         return entry;
       };
 
@@ -4186,6 +4203,21 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           if (startMinutes === null || endMinutes === null) return false;
           return targetMinutes >= startMinutes && targetMinutes < endMinutes;
         });
+      };
+
+      const focusRequestCardById = (requestId) => {
+        const normalizedId = String(requestId || "").trim();
+        if (!normalizedId || !requestsList) return;
+        setAdminPanel("clients", true);
+        window.setTimeout(() => {
+          const card = Array.from(requestsList.querySelectorAll("[data-request-id]")).find(
+            (node) => String(node.getAttribute("data-request-id") || "").trim() === normalizedId
+          );
+          if (!card) return;
+          card.classList.add("flash-focus");
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+          window.setTimeout(() => card.classList.remove("flash-focus"), 1400);
+        }, 40);
       };
 
       const getBookingGroupId = (slot) => {
@@ -4205,7 +4237,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       const buildBookingStartMap = () => {
         const map = {};
-        blockedSlots.forEach((slot) => {
+        [...blockedSlots, ...requestSlots].forEach((slot) => {
           if (!slot || slot.kind !== "booking") return;
           const key = getBookingGroupId(slot);
           if (!key) return;
@@ -4421,7 +4453,6 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 const titleLabel = entry.label ? `${entry.label} - ` : "";
                 const citySuffix = slotCity ? ` - ${slotCity}` : "";
                 slotButton.title = `${titleLabel}${entry.booking_type || "incall"} (${entry.booking_status || "paid"})${citySuffix}`;
-                slotButton.disabled = true;
               } else if (entry.kind === "template") {
                 slotButton.classList.add("blocked");
                 slotButton.classList.add("template");
@@ -4453,8 +4484,21 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               slotButton.title = slotButton.title ? `${slotButton.title} | ${maybeTitle}` : maybeTitle;
             }
             slotButton.addEventListener("click", () => {
-              if (entry && (entry.kind === "booking" || entry.kind === "template")) {
+              if (entry && entry.kind === "booking") {
+                const bookingId = String(entry.booking_id || "").trim();
+                if (bookingId) {
+                  focusRequestCardById(bookingId);
+                }
                 return;
+              }
+              if (entry && entry.kind === "template") {
+                return;
+              }
+              if (!entry && maybeEntries.length) {
+                const firstMaybeId = String(maybeEntries[0]?.id || "").trim();
+                if (firstMaybeId) {
+                  focusRequestCardById(firstMaybeId);
+                }
               }
               const start = timeValue;
               const end = minutesToTime(timeToMinutes(timeValue) + SLOT_MINUTES);
@@ -4540,6 +4584,18 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             return;
           }
           hasManual = true;
+        });
+        requestSlots.forEach((slot) => {
+          if (!slot || slot.date !== dateKey || slot.kind !== "booking") return;
+          const key = slot.booking_id || `${slot.label}-${slot.start}`;
+          bookingIds.add(key);
+          if (slot.booking_status === "paid") {
+            paidIds.add(key);
+          }
+          const city = String(slot.city || "").trim();
+          if (city) {
+            cities.add(city);
+          }
         });
         maybeSlots.forEach((slot) => {
           if (!slot || slot.date !== dateKey) return;
@@ -6106,11 +6162,51 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         return { status, paymentStatus };
       };
 
+      const buildConfirmedSlotsFromRequests = (requests) => {
+        const slots = [];
+        (Array.isArray(requests) ? requests : []).forEach((item) => {
+          const { status, paymentStatus } = normalizeStatus(item);
+          const confirmed = status === "accepted" || paymentStatus === "paid";
+          if (!confirmed) return;
+          const date = String(item?.preferred_date || "").trim();
+          const start = String(item?.preferred_time || "").trim();
+          const durationHours = Number(item?.duration_hours || 0);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(start)) return;
+          if (!Number.isFinite(durationHours) || durationHours <= 0) return;
+          const startMinutes = timeToMinutes(start);
+          if (startMinutes === null) return;
+          const totalMinutes = Math.max(SLOT_MINUTES, Math.round(durationHours * 60));
+          const endMinutes = Math.min(24 * 60, startMinutes + totalMinutes);
+          if (endMinutes <= startMinutes) return;
+          const labelRaw = String(item?.name || "").trim();
+          const label = labelRaw ? labelRaw.split(/\s+/)[0] : "Booking";
+          const bookingId = String(item?.id || "").trim();
+          const city = String(item?.city || "").trim();
+          const bookingType = String(item?.booking_type || "").trim();
+          const bookingStatus = paymentStatus === "paid" ? "paid" : "accepted";
+          for (let minutes = startMinutes; minutes < endMinutes; minutes += SLOT_MINUTES) {
+            slots.push({
+              date,
+              start: minutesToTime(minutes),
+              end: minutesToTime(Math.min(minutes + SLOT_MINUTES, endMinutes)),
+              kind: "booking",
+              booking_id: bookingId,
+              booking_status: bookingStatus,
+              booking_type: bookingType,
+              label,
+              city,
+            });
+          }
+        });
+        return slots;
+      };
+
       const buildMaybeSlotsFromRequests = (requests) => {
         const slots = [];
         (Array.isArray(requests) ? requests : []).forEach((item) => {
           const { status, paymentStatus } = normalizeStatus(item);
-          if (status !== "maybe" || paymentStatus === "paid") return;
+          const maybeLike = status === "maybe" || status === "pending";
+          if (!maybeLike || paymentStatus === "paid") return;
           const date = String(item?.preferred_date || "").trim();
           const start = String(item?.preferred_time || "").trim();
           const durationHours = Number(item?.duration_hours || 0);
@@ -6131,6 +6227,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               id: String(item?.id || "").trim(),
               label: label || t("unknown"),
               city,
+              status,
             });
           }
         });
@@ -6208,6 +6305,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         const key = getKey();
         if (!key) {
           requestsStatus.textContent = t("admin_key_required");
+          requestSlots = [];
           renderCalendarView();
           return;
         }
@@ -6278,6 +6376,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           if (requestToken !== loadRequestsToken) return;
           requestsList.innerHTML = "";
           renderNotifications(requests);
+          requestSlots = buildConfirmedSlotsFromRequests(requests);
           maybeSlots = buildMaybeSlotsFromRequests(requests);
           renderCalendarView();
           const filterValue = statusFilter.value;
@@ -6451,6 +6550,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             requestsList.innerHTML = `<p class="hint">${t("no_requests_found")}</p>`;
           }
         } catch (_error) {
+          requestSlots = [];
           maybeSlots = [];
           renderCalendarView();
           requestsStatus.textContent = t("failed_load_requests");

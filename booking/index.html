@@ -115,6 +115,122 @@
         display: block;
       }
 
+      .booking-menu-btn {
+        position: fixed;
+        top: clamp(14px, 4vw, 24px);
+        left: clamp(14px, 4vw, 24px);
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.34);
+        background: #fff;
+        color: var(--hot);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 20px rgba(255, 0, 110, 0.22);
+        cursor: pointer;
+        z-index: 140;
+      }
+
+      .booking-menu-btn:focus-visible,
+      .booking-menu-btn:hover {
+        outline: none;
+        transform: translateY(-1px);
+      }
+
+      .booking-menu-lines {
+        display: grid;
+        gap: 4px;
+        width: 20px;
+      }
+
+      .booking-menu-lines span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--hot);
+      }
+
+      .booking-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(16, 2, 8, 0.45);
+        z-index: 145;
+      }
+
+      .booking-menu-drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: min(320px, 88vw);
+        height: 100vh;
+        background: #fff;
+        border-right: 1px solid rgba(255, 0, 110, 0.26);
+        box-shadow: 18px 0 36px rgba(255, 0, 110, 0.2);
+        padding: 18px 16px 20px;
+        z-index: 146;
+        transform: translateX(-102%);
+        transition: transform 0.2s ease;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 14px;
+      }
+
+      .booking-menu-drawer.open {
+        transform: translateX(0);
+      }
+
+      .booking-menu-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .booking-menu-title {
+        margin: 0;
+        color: var(--hot);
+        font-size: 0.96rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .booking-menu-close {
+        border: 1px solid rgba(255, 0, 110, 0.24);
+        background: #fff7fb;
+        color: var(--hot);
+        border-radius: 10px;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+
+      .booking-menu-list {
+        display: grid;
+        align-content: start;
+        gap: 10px;
+      }
+
+      .booking-menu-item {
+        width: 100%;
+        text-align: left;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 110, 0.2);
+        background: #fff9fc;
+        color: #5a1431;
+        font-weight: 600;
+        padding: 11px 12px;
+        cursor: pointer;
+      }
+
+      .booking-menu-item:focus-visible,
+      .booking-menu-item:hover {
+        outline: none;
+        border-color: rgba(255, 0, 110, 0.4);
+        box-shadow: 0 8px 16px rgba(255, 0, 110, 0.15);
+      }
+
       header {
         position: relative;
         z-index: 1;
@@ -1041,6 +1157,43 @@
         <span class="language-code">FR</span>
       </button>
     </div>
+    <button id="bookingMenuBtn" class="booking-menu-btn" type="button" aria-label="Open booking menu">
+      <span class="booking-menu-lines" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+    <div id="bookingMenuBackdrop" class="booking-menu-backdrop" hidden></div>
+    <aside id="bookingMenuDrawer" class="booking-menu-drawer" aria-hidden="true">
+      <div class="booking-menu-head">
+        <h2 id="bookingMenuTitle" class="booking-menu-title">Booking menu</h2>
+        <button id="bookingMenuClose" class="booking-menu-close" type="button">Close</button>
+      </div>
+      <nav class="booking-menu-list" aria-label="Booking quick actions">
+        <button type="button" class="booking-menu-item" data-menu-jump="#panelRequest" id="menuJumpRequest">
+          Booking request
+        </button>
+        <button type="button" class="booking-menu-item" data-menu-jump="#panelAvailability" id="menuJumpAvailability">
+          Daily availability
+        </button>
+        <button type="button" class="booking-menu-item" data-menu-jump="#panelPayment" id="menuJumpPayment">
+          Payment confirmation
+        </button>
+        <button type="button" class="booking-menu-item" data-menu-jump="#panelSubmit" id="menuJumpSubmit">
+          Request booking
+        </button>
+        <button type="button" class="booking-menu-item" data-menu-action="back" id="menuActionBack">
+          Back step
+        </button>
+        <button type="button" class="booking-menu-item" data-menu-action="next" id="menuActionNext">
+          Next step
+        </button>
+        <button type="button" class="booking-menu-item" data-menu-action="refresh" id="menuActionRefresh">
+          Refresh availability
+        </button>
+      </nav>
+    </aside>
     <header>
       <div class="back-row">
         <a class="back-link" id="backInsideLink" href="/inside.html">Back to inside</a>
@@ -1358,6 +1511,10 @@
       const wizardBack = document.getElementById("wizardBack");
       const wizardNav = document.getElementById("wizardNav");
       const languageButtons = document.querySelectorAll(".age-language [data-language-choice]");
+      const bookingMenuBtn = document.getElementById("bookingMenuBtn");
+      const bookingMenuBackdrop = document.getElementById("bookingMenuBackdrop");
+      const bookingMenuDrawer = document.getElementById("bookingMenuDrawer");
+      const bookingMenuClose = document.getElementById("bookingMenuClose");
       const LANGUAGE_KEY = "hvh_inside_language";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
       let currentLanguage = "en";
@@ -1418,6 +1575,15 @@
           deposit_consent: "I confirm the 20% deposit and payment method are correct.",
           crypto_hint: "Crypto amounts are shown as CAD reference.",
           request_booking: "Request booking",
+          booking_menu_title: "Booking menu",
+          booking_menu_request: "Booking request",
+          booking_menu_availability: "Daily availability",
+          booking_menu_payment: "Payment confirmation",
+          booking_menu_submit: "Request booking",
+          booking_menu_back: "Back step",
+          booking_menu_next: "Next step",
+          booking_menu_refresh: "Refresh availability",
+          booking_menu_close: "Close",
           back: "Back",
           next: "Next",
           success_title: "Request received",
@@ -1538,6 +1704,15 @@
           deposit_consent: "Je confirme que l'acompte de 20% et la methode de paiement sont corrects.",
           crypto_hint: "Les montants crypto sont affiches en reference CAD.",
           request_booking: "Envoyer la demande",
+          booking_menu_title: "Menu reservation",
+          booking_menu_request: "Demande de reservation",
+          booking_menu_availability: "Disponibilites du jour",
+          booking_menu_payment: "Confirmation paiement",
+          booking_menu_submit: "Envoyer la demande",
+          booking_menu_back: "Etape precedente",
+          booking_menu_next: "Etape suivante",
+          booking_menu_refresh: "Actualiser disponibilites",
+          booking_menu_close: "Fermer",
           back: "Retour",
           next: "Suivant",
           success_title: "Demande recue",
@@ -1852,6 +2027,10 @@
       }
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
+        if (bookingMenuDrawer && bookingMenuDrawer.classList.contains("open")) {
+          closeBookingMenu();
+          return;
+        }
         if (alertPopup && alertPopup.classList.contains("show")) {
           closeAlertPopup();
           return;
@@ -2867,6 +3046,39 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
 
+      const openBookingMenu = () => {
+        if (!bookingMenuDrawer || !bookingMenuBackdrop) return;
+        bookingMenuBackdrop.hidden = false;
+        bookingMenuDrawer.classList.add("open");
+        bookingMenuDrawer.setAttribute("aria-hidden", "false");
+      };
+
+      const closeBookingMenu = () => {
+        if (!bookingMenuDrawer || !bookingMenuBackdrop) return;
+        bookingMenuDrawer.classList.remove("open");
+        bookingMenuDrawer.setAttribute("aria-hidden", "true");
+        bookingMenuBackdrop.hidden = true;
+      };
+
+      const handleBookingMenuAction = async (action) => {
+        if (!action) return;
+        if (action === "next") {
+          nextWizardStep();
+          closeBookingMenu();
+          return;
+        }
+        if (action === "back") {
+          prevWizardStep();
+          closeBookingMenu();
+          return;
+        }
+        if (action === "refresh") {
+          await loadAvailability();
+          renderDayCalendar();
+          closeBookingMenu();
+        }
+      };
+
       const loadAvailability = async () => {
         try {
           const response = await fetch("api/availability.php");
@@ -2930,6 +3142,32 @@
       }
       if (wizardBack) {
         wizardBack.addEventListener("click", prevWizardStep);
+      }
+      if (bookingMenuBtn) {
+        bookingMenuBtn.addEventListener("click", openBookingMenu);
+      }
+      if (bookingMenuClose) {
+        bookingMenuClose.addEventListener("click", closeBookingMenu);
+      }
+      if (bookingMenuBackdrop) {
+        bookingMenuBackdrop.addEventListener("click", closeBookingMenu);
+      }
+      if (bookingMenuDrawer) {
+        bookingMenuDrawer.addEventListener("click", (event) => {
+          const jumpTarget = event.target.closest("[data-menu-jump]")?.getAttribute("data-menu-jump");
+          if (jumpTarget) {
+            const target = document.querySelector(jumpTarget);
+            if (target) {
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+            closeBookingMenu();
+            return;
+          }
+          const action = event.target.closest("[data-menu-action]")?.getAttribute("data-menu-action");
+          if (action) {
+            handleBookingMenuAction(action);
+          }
+        });
       }
 
       form.addEventListener("submit", async (event) => {
@@ -3183,6 +3421,24 @@
         if (submitBtn) submitBtn.textContent = t("request_booking");
         if (wizardBack) wizardBack.textContent = t("back");
         if (wizardNext) wizardNext.textContent = t("next");
+        const bookingMenuTitle = document.getElementById("bookingMenuTitle");
+        if (bookingMenuTitle) bookingMenuTitle.textContent = t("booking_menu_title");
+        const menuJumpRequest = document.getElementById("menuJumpRequest");
+        if (menuJumpRequest) menuJumpRequest.textContent = t("booking_menu_request");
+        const menuJumpAvailability = document.getElementById("menuJumpAvailability");
+        if (menuJumpAvailability) menuJumpAvailability.textContent = t("booking_menu_availability");
+        const menuJumpPayment = document.getElementById("menuJumpPayment");
+        if (menuJumpPayment) menuJumpPayment.textContent = t("booking_menu_payment");
+        const menuJumpSubmit = document.getElementById("menuJumpSubmit");
+        if (menuJumpSubmit) menuJumpSubmit.textContent = t("booking_menu_submit");
+        const menuActionBack = document.getElementById("menuActionBack");
+        if (menuActionBack) menuActionBack.textContent = t("booking_menu_back");
+        const menuActionNext = document.getElementById("menuActionNext");
+        if (menuActionNext) menuActionNext.textContent = t("booking_menu_next");
+        const menuActionRefresh = document.getElementById("menuActionRefresh");
+        if (menuActionRefresh) menuActionRefresh.textContent = t("booking_menu_refresh");
+        if (bookingMenuClose) bookingMenuClose.textContent = t("booking_menu_close");
+        if (bookingMenuBtn) bookingMenuBtn.setAttribute("aria-label", t("booking_menu_title"));
         if (successTitle) successTitle.textContent = t("success_title");
         if (successLink) successLink.textContent = t("pay_now");
         if (successClose) successClose.textContent = t("got_it");

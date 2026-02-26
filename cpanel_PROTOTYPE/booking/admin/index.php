@@ -922,6 +922,47 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         color: #7a1c45;
       }
 
+      .status-filter-tabs {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+      }
+
+      .status-filter-tab {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #6b173f;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.74rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .status-filter-tab[aria-pressed="true"] {
+        background: linear-gradient(135deg, var(--pink), var(--hot));
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .status-filter-select-wrap {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      @media (min-width: 1280px) {
+        .status-filter-tabs {
+          display: inline-flex;
+        }
+
+        .status-filter-select-wrap {
+          display: none;
+        }
+      }
+
       .request-card {
         border: 1px solid var(--line);
         border-radius: 18px;
@@ -2289,16 +2330,28 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         <h2 id="requestsSectionTitle">Requests</h2>
         <div class="row">
           <button class="btn secondary" id="refreshRequests">Refresh</button>
-          <select id="statusFilter">
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="maybe">Maybe</option>
-            <option value="accepted">Accepted</option>
-            <option value="paid">Paid</option>
-            <option value="blacklisted">Blacklisted</option>
-            <option value="declined">Declined</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <div class="status-filter-tabs" id="statusFilterTabs" role="tablist" aria-label="Request status filters">
+            <button type="button" class="status-filter-tab" data-status-tab="all" aria-pressed="true">All</button>
+            <button type="button" class="status-filter-tab" data-status-tab="pending" aria-pressed="false">Pending</button>
+            <button type="button" class="status-filter-tab" data-status-tab="maybe" aria-pressed="false">Maybe</button>
+            <button type="button" class="status-filter-tab" data-status-tab="accepted" aria-pressed="false">Accepted</button>
+            <button type="button" class="status-filter-tab" data-status-tab="paid" aria-pressed="false">Paid</button>
+            <button type="button" class="status-filter-tab" data-status-tab="blacklisted" aria-pressed="false">Blacklisted</button>
+            <button type="button" class="status-filter-tab" data-status-tab="declined" aria-pressed="false">Declined</button>
+            <button type="button" class="status-filter-tab" data-status-tab="cancelled" aria-pressed="false">Cancelled</button>
+          </div>
+          <div class="status-filter-select-wrap">
+            <select id="statusFilter">
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="maybe">Maybe</option>
+              <option value="accepted">Accepted</option>
+              <option value="paid">Paid</option>
+              <option value="blacklisted">Blacklisted</option>
+              <option value="declined">Declined</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
           <span class="status" id="requestsStatus"></span>
         </div>
         <div id="requestsList"></div>
@@ -2384,6 +2437,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const toggleBlockedListBtn = document.getElementById("toggleBlockedList");
       const refreshBtn = document.getElementById("refreshRequests");
       const statusFilter = document.getElementById("statusFilter");
+      const statusFilterTabs = document.getElementById("statusFilterTabs");
+      const statusFilterTabButtons = statusFilterTabs
+        ? Array.from(statusFilterTabs.querySelectorAll("[data-status-tab]"))
+        : [];
       const requestsList = document.getElementById("requestsList");
       const requestsStatus = document.getElementById("requestsStatus");
       const quickAddType = document.getElementById("quickAddType");
@@ -2851,6 +2908,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         return formatTemplate(pack[key] || fallback, vars);
       };
       const statusLabel = (status) => t(String(status || "").toLowerCase());
+      const syncStatusFilterTabs = () => {
+        const current = String(statusFilter?.value || "all").trim().toLowerCase();
+        statusFilterTabButtons.forEach((button) => {
+          const value = String(button.getAttribute("data-status-tab") || "").trim().toLowerCase();
+          button.setAttribute("aria-pressed", value === current ? "true" : "false");
+        });
+      };
       const getStoredLanguage = () => {
         try {
           const stored = window.localStorage.getItem(LANGUAGE_KEY);
@@ -3474,7 +3538,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         Object.entries(statusLabels).forEach(([value, label]) => {
           const option = document.querySelector(`#statusFilter option[value="${value}"]`);
           if (option) option.textContent = label;
+          const tab = document.querySelector(`#statusFilterTabs [data-status-tab="${value}"]`);
+          if (tab) tab.textContent = label;
         });
+        syncStatusFilterTabs();
         const quickTypeTourOption = document.querySelector('#quickAddType option[value="tour"]');
         if (quickTypeTourOption) quickTypeTourOption.textContent = t("quick_add_type_tour");
         const quickTypeBlockOption = document.querySelector('#quickAddType option[value="block"]');
@@ -3511,7 +3578,18 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       if (statusFilter) {
         statusFilter.value = "all";
+        syncStatusFilterTabs();
       }
+
+      statusFilterTabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (!statusFilter) return;
+          const value = String(button.getAttribute("data-status-tab") || "all").trim().toLowerCase();
+          statusFilter.value = value || "all";
+          syncStatusFilterTabs();
+          loadRequests();
+        });
+      });
 
       if (adminMenuToggleBtn) {
         adminMenuToggleBtn.addEventListener("click", () => openAdminMenu());
@@ -7063,7 +7141,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         });
       }
       refreshBtn.addEventListener("click", loadRequests);
-      statusFilter.addEventListener("change", loadRequests);
+      statusFilter.addEventListener("change", () => {
+        syncStatusFilterTabs();
+        loadRequests();
+      });
       // Keep requests stable while reviewing/editing. Use Refresh button when needed.
 
       const initialLanguage = getStoredLanguage() || detectBrowserLanguage();

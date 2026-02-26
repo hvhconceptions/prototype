@@ -233,6 +233,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         --hot: #ff006e;
         --line: rgba(255, 0, 110, 0.25);
         --shadow: rgba(255, 0, 110, 0.2);
+        --accent-soft: rgba(255, 0, 110, 0.08);
+        --accent-soft-border: rgba(255, 0, 110, 0.12);
         --body-gradient: radial-gradient(circle at 15% 10%, #ffe1f0 0%, #fff5fb 45%, #fff 100%);
         --mono: "Avenir Next", "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         --bubble: "Baloo 2", "Cooper Black", "Bookman Old Style", "Georgia", serif;
@@ -1096,7 +1098,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       .calendar-cell {
         padding: 6px 8px;
         border-radius: 8px;
-        border: 1px solid rgba(255, 0, 110, 0.12);
+        border: 1px solid var(--accent-soft-border);
         background: #fff;
         font-size: 0.72rem;
         text-align: center;
@@ -1128,7 +1130,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .calendar-slot:hover {
-        background: rgba(255, 0, 110, 0.08);
+        background: var(--accent-soft);
         transform: translateY(-1px);
       }
 
@@ -1190,9 +1192,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .calendar-slot.blocked {
-        background: linear-gradient(135deg, rgba(255, 45, 147, 0.9), rgba(255, 0, 110, 0.9));
+        background: linear-gradient(135deg, var(--pink), var(--hot));
         color: #fff;
-        border-color: rgba(255, 0, 110, 0.5);
+        border-color: var(--line);
       }
 
       .calendar-slot.blocked::after {
@@ -1377,8 +1379,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         font-size: 0.7rem;
         padding: 2px 6px;
         border-radius: 999px;
-        border: 1px solid rgba(255, 0, 110, 0.28);
-        background: rgba(255, 0, 110, 0.08);
+        border: 1px solid var(--line);
+        background: var(--accent-soft);
       }
 
       .month-badge.booking {
@@ -1397,8 +1399,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .month-badge.blocked {
-        background: linear-gradient(135deg, #ff2d93, #ff006e);
-        border-color: rgba(255, 0, 110, 0.6);
+        background: linear-gradient(135deg, var(--pink), var(--hot));
+        border-color: var(--line);
         color: #fff;
       }
 
@@ -1421,13 +1423,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: rgba(255, 0, 110, 0.15);
-        border: 1px solid rgba(255, 0, 110, 0.35);
+        background: var(--accent-soft);
+        border: 1px solid var(--line);
       }
 
       .legend-dot.blocked {
-        background: linear-gradient(135deg, #ff2d93, #ff006e);
-        border-color: rgba(255, 0, 110, 0.6);
+        background: linear-gradient(135deg, var(--pink), var(--hot));
+        border-color: var(--line);
       }
 
       .legend-dot.booking {
@@ -3017,6 +3019,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         document.documentElement.style.setProperty("--pink", pink);
         document.documentElement.style.setProperty("--line", rgbaString(rgb, 0.25));
         document.documentElement.style.setProperty("--shadow", rgbaString(rgb, 0.2));
+        document.documentElement.style.setProperty("--accent-soft", rgbaString(rgb, 0.08));
+        document.documentElement.style.setProperty("--accent-soft-border", rgbaString(rgb, 0.12));
       };
 
       const applyAccountCenterToUi = () => {

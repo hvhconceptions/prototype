@@ -996,27 +996,35 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
         margin-top: 12px;
       }
 
       .status-action-row {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) auto auto auto;
         gap: 8px;
-        margin-top: 12px;
         align-items: center;
       }
 
+      .status-action-row.calendar-action-row {
+        grid-template-columns: minmax(240px, 1fr) auto;
+      }
+
       .status-action-select {
-        flex: 1 1 220px;
-        min-width: 180px;
+        width: 100%;
+        min-width: 0;
       }
 
       .status-action-apply {
         min-width: 84px;
+        white-space: nowrap;
+      }
+
+      .status-action-btn {
+        white-space: nowrap;
       }
 
       .request-edit-panel {
@@ -1605,6 +1613,18 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
         .gallery-preview {
           max-width: 100%;
+        }
+
+        .status-action-row {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .status-action-row.calendar-action-row {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .status-action-select {
+          grid-column: 1 / -1;
         }
       }
 
@@ -6595,14 +6615,14 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                   }
                   await updateStatus(item.id, nextStatus, reasonRequiredStatuses.has(nextStatus) ? nextReason : "");
                 },
-                "btn status-action-apply"
+                "btn status-action-apply status-action-btn"
               );
               const editBtn = createActionButton(
                 t("action_edit"),
                 () => {
                   editPanel.classList.toggle("hidden");
                 },
-                "btn ghost"
+                "btn ghost status-action-btn"
               );
               statusActionRow.appendChild(statusSelect);
               statusActionRow.appendChild(statusApplyBtn);
@@ -6639,12 +6659,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 const gridToggleBtn = createActionButton(
                   hiddenBookingIds.has(requestId) ? t("action_show_grid") : t("action_remove_grid"),
                   toggleGridVisibility,
-                  "btn ghost"
+                  "btn ghost status-action-btn"
                 );
-                actions.appendChild(gridToggleBtn);
+                statusActionRow.appendChild(gridToggleBtn);
               }
               const calendarActionRow = document.createElement("div");
-              calendarActionRow.className = "status-action-row";
+              calendarActionRow.className = "status-action-row calendar-action-row";
               const calendarSelect = document.createElement("select");
               calendarSelect.className = "status-action-select";
               [

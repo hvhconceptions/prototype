@@ -1007,19 +1007,21 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .status-action-row {
-        display: grid;
-        grid-template-columns: minmax(240px, 1fr) auto auto auto;
+        display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         align-items: center;
       }
 
       .status-action-row.calendar-action-row {
-        grid-template-columns: minmax(240px, 1fr) auto;
+        display: flex;
       }
 
       .status-action-select {
-        width: 100%;
-        min-width: 0;
+        flex: 0 1 240px;
+        width: 240px;
+        max-width: 240px;
+        min-width: 170px;
       }
 
       .status-action-apply {
@@ -1646,15 +1648,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         }
 
         .status-action-row {
-          grid-template-columns: 1fr 1fr;
-        }
-
-        .status-action-row.calendar-action-row {
-          grid-template-columns: 1fr 1fr;
+          gap: 8px;
         }
 
         .status-action-select {
-          grid-column: 1 / -1;
+          flex: 1 1 100%;
+          width: 100%;
+          max-width: 100%;
         }
       }
 

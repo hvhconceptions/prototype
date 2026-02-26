@@ -2585,9 +2585,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_edit: "Edit",
           action_remove_grid: "Remove from grid",
           action_show_grid: "Show on grid",
-          action_choose: "Choose option",
+          action_choose: "Choose action",
+          action_choose_calendar: "Add to calendar",
+          action_calendar_google: "Google",
+          action_calendar_samsung: "Samsung",
+          action_calendar_icloud: "iCloud",
           action_ok: "OK",
-          action_pick_first: "Pick an option first.",
+          action_pick_first: "Pick an action first.",
+          decline_reason_required: "Add decline reason before OK.",
+          calendar_pick_first: "Pick a calendar option first.",
           grid_hidden: "Booking removed from schedule grid.",
           grid_visible: "Booking shown on schedule grid.",
           save_changes: "Save changes",
@@ -2760,9 +2766,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_edit: "Modifier",
           action_remove_grid: "Retirer du planning",
           action_show_grid: "Afficher sur planning",
-          action_choose: "Choisir option",
+          action_choose: "Choisir action",
+          action_choose_calendar: "Ajouter au calendrier",
+          action_calendar_google: "Google",
+          action_calendar_samsung: "Samsung",
+          action_calendar_icloud: "iCloud",
           action_ok: "OK",
-          action_pick_first: "Choisissez une option d'abord.",
+          action_pick_first: "Choisissez une action d'abord.",
+          decline_reason_required: "Ajoutez une raison du refus avant OK.",
+          calendar_pick_first: "Choisissez un calendrier d'abord.",
           grid_hidden: "Reservation retiree du planning.",
           grid_visible: "Reservation affichee dans le planning.",
           save_changes: "Sauvegarder",
@@ -6143,20 +6155,21 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         const start = formatCalendarStamp(dateValue, timeValue, 0);
         const end = formatCalendarStamp(dateValue, timeValue, minutes);
         if (!start || !end) return "";
-        const title = encodeURIComponent(`Booking: ${item.name || "Client"}`);
-        const details = encodeURIComponent(`Booking request ${item.id || ""}`);
+        const phone = String(item.phone || "").trim();
+        const titleText = phone
+          ? `Booking: ${item.name || "Client"} (${phone})`
+          : `Booking: ${item.name || "Client"}`;
+        const detailsText = phone
+          ? `Booking request ${item.id || ""} - Phone: ${phone}`
+          : `Booking request ${item.id || ""}`;
+        const title = encodeURIComponent(titleText);
+        const details = encodeURIComponent(detailsText);
         const location = encodeURIComponent(item.city || "");
         const tz = encodeURIComponent(item.tour_timezone || "America/Toronto");
         return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${start}/${end}&ctz=${tz}`;
       };
 
-      const buildIcsDownloadUrl = (item) => {
-        const id = String(item?.id || "").trim();
-        if (!id) return "";
-        return `../api/calendar.php?id=${encodeURIComponent(id)}`;
-      };
-
-      const buildIcsTimestamp = (dateValue, timeValue, addMinutes = 0) => {
+      const buildIcsLocalTimestamp = (dateValue, timeValue, addMinutes = 0) => {
         const [year, month, day] = String(dateValue || "").split("-").map((value) => Number(value));
         const [hour, minute] = String(timeValue || "").split(":").map((value) => Number(value));
         if (!year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute)) return "";
@@ -6165,32 +6178,47 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         const pad = (value) => String(value).padStart(2, "0");
         return `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}T${pad(
           date.getUTCHours()
-        )}${pad(date.getUTCMinutes())}00Z`;
+        )}${pad(date.getUTCMinutes())}00`;
       };
 
-      const downloadSamsungIcs = (item) => {
+      const buildIcsUtcNowStamp = () => {
+        const date = new Date();
+        const pad = (value) => String(value).padStart(2, "0");
+        return `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}T${pad(
+          date.getUTCHours()
+        )}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}Z`;
+      };
+
+      const downloadIcsFile = (item, platformLabel = "calendar") => {
         const dateValue = String(item?.preferred_date || "");
         const timeValue = String(item?.preferred_time || "");
         if (!dateValue || !timeValue) return;
         const durationHours = Number(item?.duration_hours || 0);
         const durationMinutes = durationHours > 0 ? Math.round(durationHours * 60) : 60;
-        const start = buildIcsTimestamp(dateValue, timeValue, 0);
-        const end = buildIcsTimestamp(dateValue, timeValue, durationMinutes);
+        const start = buildIcsLocalTimestamp(dateValue, timeValue, 0);
+        const end = buildIcsLocalTimestamp(dateValue, timeValue, durationMinutes);
         if (!start || !end) return;
 
         const uid = `${item?.id || Date.now()}@bombacloud`;
-        const summary = `Booking: ${item?.name || "Client"}`;
+        const timezone = String(item?.tour_timezone || "America/Toronto").trim() || "America/Toronto";
+        const timezoneEscaped = timezone.replace(/([\\;,])/g, "\\$1");
+        const phone = String(item?.phone || "").trim();
+        const summary = phone
+          ? `Booking: ${item?.name || "Client"} (${phone})`
+          : `Booking: ${item?.name || "Client"}`;
         const location = String(item?.city || "");
-        const description = `Booking request ${item?.id || ""}`;
+        const description = phone
+          ? `Booking request ${item?.id || ""}\nPhone: ${phone}`
+          : `Booking request ${item?.id || ""}`;
         const ics = [
           "BEGIN:VCALENDAR",
           "VERSION:2.0",
           "PRODID:-//BombaCLOUD//Booking//EN",
           "BEGIN:VEVENT",
           `UID:${uid}`,
-          `DTSTAMP:${buildIcsTimestamp(dateValue, timeValue, 0)}`,
-          `DTSTART:${start}`,
-          `DTEND:${end}`,
+          `DTSTAMP:${buildIcsUtcNowStamp()}`,
+          `DTSTART;TZID=${timezoneEscaped}:${start}`,
+          `DTEND;TZID=${timezoneEscaped}:${end}`,
           `SUMMARY:${summary.replace(/\n/g, " ")}`,
           `LOCATION:${location.replace(/\n/g, " ")}`,
           `DESCRIPTION:${description.replace(/\n/g, " ")}`,
@@ -6204,7 +6232,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         const link = document.createElement("a");
         const safeId = String(item?.id || "booking").replace(/[^a-zA-Z0-9_-]/g, "");
         link.href = url;
-        link.download = `booking-${safeId}.ics`;
+        link.download = `booking-${safeId}-${platformLabel}.ics`;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -6530,13 +6558,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               statusSelect.className = "status-action-select";
               [
                 ["", t("action_choose")],
-                ["pending", t("pending")],
                 ["maybe", t("maybe")],
                 ["accepted", t("accepted")],
                 ["paid", t("paid")],
-                ["blacklisted", t("blacklisted")],
                 ["declined", t("declined")],
-                ["cancelled", t("cancelled")],
               ].forEach(([value, label]) => {
                 const option = document.createElement("option");
                 option.value = value;
@@ -6544,31 +6569,40 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 statusSelect.appendChild(option);
               });
               const currentStatus = paymentStatus === "paid" ? "paid" : status;
-              statusSelect.value = currentStatus;
+              statusSelect.value = ["maybe", "accepted", "paid", "declined"].includes(currentStatus)
+                ? currentStatus
+                : "";
               const statusApplyBtn = createActionButton(
                 t("action_ok"),
-                () => {
+                async () => {
                   const nextStatus = String(statusSelect.value || "").trim();
                   if (!nextStatus) {
                     requestsStatus.textContent = t("action_pick_first");
+                    return;
+                  }
+                  if (nextStatus === "declined" && !String(declineInput ? declineInput.value : "").trim()) {
+                    requestsStatus.textContent = t("decline_reason_required");
                     return;
                   }
                   if (nextStatus === currentStatus) {
                     requestsStatus.textContent = t("status_updated");
                     return;
                   }
-                  updateStatus(item.id, nextStatus, declineInput ? declineInput.value.trim() : "");
+                  await updateStatus(item.id, nextStatus, declineInput ? declineInput.value.trim() : "");
                 },
                 "btn status-action-apply"
               );
+              const editBtn = createActionButton(
+                t("action_edit"),
+                () => {
+                  editPanel.classList.toggle("hidden");
+                },
+                "btn ghost"
+              );
               statusActionRow.appendChild(statusSelect);
               statusActionRow.appendChild(statusApplyBtn);
+              statusActionRow.appendChild(editBtn);
               actions.appendChild(statusActionRow);
-              actions.appendChild(
-                createActionButton(t("action_edit"), () => {
-                  editPanel.classList.toggle("hidden");
-                }, "btn ghost")
-              );
               const requestId = String(item.id || "").trim();
               if (requestId) {
                 const toggleGridVisibility = () => {
@@ -6595,34 +6629,54 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 );
                 actions.appendChild(gridToggleBtn);
               }
-              const calendarUrl = buildGoogleCalendarUrl(item);
-              if (calendarUrl) {
-                actions.appendChild(
-                  createActionButton(t("action_google_calendar"), () => {
+              const calendarActionRow = document.createElement("div");
+              calendarActionRow.className = "status-action-row";
+              const calendarSelect = document.createElement("select");
+              calendarSelect.className = "status-action-select";
+              [
+                ["", t("action_choose_calendar")],
+                ["google", t("action_calendar_google")],
+                ["samsung", t("action_calendar_samsung")],
+                ["icloud", t("action_calendar_icloud")],
+              ].forEach(([value, label]) => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = label;
+                calendarSelect.appendChild(option);
+              });
+              const calendarOkBtn = createActionButton(
+                t("action_ok"),
+                () => {
+                  const target = String(calendarSelect.value || "").trim();
+                  if (!target) {
+                    requestsStatus.textContent = t("calendar_pick_first");
+                    return;
+                  }
+                  if (target === "google") {
+                    const calendarUrl = buildGoogleCalendarUrl(item);
+                    if (!calendarUrl) {
+                      requestsStatus.textContent = t("failed_download");
+                      return;
+                    }
                     const popup = window.open(calendarUrl, "_blank", "noopener");
                     if (!popup) {
                       window.location.href = calendarUrl;
                     }
-                  }, "btn ghost")
-                );
-              }
-              const icsUrl = buildIcsDownloadUrl(item);
-              if (icsUrl) {
-                actions.appendChild(
-                  createActionButton(t("action_samsung_calendar"), () => {
-                    const popup = window.open(icsUrl, "_blank", "noopener");
-                    if (!popup) {
-                      window.location.href = icsUrl;
-                    }
-                  }, "btn ghost")
-                );
-              } else if (item.preferred_date && item.preferred_time) {
-                actions.appendChild(
-                  createActionButton(t("action_samsung_calendar"), () => {
-                    downloadSamsungIcs(item);
-                  }, "btn ghost")
-                );
-              }
+                    return;
+                  }
+                  if (target === "samsung") {
+                    downloadIcsFile(item, "samsung");
+                    return;
+                  }
+                  if (target === "icloud") {
+                    downloadIcsFile(item, "icloud");
+                  }
+                },
+                "btn status-action-apply"
+              );
+              calendarActionRow.appendChild(calendarSelect);
+              calendarActionRow.appendChild(calendarOkBtn);
+              actions.appendChild(calendarActionRow);
               card.appendChild(actions);
               card.appendChild(editPanel);
               requestsList.appendChild(card);

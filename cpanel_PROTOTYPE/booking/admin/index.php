@@ -1108,15 +1108,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .calendar-head {
-        background: #ffe6f3;
-        color: #b01d63;
+        background: var(--accent-soft);
+        color: var(--hot);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
       }
 
       .calendar-time {
-        background: #fff5fb;
+        background: var(--bg);
         font-weight: 600;
       }
 
@@ -1379,7 +1379,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .calendar-grid.month .month-cell {
-        border: 1px solid rgba(255, 0, 110, 0.18);
+        border: 1px solid var(--line);
         border-radius: 12px;
         padding: 10px;
         min-height: 90px;
@@ -1394,7 +1394,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       .month-day {
         font-weight: 700;
-        color: #55122b;
+        color: var(--hot);
       }
 
       .month-badges {
@@ -3043,14 +3043,22 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         const accent = normalizeHexColor(accentValue);
         const rgb = hexToRgb(accent);
         const pink = rgbToHex(mixWithWhite(rgb, 0.2));
+        const bg = rgbToHex(mixWithWhite(rgb, 0.96));
+        const bg2 = rgbToHex(mixWithWhite(rgb, 0.9));
         document.documentElement.style.setProperty("--hot", accent);
         document.documentElement.style.setProperty("--pink", pink);
+        document.documentElement.style.setProperty("--bg", bg);
+        document.documentElement.style.setProperty("--bg-2", bg2);
         document.documentElement.style.setProperty("--line", rgbaString(rgb, 0.25));
         document.documentElement.style.setProperty("--shadow", rgbaString(rgb, 0.2));
         document.documentElement.style.setProperty("--accent-soft", rgbaString(rgb, 0.08));
         document.documentElement.style.setProperty("--accent-soft-border", rgbaString(rgb, 0.12));
         document.documentElement.style.setProperty("--accent-stamp", rgbaString(rgb, 0.42));
         document.documentElement.style.setProperty("--accent-stamp-soft", rgbaString(rgb, 0.34));
+        document.documentElement.style.setProperty(
+          "--body-gradient",
+          `radial-gradient(circle at 15% 10%, ${bg2} 0%, ${bg} 45%, #fff 100%)`
+        );
       };
 
       const applyAccountCenterToUi = () => {

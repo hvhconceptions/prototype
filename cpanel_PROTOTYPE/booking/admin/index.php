@@ -1376,6 +1376,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         color: #6b173f;
       }
 
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
       .calendar-controls {
         flex-wrap: wrap;
         gap: 12px;
@@ -1826,6 +1833,52 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           grid-template-columns: repeat(7, minmax(72px, 1fr));
         }
 
+        .calendar-legend {
+          flex-wrap: wrap;
+          gap: 8px 12px;
+        }
+
+        .legend-item {
+          font-size: 0.78rem;
+          font-weight: 600;
+        }
+
+        .legend-dot {
+          width: 13px;
+          height: 13px;
+          border-width: 1px;
+        }
+
+        .legend-dot.booking {
+          background: #ffd394;
+          border-color: rgba(136, 78, 8, 0.6);
+        }
+
+        .legend-dot.outcall {
+          background: #a9c4ff;
+          border-color: rgba(35, 52, 90, 0.55);
+        }
+
+        .legend-dot.paid {
+          background: #a9e7c6;
+          border-color: rgba(18, 110, 67, 0.58);
+        }
+
+        .legend-dot.maybe {
+          background: #d2c0ff;
+          border-color: rgba(84, 40, 156, 0.58);
+        }
+
+        .legend-dot.city {
+          background: #7a58c5;
+          border-color: rgba(55, 24, 109, 0.65);
+        }
+
+        .slot-city-dot {
+          border-color: rgba(55, 24, 109, 0.45);
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
+        }
+
         .city-wizard-card {
           padding: 14px;
           border-radius: 16px;
@@ -2199,12 +2252,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           <div class="calendar-grid" id="calendarGrid"></div>
         </div>
         <div class="calendar-legend">
-          <span class="legend-dot blocked"></span> <span id="legendBlockedLabel">Blocked</span>
-          <span class="legend-dot booking"></span> <span id="legendBookingLabel">Booking</span>
-          <span class="legend-dot outcall"></span> <span id="legendOutcallLabel">Outcall</span>
-          <span class="legend-dot paid"></span> <span id="legendPaidLabel">Paid</span>
-          <span class="legend-dot maybe"></span> <span id="legendMaybeLabel">Maybe</span>
-          <span class="legend-dot city"></span> <span id="legendCityLabel">City marker</span>
+          <span class="legend-item"><span class="legend-dot blocked"></span><span id="legendBlockedLabel">Blocked</span></span>
+          <span class="legend-item"><span class="legend-dot booking"></span><span id="legendBookingLabel">Booking</span></span>
+          <span class="legend-item"><span class="legend-dot outcall"></span><span id="legendOutcallLabel">Outcall</span></span>
+          <span class="legend-item"><span class="legend-dot paid"></span><span id="legendPaidLabel">Paid</span></span>
+          <span class="legend-item"><span class="legend-dot maybe"></span><span id="legendMaybeLabel">Maybe</span></span>
+          <span class="legend-item"><span class="legend-dot city"></span><span id="legendCityLabel">City marker</span></span>
         </div>
 
         <div class="grid">

@@ -649,8 +649,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .folder-switcher {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
         margin: 0 0 18px;
       }
@@ -661,7 +661,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         color: #7a1c45;
         border-radius: 14px 14px 8px 8px;
         padding: 10px 14px;
-        min-width: 140px;
+        min-width: 0;
+        width: 100%;
         font-size: 0.86rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -999,6 +1000,23 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         flex-wrap: wrap;
         gap: 8px;
         margin-top: 12px;
+      }
+
+      .status-action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+        align-items: center;
+      }
+
+      .status-action-select {
+        flex: 1 1 220px;
+        min-width: 180px;
+      }
+
+      .status-action-apply {
+        min-width: 84px;
       }
 
       .request-edit-panel {
@@ -1559,11 +1577,6 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           align-self: flex-end;
         }
 
-        .folder-button {
-          flex: 1 1 calc(50% - 10px);
-          min-width: 0;
-        }
-
         .tour-row {
           grid-template-columns: 1fr;
           grid-template-areas:
@@ -1649,7 +1662,6 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         }
 
         .folder-button {
-          flex: 1 1 100%;
           border-radius: 12px;
           padding: 9px 12px;
           font-size: 0.76rem;
@@ -2573,6 +2585,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_edit: "Edit",
           action_remove_grid: "Remove from grid",
           action_show_grid: "Show on grid",
+          action_choose: "Choose option",
+          action_ok: "OK",
+          action_pick_first: "Pick an option first.",
           grid_hidden: "Booking removed from schedule grid.",
           grid_visible: "Booking shown on schedule grid.",
           save_changes: "Save changes",
@@ -2745,6 +2760,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_edit: "Modifier",
           action_remove_grid: "Retirer du planning",
           action_show_grid: "Afficher sur planning",
+          action_choose: "Choisir option",
+          action_ok: "OK",
+          action_pick_first: "Choisissez une option d'abord.",
           grid_hidden: "Reservation retiree du planning.",
           grid_visible: "Reservation affichee dans le planning.",
           save_changes: "Sauvegarder",
@@ -6506,57 +6524,51 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               const editPanel = createRequestEditPanel(item);
               const actions = document.createElement("div");
               actions.className = "actions";
-              if (status === "pending") {
-                actions.appendChild(
-                  createActionButton(t("action_accept"), () => updateStatus(item.id, "accepted"), "btn")
-                );
-                actions.appendChild(
-                  createActionButton(
-                    t("action_maybe"),
-                    () => updateStatus(item.id, "maybe", declineInput ? declineInput.value.trim() : ""),
-                    "btn secondary"
-                  )
-                );
-                actions.appendChild(
-                  createActionButton(
-                    t("action_blacklist"),
-                    () => updateStatus(item.id, "blacklisted", declineInput ? declineInput.value.trim() : ""),
-                    "btn secondary"
-                  )
-                );
-              }
-              if (paymentStatus !== "paid" && status !== "blacklisted") {
-                actions.appendChild(
-                  createActionButton(t("action_mark_paid"), () => updateStatus(item.id, "paid"), "btn")
-                );
-              }
-              if (status !== "blacklisted") {
-                if (status !== "pending" && status !== "maybe" && paymentStatus !== "paid") {
-                  actions.appendChild(
-                    createActionButton(
-                      t("action_maybe"),
-                      () => updateStatus(item.id, "maybe", declineInput ? declineInput.value.trim() : ""),
-                      "btn ghost"
-                    )
-                  );
-                }
-                actions.appendChild(
-                  createActionButton(t("action_edit"), () => {
-                    editPanel.classList.toggle("hidden");
-                  }, "btn ghost")
-                );
-                actions.appendChild(
-                  createActionButton(
-                    t("action_decline"),
-                    () =>
-                      updateStatus(item.id, "declined", declineInput ? declineInput.value.trim() : ""),
-                    "btn secondary"
-                  )
-                );
-                actions.appendChild(
-                  createActionButton(t("action_cancel"), () => updateStatus(item.id, "cancelled"), "btn ghost")
-                );
-              }
+              const statusActionRow = document.createElement("div");
+              statusActionRow.className = "status-action-row";
+              const statusSelect = document.createElement("select");
+              statusSelect.className = "status-action-select";
+              [
+                ["", t("action_choose")],
+                ["pending", t("pending")],
+                ["maybe", t("maybe")],
+                ["accepted", t("accepted")],
+                ["paid", t("paid")],
+                ["blacklisted", t("blacklisted")],
+                ["declined", t("declined")],
+                ["cancelled", t("cancelled")],
+              ].forEach(([value, label]) => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = label;
+                statusSelect.appendChild(option);
+              });
+              const currentStatus = paymentStatus === "paid" ? "paid" : status;
+              statusSelect.value = currentStatus;
+              const statusApplyBtn = createActionButton(
+                t("action_ok"),
+                () => {
+                  const nextStatus = String(statusSelect.value || "").trim();
+                  if (!nextStatus) {
+                    requestsStatus.textContent = t("action_pick_first");
+                    return;
+                  }
+                  if (nextStatus === currentStatus) {
+                    requestsStatus.textContent = t("status_updated");
+                    return;
+                  }
+                  updateStatus(item.id, nextStatus, declineInput ? declineInput.value.trim() : "");
+                },
+                "btn status-action-apply"
+              );
+              statusActionRow.appendChild(statusSelect);
+              statusActionRow.appendChild(statusApplyBtn);
+              actions.appendChild(statusActionRow);
+              actions.appendChild(
+                createActionButton(t("action_edit"), () => {
+                  editPanel.classList.toggle("hidden");
+                }, "btn ghost")
+              );
               const requestId = String(item.id || "").trim();
               if (requestId) {
                 const toggleGridVisibility = () => {

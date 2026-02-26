@@ -166,6 +166,73 @@ function require_admin_ui(): void
 
 require_admin_ui();
 
+function resolve_request_timezone(array $request): DateTimeZone
+{
+    $fallback = defined('DEFAULT_TOUR_TZ') && DEFAULT_TOUR_TZ !== '' ? DEFAULT_TOUR_TZ : 'America/Toronto';
+    $timezoneName = trim((string) ($request['tour_timezone'] ?? $fallback));
+    if ($timezoneName === '') {
+        $timezoneName = $fallback;
+    }
+    try {
+        return new DateTimeZone($timezoneName);
+    } catch (Throwable $exception) {
+        return new DateTimeZone('UTC');
+    }
+}
+
+function resolve_request_end_at(array $request): ?DateTimeImmutable
+{
+    $date = trim((string) ($request['preferred_date'] ?? ''));
+    $time = trim((string) ($request['preferred_time'] ?? ''));
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !preg_match('/^\d{2}:\d{2}$/', $time)) {
+        return null;
+    }
+    $timezone = resolve_request_timezone($request);
+    $start = DateTimeImmutable::createFromFormat('Y-m-d H:i', $date . ' ' . $time, $timezone);
+    if (!$start instanceof DateTimeImmutable) {
+        return null;
+    }
+    $hours = is_numeric($request['duration_hours'] ?? null) ? (float) $request['duration_hours'] : 0.0;
+    $minutes = (int) round($hours * 60);
+    if ($minutes <= 0) {
+        $minutes = 60;
+    }
+    return $start->modify('+' . $minutes . ' minutes');
+}
+
+function has_request_passed(array $request, DateTimeImmutable $nowUtc): bool
+{
+    $end = resolve_request_end_at($request);
+    if (!$end instanceof DateTimeImmutable) {
+        return false;
+    }
+    return $end->setTimezone(new DateTimeZone('UTC')) < $nowUtc;
+}
+
+function is_customer_directory_status(string $status): bool
+{
+    return in_array($status, ['cancelled', 'declined', 'rejected', 'blacklisted'], true);
+}
+
+function include_in_customer_directory(array $request, DateTimeImmutable $nowUtc): bool
+{
+    $source = strtolower(trim((string) ($request['__source'] ?? '')));
+    if ($source === 'declined') {
+        return true;
+    }
+    $status = strtolower(trim((string) ($request['status'] ?? '')));
+    if (is_customer_directory_status($status)) {
+        return true;
+    }
+    $cancelReason = trim((string) ($request['cancel_reason'] ?? ''));
+    $declineReason = trim((string) ($request['decline_reason'] ?? ''));
+    $blacklistReason = trim((string) ($request['blacklist_reason'] ?? ''));
+    if ($cancelReason !== '' || $declineReason !== '' || $blacklistReason !== '') {
+        return true;
+    }
+    return has_request_passed($request, $nowUtc);
+}
+
 $store = read_json_file(DATA_DIR . '/requests.json', ['requests' => []]);
 $requests = $store['requests'] ?? [];
 if (!is_array($requests)) {
@@ -183,11 +250,26 @@ if (!is_array($hiddenKeys)) {
 }
 $hiddenKeys = array_map('strval', $hiddenKeys);
 $hiddenMap = array_fill_keys($hiddenKeys, true);
-$allRequests = array_merge($requests, $declinedRequests);
+$allRequests = [];
+foreach ($requests as $request) {
+    if (!is_array($request)) {
+        continue;
+    }
+    $request['__source'] = 'requests';
+    $allRequests[] = $request;
+}
+foreach ($declinedRequests as $request) {
+    if (!is_array($request)) {
+        continue;
+    }
+    $request['__source'] = 'declined';
+    $allRequests[] = $request;
+}
+$nowUtc = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
 $customers = [];
 foreach ($allRequests as $request) {
-    if (!is_array($request)) {
+    if (!include_in_customer_directory($request, $nowUtc)) {
         continue;
     }
     $email = strtolower(trim((string) ($request['email'] ?? '')));

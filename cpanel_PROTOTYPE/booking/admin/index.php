@@ -922,35 +922,57 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         color: #7a1c45;
       }
 
+      .requests-toolbar {
+        align-items: flex-end;
+        gap: 10px 12px;
+      }
+
       .status-filter-tabs {
         display: none;
-        align-items: center;
-        gap: 8px;
+        align-items: flex-end;
+        gap: 0;
         flex-wrap: nowrap;
+        border-bottom: 1px solid var(--line);
+        overflow-x: auto;
+        max-width: 100%;
+        padding-bottom: 0;
       }
 
       .status-filter-tab {
         border: 1px solid var(--line);
-        background: #fff;
+        border-bottom: none;
+        background: #f7eaf2;
         color: #6b173f;
-        border-radius: 999px;
-        padding: 8px 12px;
-        font-size: 0.74rem;
+        border-radius: 9px 9px 0 0;
+        padding: 9px 15px;
+        font-size: 0.72rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         cursor: pointer;
         white-space: nowrap;
+        margin: 0 2px 0 0;
+        transform: translateY(1px);
+        box-shadow: none;
       }
 
       .status-filter-tab[aria-pressed="true"] {
-        background: linear-gradient(135deg, var(--pink), var(--hot));
-        color: #fff;
-        border-color: transparent;
+        background: #fff;
+        color: var(--hot);
+        border-color: var(--line);
+        font-weight: 700;
       }
 
       .status-filter-select-wrap {
         display: inline-flex;
         align-items: center;
+      }
+
+      .requests-toolbar #statusFilter {
+        min-width: 180px;
+      }
+
+      .requests-toolbar #customersDirectoryBtn {
+        white-space: nowrap;
       }
 
       @media (min-width: 1280px) {
@@ -2328,8 +2350,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       <section data-admin-panel-group="clients">
         <h2 id="requestsSectionTitle">Requests</h2>
-        <div class="row">
+        <div class="row requests-toolbar">
           <button class="btn secondary" id="refreshRequests">Refresh</button>
+          <a class="btn ghost" href="customers.php" id="customersDirectoryBtn">Customer directory</a>
           <div class="status-filter-tabs" id="statusFilterTabs" role="tablist" aria-label="Request status filters">
             <button type="button" class="status-filter-tab" data-status-tab="all" aria-pressed="true">All</button>
             <button type="button" class="status-filter-tab" data-status-tab="pending" aria-pressed="false">Pending</button>
@@ -2355,9 +2378,6 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           <span class="status" id="requestsStatus"></span>
         </div>
         <div id="requestsList"></div>
-        <div class="row">
-          <a class="btn ghost" href="customers.php">Costumer directory</a>
-        </div>
       </section>
 
     </main>
@@ -2597,7 +2617,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           blacklisted: "Blacklisted",
           declined: "Declined",
           cancelled: "Cancelled",
-          costumer_directory: "Costumer directory",
+          costumer_directory: "Customer directory",
           remove: "Remove",
           add_tour_first: "Add tour stops first, then city schedule cards appear here.",
           add_photo_min: "Add at least one eye candy photo.",
@@ -3522,7 +3542,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         setTextById("legendPaidLabel", t("legend_paid"));
         setTextById("legendMaybeLabel", t("legend_maybe"));
         setTextById("legendCityLabel", t("legend_city"));
-        const customersLink = document.querySelector('a[href="customers.php"]');
+        const customersLink = document.getElementById("customersDirectoryBtn");
         if (customersLink) customersLink.textContent = t("costumer_directory");
 
         const statusLabels = {

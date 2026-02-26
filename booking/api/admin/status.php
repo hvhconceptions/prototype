@@ -228,6 +228,9 @@ $allowed = ['pending', 'maybe', 'accepted', 'declined', 'paid', 'cancelled', 'bl
 if (!in_array($status, $allowed, true)) {
     json_response(['error' => 'Invalid status'], 422);
 }
+if (in_array($status, ['declined', 'cancelled', 'blacklisted'], true) && $reason === '') {
+    json_response(['error' => 'Reason is required for this status'], 422);
+}
 
 $store = read_json_file(DATA_DIR . '/requests.json', ['requests' => []]);
 $requests = $store['requests'] ?? [];
@@ -258,6 +261,7 @@ foreach ($requests as $index => &$request) {
 
     if ($status === 'declined') {
         $request['status'] = 'declined';
+        $request['payment_status'] = '';
         $request['decline_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
         append_history_entry($request, 'status', 'Status set to declined' . ($reason !== '' ? " ({$reason})" : ''));
@@ -285,6 +289,7 @@ foreach ($requests as $index => &$request) {
 
     if ($status === 'blacklisted') {
         $request['status'] = 'blacklisted';
+        $request['payment_status'] = '';
         $request['blacklist_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
         append_history_entry($request, 'status', 'Status set to blacklisted' . ($reason !== '' ? " ({$reason})" : ''));
@@ -296,6 +301,27 @@ foreach ($requests as $index => &$request) {
             'reason' => $reason,
             'request_id' => $request['id'] ?? '',
         ]);
+        $found = true;
+        break;
+    }
+
+    if ($status === 'cancelled') {
+        $request['status'] = 'cancelled';
+        $request['payment_status'] = '';
+        $request['cancel_reason'] = $reason;
+        $request['updated_at'] = gmdate('c');
+        append_history_entry($request, 'status', 'Status set to cancelled' . ($reason !== '' ? " ({$reason})" : ''));
+        $requestEmail = (string) ($request['email'] ?? '');
+        if ($requestEmail !== '' && ($request['cancelled_email_sent_at'] ?? '') === '') {
+            $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
+            $body .= "Your booking request was cancelled.\n";
+            if ($reason !== '') {
+                $body .= "Reason: " . $reason . "\n";
+            }
+            $body .= "\nIf you want to book again, you can send a new request.\n";
+            send_payment_email($requestEmail, $body, 'Booking update');
+            $request['cancelled_email_sent_at'] = gmdate('c');
+        }
         $found = true;
         break;
     }
@@ -404,9 +430,15 @@ foreach ($requests as $index => &$request) {
     } elseif ($status !== 'maybe' && $paymentLink !== '') {
         $request['status'] = $status;
         $request['payment_link'] = $paymentLink;
+        if ($status !== 'accepted') {
+            $request['payment_status'] = '';
+        }
         append_history_entry($request, 'status', "Status set to {$status}");
     } elseif ($status !== 'maybe') {
         $request['status'] = $status;
+        if ($status !== 'accepted') {
+            $request['payment_status'] = '';
+        }
         append_history_entry($request, 'status', "Status set to {$status}");
     }
 
@@ -455,6 +487,38 @@ if ($found) {
         $bookingBlocks = build_booking_blocks($request, $bookingStatus);
         $blocked = array_merge($blocked, $bookingBlocks);
     }
+    $activeBookingIds = [];
+    foreach ($requests as $requestItem) {
+        if (!is_array($requestItem)) {
+            continue;
+        }
+        $requestStatus = strtolower(trim((string) ($requestItem['status'] ?? 'pending')));
+        $requestPayment = strtolower(trim((string) ($requestItem['payment_status'] ?? '')));
+        if ($requestStatus === 'paid') {
+            $requestStatus = 'accepted';
+            $requestPayment = 'paid';
+        }
+        if ($requestStatus !== 'accepted' && $requestPayment !== 'paid') {
+            continue;
+        }
+        $requestId = trim((string) ($requestItem['id'] ?? ''));
+        if ($requestId !== '') {
+            $activeBookingIds[$requestId] = true;
+        }
+    }
+    $blocked = array_values(array_filter($blocked, function ($entry) use ($activeBookingIds): bool {
+        if (!is_array($entry)) {
+            return false;
+        }
+        if (($entry['kind'] ?? '') !== 'booking') {
+            return true;
+        }
+        $entryBookingId = trim((string) ($entry['booking_id'] ?? ''));
+        if ($entryBookingId === '') {
+            return false;
+        }
+        return isset($activeBookingIds[$entryBookingId]);
+    }));
     $availability['blocked'] = $blocked;
     $availability['updated_at'] = gmdate('c');
     write_json_file(DATA_DIR . '/availability.json', $availability);

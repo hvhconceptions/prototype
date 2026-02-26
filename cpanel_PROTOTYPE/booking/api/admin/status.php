@@ -181,6 +181,9 @@ $allowed = ['pending', 'accepted', 'declined', 'paid', 'cancelled', 'blacklisted
 if (!in_array($status, $allowed, true)) {
     json_response(['error' => 'Invalid status'], 422);
 }
+if (in_array($status, ['declined', 'cancelled', 'blacklisted'], true) && $reason === '') {
+    json_response(['error' => 'Reason is required for this status'], 422);
+}
 
 $store = read_json_file(DATA_DIR . '/requests.json', ['requests' => []]);
 $requests = $store['requests'] ?? [];
@@ -211,6 +214,7 @@ foreach ($requests as $index => &$request) {
 
     if ($status === 'declined') {
         $request['status'] = 'declined';
+        $request['payment_status'] = '';
         $request['decline_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
         $requestEmail = (string) ($request['email'] ?? '');
@@ -237,6 +241,7 @@ foreach ($requests as $index => &$request) {
 
     if ($status === 'blacklisted') {
         $request['status'] = 'blacklisted';
+        $request['payment_status'] = '';
         $request['blacklist_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
         add_blacklist_entry([
@@ -247,6 +252,26 @@ foreach ($requests as $index => &$request) {
             'reason' => $reason,
             'request_id' => $request['id'] ?? '',
         ]);
+        $found = true;
+        break;
+    }
+
+    if ($status === 'cancelled') {
+        $request['status'] = 'cancelled';
+        $request['payment_status'] = '';
+        $request['cancel_reason'] = $reason;
+        $request['updated_at'] = gmdate('c');
+        $requestEmail = (string) ($request['email'] ?? '');
+        if ($requestEmail !== '' && ($request['cancelled_email_sent_at'] ?? '') === '') {
+            $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
+            $body .= "Your booking request was cancelled.\n";
+            if ($reason !== '') {
+                $body .= "Reason: " . $reason . "\n";
+            }
+            $body .= "\nIf you want to book again, you can send a new request.\n";
+            send_payment_email($requestEmail, $body, 'Booking update');
+            $request['cancelled_email_sent_at'] = gmdate('c');
+        }
         $found = true;
         break;
     }
@@ -356,8 +381,14 @@ foreach ($requests as $index => &$request) {
     } elseif ($paymentLink !== '') {
         $request['status'] = $status;
         $request['payment_link'] = $paymentLink;
+        if ($status !== 'accepted') {
+            $request['payment_status'] = '';
+        }
     } else {
         $request['status'] = $status;
+        if ($status !== 'accepted') {
+            $request['payment_status'] = '';
+        }
     }
 
     $request['updated_at'] = gmdate('c');
@@ -392,7 +423,11 @@ if ($found) {
         $blocked = [];
     }
     $blocked = array_values(array_filter($blocked, function ($entry) use ($id): bool {
-        return !is_array($entry) || (($entry['booking_id'] ?? '') !== $id);
+        if (!is_array($entry)) {
+            return true;
+        }
+        $entryBookingId = trim((string) ($entry['booking_id'] ?? ''));
+        return $entryBookingId === '' || $entryBookingId !== $id;
     }));
     $isAccepted = (string) ($request['status'] ?? '') === 'accepted';
     $isPaid = (string) ($request['payment_status'] ?? '') === 'paid';
@@ -401,9 +436,81 @@ if ($found) {
         $bookingBlocks = build_booking_blocks($request, $bookingStatus);
         $blocked = array_merge($blocked, $bookingBlocks);
     }
+    $activeBookingIds = [];
+    foreach ($requests as $requestItem) {
+        if (!is_array($requestItem)) {
+            continue;
+        }
+        $requestStatus = strtolower(trim((string) ($requestItem['status'] ?? 'pending')));
+        $requestPayment = strtolower(trim((string) ($requestItem['payment_status'] ?? '')));
+        if ($requestStatus === 'paid') {
+            $requestStatus = 'accepted';
+            $requestPayment = 'paid';
+        }
+        if ($requestStatus !== 'accepted' && $requestPayment !== 'paid') {
+            continue;
+        }
+        $requestId = trim((string) ($requestItem['id'] ?? ''));
+        if ($requestId !== '') {
+            $activeBookingIds[$requestId] = true;
+        }
+    }
+    $blocked = array_values(array_filter($blocked, function ($entry) use ($activeBookingIds): bool {
+        if (!is_array($entry)) {
+            return false;
+        }
+        if (($entry['kind'] ?? '') !== 'booking') {
+            return true;
+        }
+        $entryBookingId = trim((string) ($entry['booking_id'] ?? ''));
+        if ($entryBookingId === '') {
+            return false;
+        }
+        return isset($activeBookingIds[$entryBookingId]);
+    }));
     $availability['blocked'] = $blocked;
     $availability['updated_at'] = gmdate('c');
     write_json_file(DATA_DIR . '/availability.json', $availability);
+}
+
+$statusForPush = strtolower(trim((string) ($request['status'] ?? '')));
+$paymentStatusForPush = strtolower(trim((string) ($request['payment_status'] ?? '')));
+$isConfirmedForPush = $statusForPush === 'accepted' || $paymentStatusForPush === 'paid';
+if ($isConfirmedForPush) {
+    $tokens = get_push_token_strings();
+    if ($tokens) {
+        $pushTitle = 'Booking confirmed';
+        $pushBodyParts = [];
+        $durationLabel = trim((string) ($request['duration_label'] ?? ''));
+        $dateLabel = trim((string) ($request['preferred_date'] ?? ''));
+        $timeLabel = trim((string) ($request['preferred_time'] ?? ''));
+        $cityLabel = trim((string) ($request['city'] ?? ''));
+        if ($durationLabel !== '') {
+            $pushBodyParts[] = $durationLabel;
+        }
+        $dateTimeLabel = trim($dateLabel . ' ' . $timeLabel);
+        if ($dateTimeLabel !== '') {
+            $pushBodyParts[] = $dateTimeLabel;
+        }
+        if ($cityLabel !== '') {
+            $pushBodyParts[] = $cityLabel;
+        }
+        $pushBody = $pushBodyParts ? implode(' - ', $pushBodyParts) : 'Appointment confirmed';
+        $pushData = [
+            'id' => (string) ($request['id'] ?? ''),
+            'name' => (string) ($request['name'] ?? ''),
+            'email' => (string) ($request['email'] ?? ''),
+            'phone' => (string) ($request['phone'] ?? ''),
+            'city' => (string) ($request['city'] ?? ''),
+            'preferred_date' => (string) ($request['preferred_date'] ?? ''),
+            'preferred_time' => (string) ($request['preferred_time'] ?? ''),
+            'duration_label' => (string) ($request['duration_label'] ?? ''),
+            'duration_hours' => (string) ($request['duration_hours'] ?? ''),
+            'status' => (string) ($request['status'] ?? ''),
+            'payment_status' => (string) ($request['payment_status'] ?? ''),
+        ];
+        send_push_to_tokens($tokens, $pushTitle, $pushBody, $pushData);
+    }
 }
 
 json_response(['ok' => true]);

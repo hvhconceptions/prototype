@@ -2592,7 +2592,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_calendar_icloud: "iCloud",
           action_ok: "OK",
           action_pick_first: "Pick an action first.",
-          decline_reason_required: "Add decline reason before OK.",
+          decline_reason_required: "Add reason before OK.",
           calendar_pick_first: "Pick a calendar option first.",
           grid_hidden: "Booking removed from schedule grid.",
           grid_visible: "Booking shown on schedule grid.",
@@ -2773,7 +2773,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_calendar_icloud: "iCloud",
           action_ok: "OK",
           action_pick_first: "Choisissez une action d'abord.",
-          decline_reason_required: "Ajoutez une raison du refus avant OK.",
+          decline_reason_required: "Ajoutez une raison avant OK.",
           calendar_pick_first: "Choisissez un calendrier d'abord.",
           grid_hidden: "Reservation retiree du planning.",
           grid_visible: "Reservation affichee dans le planning.",
@@ -6537,7 +6537,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 ${formatLine(t("payment_status"), paymentStatus === "paid" ? t("paid") : "")}
                 ${formatLine(t("payment_method"), formatPaymentMethod(item.payment_method))}
                 ${formatLine(t("notes"), item.notes)}
-                <div class="meta"><strong>${t("decline_reason")}:</strong> <input class="decline-reason" type="text" placeholder="${t("reason")}" value="${item.decline_reason || ""}" /></div>
+                <div class="meta status-reason-row hidden"><strong>${t("reason")}:</strong> <input class="status-reason-input" type="text" placeholder="${t("reason")}" value="${item.decline_reason || item.blacklist_reason || item.cancel_reason || ""}" /></div>
                 ${formatLine(t("blacklist_reason"), item.blacklist_reason)}
                 ${formatLine(t("follow_up_phone"), followupPhoneLabel)}
                 ${formatLine(t("follow_up_email"), followupEmailLabel)}
@@ -6548,7 +6548,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 ${formatLine(t("email_sent"), item.payment_email_sent_at)}
                 ${formatHistory(item.history)}
               `;
-              const declineInput = card.querySelector(".decline-reason");
+              const reasonRow = card.querySelector(".status-reason-row");
+              const reasonInput = card.querySelector(".status-reason-input");
               const editPanel = createRequestEditPanel(item);
               const actions = document.createElement("div");
               actions.className = "actions";
@@ -6578,11 +6579,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 t("action_ok"),
                 async () => {
                   const nextStatus = String(statusSelect.value || "").trim();
+                  const reasonRequiredStatuses = new Set(["declined", "blacklisted", "cancelled"]);
+                  const nextReason = String(reasonInput ? reasonInput.value : "").trim();
                   if (!nextStatus) {
                     requestsStatus.textContent = t("action_pick_first");
                     return;
                   }
-                  if (nextStatus === "declined" && !String(declineInput ? declineInput.value : "").trim()) {
+                  if (reasonRequiredStatuses.has(nextStatus) && !nextReason) {
                     requestsStatus.textContent = t("decline_reason_required");
                     return;
                   }
@@ -6590,7 +6593,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                     requestsStatus.textContent = t("status_updated");
                     return;
                   }
-                  await updateStatus(item.id, nextStatus, declineInput ? declineInput.value.trim() : "");
+                  await updateStatus(item.id, nextStatus, reasonRequiredStatuses.has(nextStatus) ? nextReason : "");
                 },
                 "btn status-action-apply"
               );
@@ -6605,6 +6608,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               statusActionRow.appendChild(statusApplyBtn);
               statusActionRow.appendChild(editBtn);
               actions.appendChild(statusActionRow);
+              const syncReasonField = () => {
+                const selected = String(statusSelect.value || "").trim();
+                const showReason = selected === "declined" || selected === "blacklisted" || selected === "cancelled";
+                if (reasonRow) {
+                  reasonRow.classList.toggle("hidden", !showReason);
+                }
+              };
+              statusSelect.addEventListener("change", syncReasonField);
+              syncReasonField();
               const requestId = String(item.id || "").trim();
               if (requestId) {
                 const toggleGridVisibility = () => {

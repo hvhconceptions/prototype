@@ -1319,7 +1319,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         border: 1px solid var(--line);
         border-radius: 999px;
         overflow: hidden;
-        background: #fff;
+        background: var(--accent-soft);
       }
 
       .seg-btn {
@@ -1333,13 +1333,39 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         cursor: pointer;
       }
 
+      .seg-btn:hover {
+        background: rgba(255, 255, 255, 0.7);
+      }
+
       .seg-btn[aria-pressed="true"] {
-        background: linear-gradient(135deg, #ff2d93, #ff006e);
+        background: linear-gradient(135deg, var(--pink), var(--hot));
         color: #fff;
       }
 
       .calendar-field {
         min-width: 200px;
+      }
+
+      .calendar-controls .calendar-field input {
+        border-color: var(--line);
+        background: var(--accent-soft);
+      }
+
+      .calendar-controls .calendar-field input:focus-visible {
+        border-color: var(--hot);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+        outline: none;
+      }
+
+      #calendarToday.btn.secondary {
+        border-color: var(--line);
+        background: var(--accent-soft);
+        color: #6b173f;
+      }
+
+      #calendarToday.btn.secondary:hover {
+        border-color: var(--hot);
+        color: var(--hot);
       }
 
       .calendar-field[hidden] {

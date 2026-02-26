@@ -235,6 +235,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         --shadow: rgba(255, 0, 110, 0.2);
         --accent-soft: rgba(255, 0, 110, 0.08);
         --accent-soft-border: rgba(255, 0, 110, 0.12);
+        --accent-stamp: rgba(255, 0, 110, 0.42);
+        --accent-stamp-soft: rgba(255, 0, 110, 0.34);
         --body-gradient: radial-gradient(circle at 15% 10%, #ffe1f0 0%, #fff5fb 45%, #fff 100%);
         --mono: "Avenir Next", "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         --bubble: "Baloo 2", "Cooper Black", "Bookman Old Style", "Georgia", serif;
@@ -1142,7 +1144,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         font-size: 0.54rem;
         font-weight: 700;
         letter-spacing: 0.04em;
-        color: rgba(86, 18, 45, 0.26);
+        color: var(--accent-stamp);
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.68);
         pointer-events: none;
       }
@@ -1155,7 +1157,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         font-size: 0.6rem;
         font-weight: 700;
         letter-spacing: 0.02em;
-        color: rgba(86, 18, 45, 0.32);
+        color: var(--accent-stamp-soft);
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
         pointer-events: none;
       }
@@ -3047,6 +3049,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         document.documentElement.style.setProperty("--shadow", rgbaString(rgb, 0.2));
         document.documentElement.style.setProperty("--accent-soft", rgbaString(rgb, 0.08));
         document.documentElement.style.setProperty("--accent-soft-border", rgbaString(rgb, 0.12));
+        document.documentElement.style.setProperty("--accent-stamp", rgbaString(rgb, 0.42));
+        document.documentElement.style.setProperty("--accent-stamp-soft", rgbaString(rgb, 0.34));
       };
 
       const applyAccountCenterToUi = () => {

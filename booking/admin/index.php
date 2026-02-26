@@ -6561,7 +6561,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 ["maybe", t("maybe")],
                 ["accepted", t("accepted")],
                 ["paid", t("paid")],
+                ["blacklisted", t("blacklisted")],
                 ["declined", t("declined")],
+                ["cancelled", t("cancelled")],
               ].forEach(([value, label]) => {
                 const option = document.createElement("option");
                 option.value = value;
@@ -6569,7 +6571,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 statusSelect.appendChild(option);
               });
               const currentStatus = paymentStatus === "paid" ? "paid" : status;
-              statusSelect.value = ["maybe", "accepted", "paid", "declined"].includes(currentStatus)
+              statusSelect.value = ["maybe", "accepted", "paid", "blacklisted", "declined", "cancelled"].includes(currentStatus)
                 ? currentStatus
                 : "";
               const statusApplyBtn = createActionButton(

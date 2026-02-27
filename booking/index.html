@@ -1908,7 +1908,6 @@
       );
       const BASE_CURRENCY = "CAD";
       const DEPOSIT_PERCENT = 20;
-      const PSE_BILL_ADDON = 100;
       const FILMING_BILL_ADDON = 500;
       const FIAT_CURRENCIES = ["CAD", "USD", "EUR", "GBP"];
       const CRYPTO_CURRENCIES = ["USDC", "BTC", "LTC"];
@@ -1929,13 +1928,22 @@
           4: 2000,
           12: 3000,
         },
+        pse: {
+          0.5: 800,
+          1: 800,
+          1.5: 1100,
+          2: 1400,
+          3: 1600,
+          4: 2000,
+          12: 3000,
+        },
         social: {
           3: 1000,
         },
       };
-      const LONG_SESSION_MIN = 8;
-      const LONG_SESSION_MAX = 12;
-      const LONG_SESSION_RATE = 3000;
+      let longSessionMin = 8;
+      let longSessionMax = 12;
+      let longSessionRate = 3000;
       const DAY_PLUS_HOURS = 24;
       const DAY_PLUS_RATE = 4000;
       const DURATION_OPTIONS = [
@@ -2127,17 +2135,52 @@
         return "gfe";
       };
 
+      const normalizeRateEntries = (entries) => {
+        if (!Array.isArray(entries)) return {};
+        const table = {};
+        entries.forEach((entry) => {
+          const hours = Number(entry?.hours || 0);
+          const amount = Number(entry?.amount || 0);
+          if (!Number.isFinite(hours) || hours <= 0) return;
+          if (!Number.isFinite(amount) || amount < 0) return;
+          table[String(hours)] = Math.round(amount);
+        });
+        return table;
+      };
+
+      const applyWebsiteRates = (rates) => {
+        if (!rates || typeof rates !== "object") return;
+        const gfe = normalizeRateEntries(rates.gfe);
+        if (Object.keys(gfe).length) {
+          RATE_TABLE.gfe = gfe;
+        }
+        const pse = normalizeRateEntries(rates.pse);
+        if (Object.keys(pse).length) {
+          RATE_TABLE.pse = pse;
+        }
+        const socialAmount = Number(rates?.social?.amount || 0);
+        if (Number.isFinite(socialAmount) && socialAmount > 0) {
+          RATE_TABLE.social = { 3: Math.round(socialAmount) };
+        }
+        const longMin = Number(rates?.long_session?.min || 0);
+        const longMax = Number(rates?.long_session?.max || 0);
+        const longAmount = Number(rates?.long_session?.amount || 0);
+        if (Number.isFinite(longMin) && Number.isFinite(longMax) && Number.isFinite(longAmount) && longMin > 0 && longMax >= longMin && longAmount > 0) {
+          longSessionMin = longMin;
+          longSessionMax = longMax;
+          longSessionRate = Math.round(longAmount);
+        }
+      };
+
       const getServiceAddonBase = (experience, baseRate) => {
         if (!Number.isFinite(baseRate) || baseRate <= 0) return 0;
         const normalized = normalizeExperience(experience);
-        if (normalized === "pse") return PSE_BILL_ADDON;
         if (normalized === "filming") return FILMING_BILL_ADDON;
         return 0;
       };
 
       const getServiceAddonLabel = (experience) => {
         const normalized = normalizeExperience(experience);
-        if (normalized === "pse") return t("pse_addon");
         if (normalized === "filming") return t("filming_addon");
         return t("service_addon");
       };
@@ -2151,14 +2194,18 @@
         if (hours >= DAY_PLUS_HOURS) {
           return DAY_PLUS_RATE;
         }
-        if (hours >= LONG_SESSION_MIN && hours <= LONG_SESSION_MAX) {
-          return LONG_SESSION_RATE;
+        if (hours >= longSessionMin && hours <= longSessionMax) {
+          return longSessionRate;
         }
-        const rates = RATE_TABLE.gfe;
+        const rates = normalized === "pse" ? RATE_TABLE.pse : RATE_TABLE.gfe;
         if (rates[hours]) return rates[hours];
         let lower = null;
         let upper = null;
-        const sorted = RATE_BRACKETS.slice().sort((a, b) => a - b);
+        const sorted = Object.keys(rates)
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value) && value > 0)
+          .sort((a, b) => a - b);
+        if (!sorted.length) return 0;
         for (const bracket of sorted) {
           if (bracket < hours) {
             lower = bracket;
@@ -2883,11 +2930,13 @@
           const response = await fetch("api/site-content.php", { cache: "no-store" });
           if (!response.ok) throw new Error("touring");
           const data = await response.json();
+          applyWebsiteRates(data.rates || {});
           const schedule = normalizeTourSchedule(data.touring || []);
           if (schedule.length) {
             tourSchedule = schedule;
           }
           syncCityOptions();
+          await updateDurationOptions();
           validateCityForDate({ showMessage: true });
           renderDayCalendar();
         } catch (_error) {

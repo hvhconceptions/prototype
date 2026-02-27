@@ -30,12 +30,52 @@ function format_experience_label(string $experience): string
     return 'GFE';
 }
 
+function normalize_rate_table(array $entries): array
+{
+    $table = [];
+    foreach ($entries as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $hours = isset($entry['hours']) && is_numeric($entry['hours']) ? (float) $entry['hours'] : 0.0;
+        $amount = isset($entry['amount']) && is_numeric($entry['amount']) ? (float) $entry['amount'] : -1.0;
+        if ($hours <= 0 || $amount < 0) {
+            continue;
+        }
+        $table[(string) $hours] = (int) round($amount);
+    }
+    return $table;
+}
+
+function get_site_rate_config(): array
+{
+    static $cached = null;
+    if (is_array($cached)) {
+        return $cached;
+    }
+    $content = read_site_content();
+    $rates = is_array($content['rates'] ?? null) ? $content['rates'] : [];
+
+    $gfe = normalize_rate_table(is_array($rates['gfe'] ?? null) ? $rates['gfe'] : []);
+    $pse = normalize_rate_table(is_array($rates['pse'] ?? null) ? $rates['pse'] : []);
+    $social = is_array($rates['social'] ?? null) ? $rates['social'] : [];
+    $longSession = is_array($rates['long_session'] ?? null) ? $rates['long_session'] : [];
+
+    $cached = [
+        'gfe' => $gfe,
+        'pse' => $pse,
+        'social_amount' => isset($social['amount']) && is_numeric($social['amount']) ? (int) round((float) $social['amount']) : 1000,
+        'long_min' => isset($longSession['min']) && is_numeric($longSession['min']) ? (float) $longSession['min'] : 8.0,
+        'long_max' => isset($longSession['max']) && is_numeric($longSession['max']) ? (float) $longSession['max'] : 12.0,
+        'long_amount' => isset($longSession['amount']) && is_numeric($longSession['amount']) ? (int) round((float) $longSession['amount']) : 3000,
+        'day_plus_amount' => 4000,
+    ];
+    return $cached;
+}
+
 function get_service_addon_amount(string $experience): int
 {
     $normalized = normalize_experience($experience);
-    if ($normalized === 'pse') {
-        return 100;
-    }
     if ($normalized === 'filming') {
         return 500;
     }
@@ -45,9 +85,6 @@ function get_service_addon_amount(string $experience): int
 function get_service_addon_label(string $experience): string
 {
     $normalized = normalize_experience($experience);
-    if ($normalized === 'pse') {
-        return 'PSE add-on';
-    }
     if ($normalized === 'filming') {
         return 'Filming add-on';
     }
@@ -218,29 +255,49 @@ function is_template_generated_block_entry(array $entry): bool
 
 function get_base_rate(float $hours, string $experience, string $rateKey): int
 {
+    unset($rateKey);
     if ($hours <= 0) {
         return 0;
     }
+    $rateConfig = get_site_rate_config();
     $normalized = normalize_experience($experience);
     if ($normalized === 'social') {
-        return 1000;
+        return (int) ($rateConfig['social_amount'] ?? 1000);
     }
     if ($hours >= 24) {
-        return 4000;
+        return (int) ($rateConfig['day_plus_amount'] ?? 4000);
     }
-    if ($hours >= 8 && $hours <= 12) {
-        return 3000;
+    $longMin = (float) ($rateConfig['long_min'] ?? 8.0);
+    $longMax = (float) ($rateConfig['long_max'] ?? 12.0);
+    if ($hours >= $longMin && $hours <= $longMax) {
+        return (int) ($rateConfig['long_amount'] ?? 3000);
     }
 
-    $rates = [
-        0.5 => 400,
-        1.0 => 700,
-        1.5 => 1000,
-        2.0 => 1300,
-        3.0 => 1600,
-        4.0 => 2000,
-        12.0 => 3000,
-    ];
+    $serviceRates = $normalized === 'pse'
+        ? (is_array($rateConfig['pse'] ?? null) && count($rateConfig['pse']) ? $rateConfig['pse'] : ($rateConfig['gfe'] ?? []))
+        : ($rateConfig['gfe'] ?? []);
+    if (!is_array($serviceRates) || !count($serviceRates)) {
+        $serviceRates = [
+            '0.5' => 400,
+            '1' => 700,
+            '1.5' => 1000,
+            '2' => 1300,
+            '3' => 1600,
+            '4' => 2000,
+            '12' => 3000,
+        ];
+    }
+    $rates = [];
+    foreach ($serviceRates as $key => $amount) {
+        $hoursKey = is_numeric($key) ? (float) $key : 0.0;
+        if ($hoursKey > 0) {
+            $rates[$hoursKey] = (int) $amount;
+        }
+    }
+    if (!count($rates)) {
+        return 0;
+    }
+
     $brackets = array_keys($rates);
     sort($brackets);
     foreach ($brackets as $bracket) {

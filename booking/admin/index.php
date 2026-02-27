@@ -926,6 +926,23 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         max-width: 320px;
       }
 
+      .schedule-sync-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .schedule-sync-inline select {
+        min-width: 220px;
+      }
+
+      .schedule-sync-inline .btn {
+        padding: 8px 12px;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+      }
+
       #blockedList,
       #recurringList {
         display: grid;
@@ -2394,14 +2411,16 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             <div class="row schedule-actions">
               <div class="field schedule-sync-field">
                 <label for="scheduleCalendarTarget">Choose calendar</label>
-                <select id="scheduleCalendarTarget">
-                  <option value="">Choose calendar</option>
-                  <option value="google">Google</option>
-                  <option value="samsung">Samsung</option>
-                  <option value="icloud">iCloud</option>
-                </select>
+                <div class="schedule-sync-inline">
+                  <select id="scheduleCalendarTarget">
+                    <option value="">Choose calendar</option>
+                    <option value="google">Google</option>
+                    <option value="samsung">Samsung</option>
+                    <option value="icloud">iCloud</option>
+                  </select>
+                  <button class="btn secondary" id="scheduleCalendarSync" type="button">OK</button>
+                </div>
               </div>
-              <button class="btn secondary" id="scheduleCalendarSync" type="button">OK</button>
               <span class="status" id="scheduleCalendarStatus"></span>
             </div>
           </div>

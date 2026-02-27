@@ -10,6 +10,8 @@ import java.util.Date
 import java.util.Locale
 
 object AppointmentReminderScheduler {
+    private val reminderEventTypes = listOf("prestart", "start", "end")
+
     fun scheduleFromBooking(
         context: Context,
         requestId: String,
@@ -21,8 +23,26 @@ object AppointmentReminderScheduler {
         durationLabel: String? = null
     ) {
         val id = resolveReminderId(requestId, name, preferredDate, preferredTime)
+        // Always reset previous alarms for this booking id before scheduling fresh ones.
+        cancelForRequest(context, id)
+
         val appointmentAt = parseLocalDateTime(preferredDate, preferredTime) ?: return
         val now = System.currentTimeMillis()
+
+        val prestartAt = appointmentAt.time - PRESTART_LEAD_MS
+        if (prestartAt > now) {
+            scheduleAlarm(
+                context = context,
+                id = id,
+                triggerAt = prestartAt,
+                name = name,
+                city = city,
+                preferredDate = preferredDate,
+                preferredTime = preferredTime,
+                eventType = "prestart"
+            )
+        }
+
         if (appointmentAt.time > now) {
             scheduleAlarm(
                 context = context,
@@ -52,6 +72,27 @@ object AppointmentReminderScheduler {
                 preferredTime = preferredTime,
                 eventType = "end"
             )
+        }
+    }
+
+    fun cancelForRequest(context: Context, requestId: String, name: String = "", preferredDate: String = "", preferredTime: String = "") {
+        val id = resolveReminderId(requestId, name, preferredDate, preferredTime)
+        if (id.isBlank()) return
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        for (eventType in reminderEventTypes) {
+            val intent = Intent(context, AppointmentReminderReceiver::class.java).apply {
+                putExtra("request_id", id)
+                putExtra("event_type", eventType)
+            }
+            val requestCode = "$id|$eventType".hashCode()
+            val pending = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pending)
+            pending.cancel()
         }
     }
 
@@ -147,4 +188,6 @@ object AppointmentReminderScheduler {
         }
         return totalMinutes.coerceAtLeast(0)
     }
+
+    private const val PRESTART_LEAD_MS = 30L * 60L * 1000L
 }

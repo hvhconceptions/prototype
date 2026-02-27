@@ -268,7 +268,15 @@ class MainActivity : AppCompatActivity() {
         }
         Thread {
             try {
-                val entries = fetchUpcomingBookings()
+                val snapshot = fetchReminderSyncSnapshot()
+                for (requestId in snapshot.cancelIds) {
+                    AppointmentReminderScheduler.cancelForRequest(
+                        context = this,
+                        requestId = requestId
+                    )
+                }
+
+                val entries = snapshot.confirmedEntries
                 for (entry in entries) {
                     AppointmentReminderScheduler.scheduleFromBooking(
                         context = this,
@@ -288,7 +296,7 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun fetchUpcomingBookings(): List<ReminderBooking> {
+    private fun fetchReminderSyncSnapshot(): ReminderSyncSnapshot {
         val url = URL(REQUESTS_ENDPOINT)
         val connection = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
@@ -300,39 +308,51 @@ class MainActivity : AppCompatActivity() {
         return try {
             val code = connection.responseCode
             if (code !in 200..299) {
-                emptyList()
+                ReminderSyncSnapshot(emptyList(), emptySet())
             } else {
                 val body = connection.inputStream.use { stream ->
                     BufferedReader(InputStreamReader(stream)).use { it.readText() }
                 }
-                parseReminderBookings(body)
+                parseReminderSnapshot(body)
             }
         } finally {
             connection.disconnect()
         }
     }
 
-    private fun parseReminderBookings(rawJson: String): List<ReminderBooking> {
+    private fun parseReminderSnapshot(rawJson: String): ReminderSyncSnapshot {
         val json = JSONObject(rawJson)
         val requests = json.optJSONArray("requests") ?: JSONArray()
         val list = mutableListOf<ReminderBooking>()
+        val cancelIds = linkedSetOf<String>()
         for (i in 0 until requests.length()) {
             val item = requests.optJSONObject(i) ?: continue
+            val requestId = item.optString("id", "").trim()
             val status = item.optString("status", "").trim().lowercase()
             val paymentStatus = item.optString("payment_status", "").trim().lowercase()
+            if (status == "declined" || status == "cancelled" || status == "blacklisted") {
+                if (requestId.isNotBlank()) cancelIds.add(requestId)
+                continue
+            }
+
             val isConfirmed = status == "accepted" || status == "paid" || paymentStatus == "paid"
-            if (!isConfirmed) continue
+            if (!isConfirmed) {
+                if (requestId.isNotBlank()) cancelIds.add(requestId)
+                continue
+            }
 
             val preferredDate = item.optString("preferred_date", "").trim()
             val preferredTime = item.optString("preferred_time", "").trim()
-            if (preferredDate.isBlank() || preferredTime.isBlank()) continue
+            if (preferredDate.isBlank() || preferredTime.isBlank()) {
+                if (requestId.isNotBlank()) cancelIds.add(requestId)
+                continue
+            }
 
-            val id = item.optString("id", "").trim()
             val name = item.optString("name", "").trim()
             val city = item.optString("city", "").trim()
             list.add(
                 ReminderBooking(
-                    id = id,
+                    id = requestId,
                     name = name,
                     city = city,
                     preferredDate = preferredDate,
@@ -342,7 +362,7 @@ class MainActivity : AppCompatActivity() {
                 )
             )
         }
-        return list
+        return ReminderSyncSnapshot(list, cancelIds)
     }
 
     override fun onBackPressed() {
@@ -473,5 +493,10 @@ class MainActivity : AppCompatActivity() {
         val preferredTime: String,
         val durationHours: String,
         val durationLabel: String
+    )
+
+    private data class ReminderSyncSnapshot(
+        val confirmedEntries: List<ReminderBooking>,
+        val cancelIds: Set<String>
     )
 }

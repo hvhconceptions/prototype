@@ -18,9 +18,13 @@ object NotificationState {
         return prefs.getInt(KEY_UNREAD_COUNT, 0)
     }
 
+    fun setUnread(context: Context, count: Int) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putInt(KEY_UNREAD_COUNT, count.coerceAtLeast(0)).apply()
+    }
+
     fun clearUnread(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putInt(KEY_UNREAD_COUNT, 0).apply()
     }
 }
-

@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
@@ -25,14 +26,13 @@ class PushMessagingService : FirebaseMessagingService() {
         val title = message.notification?.title ?: "New booking"
         val body = message.notification?.body ?: "Open the admin panel to review."
         val status = message.data["status"]?.trim()?.lowercase(Locale.US).orEmpty()
-        val paymentStatus = message.data["payment_status"]?.trim()?.lowercase(Locale.US).orEmpty()
-        val isConfirmed = status == "accepted" || status == "paid" || paymentStatus == "paid"
-        val shouldCountUnread = !isConfirmed
-        val unreadCount = if (shouldCountUnread) {
+        val shouldCountUnread = status == "pending"
+        val unreadCount = fetchPendingCount() ?: if (shouldCountUnread) {
             NotificationState.incrementUnread(this)
         } else {
             NotificationState.getUnread(this)
         }
+        NotificationState.setUnread(this, unreadCount)
         val overviewLines = getOverviewLines()
         showNotification(title, body, unreadCount, overviewLines, shouldCountUnread)
     }
@@ -166,6 +166,50 @@ class PushMessagingService : FirebaseMessagingService() {
                 durationHours = durationHours,
                 durationLabel = durationLabel
             )
+        } else if (entryId.isNotBlank()) {
+            AppointmentReminderScheduler.cancelForRequest(
+                context = this,
+                requestId = entryId,
+                name = name,
+                preferredDate = preferredDate,
+                preferredTime = preferredTime
+            )
+        }
+    }
+
+    private fun fetchPendingCount(): Int? {
+        return try {
+            val url = URL(REQUESTS_ENDPOINT)
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 7000
+                readTimeout = 9000
+                setRequestProperty("Accept", "application/json")
+                setRequestProperty("X-Admin-Key", ADMIN_API_KEY)
+            }
+            try {
+                val code = connection.responseCode
+                if (code !in 200..299) {
+                    null
+                } else {
+                    val body = connection.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(body)
+                    val requests = json.optJSONArray("requests") ?: return 0
+                    var pending = 0
+                    for (i in 0 until requests.length()) {
+                        val item = requests.optJSONObject(i) ?: continue
+                        val rawStatus = item.optString("status", "").trim().lowercase(Locale.US)
+                        if (rawStatus == "pending") {
+                            pending += 1
+                        }
+                    }
+                    pending
+                }
+            } finally {
+                connection.disconnect()
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -186,5 +230,7 @@ class PushMessagingService : FirebaseMessagingService() {
         private const val CHANNEL_ID = "booking_alerts_v2"
         const val BADGE_NOTIFICATION_ID = 1101
         private const val TOKEN_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/push-token.php"
+        private const val REQUESTS_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/requests.php"
+        private const val ADMIN_API_KEY = "Simo.666$$$"
     }
 }

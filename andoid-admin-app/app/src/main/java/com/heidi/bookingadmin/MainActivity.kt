@@ -87,7 +87,10 @@ class MainActivity : AppCompatActivity() {
 
         setupWebView()
         setupSwipeRefresh()
-        loadAdminUrl(forceFresh = true)
+        val restoredState = savedInstanceState?.let { webView.restoreState(it) != null } ?: false
+        if (!restoredState) {
+            loadLastVisitedUrlOrDefault()
+        }
         refreshUnreadBadge()
 
         requestNotificationPermissionIfNeeded()
@@ -170,6 +173,7 @@ class MainActivity : AppCompatActivity() {
                 offlineMessage.visibility = View.GONE
                 webView.visibility = View.VISIBLE
                 swipeRefresh.isEnabled = !webView.canScrollVertically(-1)
+                persistLastVisitedUrl(url)
             }
         }
 
@@ -359,7 +363,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        loadAdminUrl(forceFresh = true)
+        if (webView.url.isNullOrBlank()) {
+            loadLastVisitedUrlOrDefault()
+        }
         NotificationState.clearUnread(this)
         NotificationManagerCompat.from(this).cancel(PushMessagingService.BADGE_NOTIFICATION_ID)
         refreshUnreadBadge()
@@ -368,8 +374,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        persistLastVisitedUrl(webView.url)
         super.onPause()
         stopPeriodicReminderSync()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        webView.saveState(outState)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
@@ -379,12 +391,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadAdminUrl(forceFresh: Boolean = false) {
-        val url = if (forceFresh) {
-            "$ADMIN_URL?v=${System.currentTimeMillis()}"
+        val currentUrl = webView.url?.takeIf { it.startsWith("http") }
+        val baseUrl = currentUrl ?: ADMIN_URL
+        val targetUrl = if (forceFresh) appendCacheBust(baseUrl) else baseUrl
+        webView.loadUrl(targetUrl)
+    }
+
+    private fun loadLastVisitedUrlOrDefault() {
+        val prefs = getSharedPreferences(APP_PREFS_NAME, MODE_PRIVATE)
+        val savedUrl = prefs.getString(KEY_LAST_ADMIN_URL, null)
+        if (!savedUrl.isNullOrBlank() && savedUrl.startsWith("http")) {
+            webView.loadUrl(savedUrl)
         } else {
-            ADMIN_URL
+            loadAdminUrl(forceFresh = false)
         }
-        webView.loadUrl(url)
+    }
+
+    private fun persistLastVisitedUrl(url: String?) {
+        if (url.isNullOrBlank() || !url.startsWith("http")) return
+        getSharedPreferences(APP_PREFS_NAME, MODE_PRIVATE)
+            .edit()
+            .putString(KEY_LAST_ADMIN_URL, url)
+            .apply()
+    }
+
+    private fun appendCacheBust(url: String): String {
+        val uri = Uri.parse(url)
+        val builder = uri.buildUpon().clearQuery()
+        for (name in uri.queryParameterNames) {
+            if (name == "v") continue
+            for (value in uri.getQueryParameters(name)) {
+                builder.appendQueryParameter(name, value)
+            }
+        }
+        builder.appendQueryParameter("v", System.currentTimeMillis().toString())
+        return builder.build().toString()
     }
 
     private fun refreshUnreadBadge() {
@@ -421,6 +462,7 @@ class MainActivity : AppCompatActivity() {
         private const val REMINDER_SYNC_INTERVAL_MS = 60_000L
         private const val APP_PREFS_NAME = "booking_admin_app"
         private const val KEY_EXACT_ALARM_PROMPTED = "exact_alarm_prompted"
+        private const val KEY_LAST_ADMIN_URL = "last_admin_url"
     }
 
     private data class ReminderBooking(

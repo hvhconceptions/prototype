@@ -943,6 +943,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         white-space: nowrap;
       }
 
+      .schedule-calendar-selection {
+        font-size: 0.8rem;
+        color: #6b173f;
+        margin-top: 4px;
+      }
+
       #blockedList,
       #recurringList {
         display: grid;
@@ -1397,6 +1403,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       .calendar-slot.booking.paid {
         box-shadow: inset 0 0 0 2px rgba(26, 127, 79, 0.35);
+      }
+
+      .calendar-slot.booking.selected-booking {
+        box-shadow: inset 0 0 0 2px #2a0d1a, 0 0 0 2px rgba(255, 255, 255, 0.72);
       }
 
       .calendar-slot.maybe {
@@ -2420,6 +2430,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                   </select>
                   <button class="btn secondary" id="scheduleCalendarSync" type="button">OK</button>
                 </div>
+                <div class="schedule-calendar-selection" id="scheduleCalendarSelection">Selected: none (click a booking block in grid)</div>
               </div>
               <span class="status" id="scheduleCalendarStatus"></span>
             </div>
@@ -2612,6 +2623,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const toggleBlockedListBtn = document.getElementById("toggleBlockedList");
       const scheduleCalendarTarget = document.getElementById("scheduleCalendarTarget");
       const scheduleCalendarSyncBtn = document.getElementById("scheduleCalendarSync");
+      const scheduleCalendarSelection = document.getElementById("scheduleCalendarSelection");
       const scheduleCalendarStatus = document.getElementById("scheduleCalendarStatus");
       const refreshBtn = document.getElementById("refreshRequests");
       const statusFilter = document.getElementById("statusFilter");
@@ -4136,6 +4148,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       let tourPartners = [];
       let citySchedules = [];
       let autoTemplateBlocksEnabled = false;
+      let selectedGridBookingId = "";
       let selectedRecurringIndex = -1;
       let autoSaveTimer = null;
       let autoSaveInFlight = false;
@@ -4747,6 +4760,35 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         }, 40);
       };
 
+      const findRequestById = (requestId) =>
+        latestRequests.find((item) => String(item?.id || "").trim() === String(requestId || "").trim()) || null;
+
+      const updateScheduleCalendarSelectionLabel = () => {
+        if (!scheduleCalendarSelection) return;
+        if (!selectedGridBookingId) {
+          scheduleCalendarSelection.textContent = "Selected: none (click a booking block in grid)";
+          return;
+        }
+        const item = findRequestById(selectedGridBookingId);
+        if (!item) {
+          scheduleCalendarSelection.textContent = "Selected: booking not found, refresh requests";
+          return;
+        }
+        const name = String(item.name || "Client").trim() || "Client";
+        const date = String(item.preferred_date || "").trim();
+        const time = String(item.preferred_time || "").trim();
+        const city = String(item.city || "").trim();
+        const when = [date, time].filter(Boolean).join(" ");
+        const parts = [name, when, city].filter(Boolean);
+        scheduleCalendarSelection.textContent = `Selected: ${parts.join(" - ")}`;
+      };
+
+      const selectGridBookingForCalendar = (bookingId) => {
+        const normalized = String(bookingId || "").trim();
+        selectedGridBookingId = normalized;
+        updateScheduleCalendarSelectionLabel();
+      };
+
       const getBookingGroupId = (slot) => {
         if (!slot) return "";
         const bookingId = String(slot.booking_id || "").trim();
@@ -4972,6 +5014,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
                 if (entry.booking_status === "paid") {
                   slotButton.classList.add("paid");
                 }
+                const bookingId = String(entry.booking_id || "").trim();
+                if (bookingId && bookingId === selectedGridBookingId) {
+                  slotButton.classList.add("selected-booking");
+                }
                 const key = getBookingGroupId(entry);
                 const startKey = key ? bookingStartMap[key] : "";
                 if (key && startKey === `${entry.date} ${entry.start}`) {
@@ -5014,7 +5060,11 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               if (entry && entry.kind === "booking") {
                 const bookingId = String(entry.booking_id || "").trim();
                 if (bookingId) {
-                  focusRequestCardById(bookingId);
+                  selectGridBookingForCalendar(bookingId);
+                  if (scheduleCalendarStatus) {
+                    scheduleCalendarStatus.textContent = "Booking selected for calendar sync.";
+                  }
+                  renderCalendarView();
                 }
                 return;
               }
@@ -6987,6 +7037,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           if (requestToken !== loadRequestsToken) return;
           requestsList.innerHTML = "";
           latestRequests = requests;
+          if (selectedGridBookingId && !findRequestById(selectedGridBookingId)) {
+            selectedGridBookingId = "";
+          }
+          updateScheduleCalendarSelectionLabel();
           renderNotifications(requests);
           requestSlots = buildConfirmedSlotsFromRequests(requests);
           maybeSlots = buildMaybeSlotsFromRequests(requests);
@@ -7223,6 +7277,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           }
         } catch (_error) {
           latestRequests = [];
+          selectedGridBookingId = "";
+          updateScheduleCalendarSelectionLabel();
           requestSlots = [];
           maybeSlots = [];
           renderCalendarView();
@@ -7458,23 +7514,19 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             scheduleCalendarStatus.textContent = "Choose a calendar first.";
             return;
           }
-          const range = getBlockRangeFromForm();
-          if (range.error) {
-            scheduleCalendarStatus.textContent = range.error;
+          if (!selectedGridBookingId) {
+            scheduleCalendarStatus.textContent = "Click a customer booking block in the calendar grid first.";
             return;
           }
-          const tempItem = {
-            id: `block-${Date.now()}`,
-            name: "Blocked time",
-            phone: "",
-            city: getTourCityForDate(range.startDate),
-            preferred_date: range.startDate,
-            preferred_time: minutesToTime(range.startMinutes),
-            duration_hours: Math.max(0.5, (range.endStamp - range.startStamp) / 60),
-            tour_timezone: getActiveTimezone(),
-          };
+          const selectedItem = findRequestById(selectedGridBookingId);
+          if (!selectedItem) {
+            scheduleCalendarStatus.textContent = "Selected booking no longer exists. Refresh requests and pick again.";
+            selectedGridBookingId = "";
+            updateScheduleCalendarSelectionLabel();
+            return;
+          }
           if (target === "google") {
-            const calendarUrl = buildGoogleCalendarUrl(tempItem);
+            const calendarUrl = buildGoogleCalendarUrl(selectedItem);
             if (!calendarUrl) {
               scheduleCalendarStatus.textContent = "Unable to build calendar link.";
               return;
@@ -7486,11 +7538,11 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             return;
           }
           if (target === "samsung") {
-            downloadIcsFile(tempItem, "samsung");
+            downloadIcsFile(selectedItem, "samsung");
             return;
           }
           if (target === "icloud") {
-            downloadIcsFile(tempItem, "icloud");
+            downloadIcsFile(selectedItem, "icloud");
           }
         });
       }
@@ -7625,6 +7677,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       applyScheduleMenuConfigToUi();
       applyServicesConfigToUi();
       updatePhotoModeUi();
+      updateScheduleCalendarSelectionLabel();
       closeAdminMenu();
       if (notifPanel) {
         notifPanel.classList.add("hidden");

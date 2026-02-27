@@ -11,6 +11,15 @@ function append_history_entry(array &$request, string $action, string $summary):
     if (!is_array($history)) {
         $history = [];
     }
+    $last = end($history);
+    if (is_array($last)) {
+        $lastAction = (string) ($last['action'] ?? '');
+        $lastSource = (string) ($last['source'] ?? '');
+        $lastSummary = (string) ($last['summary'] ?? '');
+        if ($lastAction === $action && $lastSource === 'admin_status' && $lastSummary === $summary) {
+            return;
+        }
+    }
     $history[] = [
         'at' => gmdate('c'),
         'action' => $action,
@@ -18,6 +27,50 @@ function append_history_entry(array &$request, string $action, string $summary):
         'summary' => $summary,
     ];
     $request['history'] = $history;
+}
+
+function should_skip_duplicate_status_update(array $request, string $status, string $reason, string $paymentLink): bool
+{
+    $existingStatus = strtolower(trim((string) ($request['status'] ?? 'pending')));
+    $existingPayment = strtolower(trim((string) ($request['payment_status'] ?? '')));
+    if ($existingStatus === 'paid') {
+        $existingStatus = 'accepted';
+        $existingPayment = 'paid';
+    }
+
+    if ($status === 'declined') {
+        return $existingStatus === 'declined'
+            && trim((string) ($request['decline_reason'] ?? '')) === $reason;
+    }
+    if ($status === 'cancelled') {
+        return $existingStatus === 'cancelled'
+            && trim((string) ($request['cancel_reason'] ?? '')) === $reason;
+    }
+    if ($status === 'blacklisted') {
+        return $existingStatus === 'blacklisted'
+            && trim((string) ($request['blacklist_reason'] ?? '')) === $reason;
+    }
+    if ($status === 'maybe') {
+        return $existingStatus === 'maybe'
+            && $existingPayment === ''
+            && trim((string) ($request['maybe_reason'] ?? '')) === $reason;
+    }
+    if ($status === 'pending') {
+        return $existingStatus === 'pending' && $existingPayment === '';
+    }
+    if ($status === 'paid') {
+        return $existingStatus === 'accepted' && $existingPayment === 'paid';
+    }
+    if ($status === 'accepted') {
+        if ($existingStatus !== 'accepted') {
+            return false;
+        }
+        if ($paymentLink !== '' && trim((string) ($request['payment_link'] ?? '')) !== $paymentLink) {
+            return false;
+        }
+        return true;
+    }
+    return $existingStatus === $status;
 }
 
 function resolve_tour_timezone(string $value): DateTimeZone
@@ -235,6 +288,7 @@ if (in_array($status, ['declined', 'cancelled', 'blacklisted'], true) && $reason
 $store = read_json_file(DATA_DIR . '/requests.json', ['requests' => []]);
 $requests = $store['requests'] ?? [];
 $found = false;
+$noop = false;
 $removeIndex = null;
 $declinedPath = DATA_DIR . '/declined.json';
 $declinedStore = read_json_file($declinedPath, ['requests' => []]);
@@ -246,6 +300,12 @@ if (!is_array($declinedRequests)) {
 foreach ($requests as $index => &$request) {
     if (($request['id'] ?? '') !== $id) {
         continue;
+    }
+
+    if (should_skip_duplicate_status_update($request, $status, $reason, (string) $paymentLink)) {
+        $found = true;
+        $noop = true;
+        break;
     }
 
     $existingStatus = (string) ($request['status'] ?? 'pending');
@@ -453,6 +513,10 @@ if ($removeIndex !== null) {
 
 if (!$found) {
     json_response(['error' => 'Request not found'], 404);
+}
+
+if ($noop) {
+    json_response(['ok' => true, 'noop' => true]);
 }
 
 $store['requests'] = $requests;

@@ -611,12 +611,23 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         gap: 8px;
       }
 
+      .menu-list-row.has-third {
+        grid-template-columns: minmax(0, 1fr) minmax(88px, 120px) minmax(0, 1fr) auto;
+      }
+
       .menu-list-row input {
         min-width: 0;
       }
 
+      .menu-row-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
       .menu-list-row .btn {
         padding: 8px 10px;
+        white-space: nowrap;
       }
 
       .menu-avatar-preview {
@@ -879,6 +890,61 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         flex-wrap: wrap;
         gap: 12px;
         align-items: center;
+      }
+
+      .schedule-blocks-wrap {
+        margin-top: 18px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .schedule-block-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .schedule-block-title {
+        margin: 0 0 10px;
+        font-size: 0.82rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6b173f;
+      }
+
+      .schedule-block-grid {
+        gap: 12px;
+      }
+
+      .schedule-actions {
+        margin-top: 10px;
+      }
+
+      .schedule-sync-field {
+        min-width: 220px;
+        max-width: 320px;
+      }
+
+      #blockedList,
+      #recurringList {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .block-list-row,
+      .recurring-list-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+        color: #6b173f;
       }
 
       #recurringDays label {
@@ -2122,13 +2188,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         </div>
         <p class="hint">This saves admin service presets so you can organize prices quickly.</p>
         <div class="field">
-          <label for="serviceNameInput">Name</label>
-          <input id="serviceNameInput" type="text" placeholder="ex: Heidi Van Horny" />
+          <label for="serviceNameInput" id="serviceNameLabel">Service name</label>
+          <input id="serviceNameInput" type="text" placeholder="Service name" />
         </div>
         <div class="field">
-          <label>Price per duration</label>
+          <label id="serviceDurationLabel">Price + service picture</label>
           <div id="serviceDurationList" class="menu-list"></div>
-          <button class="btn secondary" id="addServiceDuration" type="button">Add duration</button>
         </div>
         <div class="field">
           <label>Service package (comma separated) + price</label>
@@ -2254,77 +2319,94 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         <div class="calendar-legend">
           <span class="legend-item"><span class="legend-dot blocked"></span><span id="legendBlockedLabel">Blocked</span></span>
           <span class="legend-item"><span class="legend-dot booking"></span><span id="legendBookingLabel">Booking</span></span>
-          <span class="legend-item"><span class="legend-dot outcall"></span><span id="legendOutcallLabel">Outcall</span></span>
+          <span class="legend-item"><span class="legend-dot outcall"></span><span id="legendOutcallLabel">Housecall</span></span>
           <span class="legend-item"><span class="legend-dot paid"></span><span id="legendPaidLabel">Paid</span></span>
           <span class="legend-item"><span class="legend-dot maybe"></span><span id="legendMaybeLabel">Maybe</span></span>
           <span class="legend-item"><span class="legend-dot city"></span><span id="legendCityLabel">City marker</span></span>
         </div>
+        <div class="schedule-blocks-wrap">
+          <div class="schedule-block-card">
+            <h3 class="schedule-block-title">Block date</h3>
+            <div class="grid schedule-block-grid">
+              <div class="field">
+                <label for="blockedDate">From day</label>
+                <input id="blockedDate" type="date" />
+              </div>
+              <div class="field">
+                <label for="blockedStart">From time</label>
+                <input id="blockedStart" type="time" />
+              </div>
+              <div class="field">
+                <label for="blockedEndDate">To day</label>
+                <input id="blockedEndDate" type="date" />
+              </div>
+              <div class="field">
+                <label for="blockedEnd">To time</label>
+                <input id="blockedEnd" type="time" />
+              </div>
+              <div class="field span-2">
+                <label for="blockedReason">Reason</label>
+                <input id="blockedReason" type="text" placeholder="ex: vacation" />
+              </div>
+            </div>
+            <div class="row schedule-actions">
+              <button class="btn secondary" id="addBlocked" type="button">Add block</button>
+              <button class="btn secondary" id="editBlocked" type="button">Edit block</button>
+              <button class="btn ghost" id="deleteBlocked" type="button">Delete block</button>
+              <span class="status" id="blockedStatus"></span>
+            </div>
+          </div>
 
-        <div class="grid">
-          <div class="field">
-            <label for="blockedDate">Block date</label>
-            <input id="blockedDate" type="date" />
+          <div class="schedule-block-card">
+            <h3 class="schedule-block-title">Recurring block</h3>
+            <div class="grid schedule-block-grid">
+              <div class="field span-2">
+                <label>Checked day(s)</label>
+                <div id="recurringDays"></div>
+              </div>
+              <div class="field">
+                <label for="recurringAllDay">Full day</label>
+                <input id="recurringAllDay" type="checkbox" />
+              </div>
+              <div class="field">
+                <label for="recurringStart">From time</label>
+                <input id="recurringStart" type="time" />
+              </div>
+              <div class="field">
+                <label for="recurringEnd">To time</label>
+                <input id="recurringEnd" type="time" />
+              </div>
+              <div class="field span-2">
+                <label for="recurringReason">Reason</label>
+                <input id="recurringReason" type="text" placeholder="ex: lunch break" />
+              </div>
+            </div>
+            <div class="row schedule-actions">
+              <button class="btn secondary" id="addRecurring" type="button">Add recurring</button>
+              <button class="btn secondary" id="editRecurring" type="button">Edit recurring</button>
+              <button class="btn ghost" id="deleteRecurring" type="button">Delete recurring</button>
+              <span class="status" id="recurringStatus"></span>
+            </div>
           </div>
-          <div class="field">
-            <label for="blockedStart">Start</label>
-            <input id="blockedStart" type="time" />
-          </div>
-          <div class="field">
-            <label for="blockedEnd">End</label>
-            <input id="blockedEnd" type="time" />
-          </div>
-          <div class="field span-2">
-            <label for="blockedReason">Reason</label>
-            <input id="blockedReason" type="text" placeholder="Optional reason" />
-          </div>
-        </div>
-        <div class="row">
-          <button class="btn secondary" id="addBlocked" type="button">Block slot</button>
-          <button class="btn ghost" id="blockFullDay" type="button">Block full day</button>
-          <span class="status" id="blockedStatus"></span>
-        </div>
-        <div class="grid">
-          <div class="field">
-            <label for="blockedFullRangeStart">Full-day range start</label>
-            <input id="blockedFullRangeStart" type="date" />
-          </div>
-          <div class="field">
-            <label for="blockedFullRangeEnd">Full-day range end</label>
-            <input id="blockedFullRangeEnd" type="date" />
-          </div>
-        </div>
-        <div class="row">
-          <button class="btn ghost" id="blockFullRange" type="button">Block full range</button>
-          <button class="btn ghost" id="toggleBlockedList" type="button">Show blocked slots</button>
-        </div>
-        <div id="blockedList" class="hidden"></div>
 
-        <div class="grid">
-          <div class="field span-2">
-            <label>Recurring days</label>
-            <div id="recurringDays"></div>
-          </div>
-          <div class="field">
-            <label for="recurringAllDay">All day</label>
-            <input id="recurringAllDay" type="checkbox" />
-          </div>
-          <div class="field">
-            <label for="recurringStart">Recurring start</label>
-            <input id="recurringStart" type="time" />
-          </div>
-          <div class="field">
-            <label for="recurringEnd">Recurring end</label>
-            <input id="recurringEnd" type="time" />
-          </div>
-          <div class="field span-2">
-            <label for="recurringReason">Recurring reason</label>
-            <input id="recurringReason" type="text" placeholder="Optional reason" />
+          <div class="schedule-block-card">
+            <h3 class="schedule-block-title">Synchronize to calendar</h3>
+            <div class="row schedule-actions">
+              <div class="field schedule-sync-field">
+                <label for="scheduleCalendarTarget">Choose calendar</label>
+                <select id="scheduleCalendarTarget">
+                  <option value="">Choose calendar</option>
+                  <option value="google">Google</option>
+                  <option value="samsung">Samsung</option>
+                  <option value="icloud">iCloud</option>
+                </select>
+              </div>
+              <button class="btn secondary" id="scheduleCalendarSync" type="button">OK</button>
+              <span class="status" id="scheduleCalendarStatus"></span>
+            </div>
           </div>
         </div>
-        <div class="row">
-          <button class="btn secondary" id="addRecurring" type="button">Add recurring block</button>
-          <span class="status" id="recurringStatus"></span>
-        </div>
+        <div id="blockedList"></div>
         <div id="recurringList"></div>
       </section>
 
@@ -2490,24 +2572,28 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const calendarFields = document.querySelectorAll("[data-calendar-field]");
       const blockedDate = document.getElementById("blockedDate");
       const blockedStart = document.getElementById("blockedStart");
+      const blockedEndDate = document.getElementById("blockedEndDate");
       const blockedEnd = document.getElementById("blockedEnd");
       const blockedReason = document.getElementById("blockedReason");
-      const blockedFullRangeStart = document.getElementById("blockedFullRangeStart");
-      const blockedFullRangeEnd = document.getElementById("blockedFullRangeEnd");
       const blockedStatus = document.getElementById("blockedStatus");
       const blockedList = document.getElementById("blockedList");
       const addBlockedBtn = document.getElementById("addBlocked");
-      const blockFullDayBtn = document.getElementById("blockFullDay");
-      const blockFullRangeBtn = document.getElementById("blockFullRange");
+      const editBlockedBtn = document.getElementById("editBlocked");
+      const deleteBlockedBtn = document.getElementById("deleteBlocked");
       const recurringDays = document.getElementById("recurringDays");
       const recurringAllDay = document.getElementById("recurringAllDay");
       const recurringStart = document.getElementById("recurringStart");
       const recurringEnd = document.getElementById("recurringEnd");
       const recurringReason = document.getElementById("recurringReason");
       const addRecurringBtn = document.getElementById("addRecurring");
+      const editRecurringBtn = document.getElementById("editRecurring");
+      const deleteRecurringBtn = document.getElementById("deleteRecurring");
       const recurringStatus = document.getElementById("recurringStatus");
       const recurringList = document.getElementById("recurringList");
       const toggleBlockedListBtn = document.getElementById("toggleBlockedList");
+      const scheduleCalendarTarget = document.getElementById("scheduleCalendarTarget");
+      const scheduleCalendarSyncBtn = document.getElementById("scheduleCalendarSync");
+      const scheduleCalendarStatus = document.getElementById("scheduleCalendarStatus");
       const refreshBtn = document.getElementById("refreshRequests");
       const statusFilter = document.getElementById("statusFilter");
       const statusFilterTabs = document.getElementById("statusFilterTabs");
@@ -2592,7 +2678,6 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const serviceDurationList = document.getElementById("serviceDurationList");
       const servicePackageList = document.getElementById("servicePackageList");
       const serviceAddonList = document.getElementById("serviceAddonList");
-      const addServiceDurationBtn = document.getElementById("addServiceDuration");
       const addServicePackageBtn = document.getElementById("addServicePackage");
       const addServiceAddonBtn = document.getElementById("addServiceAddon");
       const saveServicesConfigBtn = document.getElementById("saveServicesConfig");
@@ -2786,10 +2871,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_samsung_calendar: "Samsung Calendar (.ics)",
           legend_blocked: "Blocked",
           legend_booking: "Booking",
-          legend_outcall: "Outcall",
+          legend_outcall: "Housecall",
           legend_paid: "Paid",
           legend_maybe: "Maybe",
           legend_city: "City marker",
+          service_name_label: "Service name",
+          service_name_placeholder: "Service name",
+          service_price_picture_label: "Price + service picture",
+          service_picture_placeholder: "Service picture",
+          add_service: "Add service",
         },
         fr: {
           admin_title: "BombaCLOUD!",
@@ -2967,10 +3057,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           action_samsung_calendar: "Samsung Calendar (.ics)",
           legend_blocked: "Bloque",
           legend_booking: "Reservation",
-          legend_outcall: "Outcall",
+          legend_outcall: "Housecall",
           legend_paid: "Paye",
           legend_maybe: "Peut-etre",
           legend_city: "Repere ville",
+          service_name_label: "Nom du service",
+          service_name_placeholder: "Nom du service",
+          service_price_picture_label: "Prix + photo du service",
+          service_picture_placeholder: "Photo du service",
+          add_service: "Ajouter service",
         },
       };
       const formatTemplate = (template, vars = {}) =>
@@ -3366,22 +3461,71 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         menuScheduleStatus.textContent = "Schedule applied.";
       };
 
-      const createMenuListRow = (container, firstPlaceholder, secondPlaceholder = "Price", firstValue = "", secondValue = "") => {
+      const createMenuListRow = (
+        container,
+        firstPlaceholder,
+        secondPlaceholder = "Price",
+        firstValue = "",
+        secondValue = "",
+        options = {}
+      ) => {
         if (!container) return null;
+        const config = {
+          thirdPlaceholder: "",
+          thirdValue: "",
+          showAddButton: false,
+          addButtonLabel: "Add",
+          keepAtLeastOne: false,
+          ...options,
+        };
         const row = document.createElement("div");
-        row.className = "menu-list-row";
+        row.className = `menu-list-row${config.thirdPlaceholder ? " has-third" : ""}`;
+        const thirdInputHtml = config.thirdPlaceholder
+          ? `<input type="text" data-third placeholder="${config.thirdPlaceholder}" value="${String(config.thirdValue || "")}" />`
+          : "";
+        const addButtonHtml = config.showAddButton
+          ? `<button class="btn secondary" type="button" data-add-row>${config.addButtonLabel}</button>`
+          : "";
         row.innerHTML = `
           <input type="text" data-first placeholder="${firstPlaceholder}" value="${String(firstValue || "")}" />
           <input type="number" data-second placeholder="${secondPlaceholder}" value="${String(secondValue || "")}" min="0" step="1" />
-          <button class="btn ghost" type="button" data-remove-row>Remove</button>
+          ${thirdInputHtml}
+          <div class="menu-row-actions">
+            <button class="btn ghost" type="button" data-remove-row>${t("remove")}</button>
+            ${addButtonHtml}
+          </div>
         `;
         const removeBtn = row.querySelector("[data-remove-row]");
         if (removeBtn) {
-          removeBtn.addEventListener("click", () => row.remove());
+          removeBtn.addEventListener("click", () => {
+            const allRows = Array.from(container.querySelectorAll(".menu-list-row"));
+            if (config.keepAtLeastOne && allRows.length <= 1) {
+              row.querySelectorAll("input").forEach((input) => {
+                input.value = "";
+              });
+              return;
+            }
+            row.remove();
+          });
+        }
+        const addBtn = row.querySelector("[data-add-row]");
+        if (addBtn) {
+          addBtn.addEventListener("click", () => {
+            createMenuListRow(container, firstPlaceholder, secondPlaceholder, "", "", config);
+          });
         }
         container.appendChild(row);
         return row;
       };
+
+      const createDurationServiceRow = (item = {}) =>
+        createMenuListRow(serviceDurationList, "Service option (ex: 1h)", "Price", item.first, item.second, {
+          thirdPlaceholder: t("service_picture_placeholder"),
+          thirdValue: item.third || "",
+          showAddButton: true,
+          addButtonLabel: t("add_service"),
+          keepAtLeastOne: true,
+        });
 
       const readMenuRows = (container) => {
         if (!container) return [];
@@ -3389,10 +3533,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           .map((row) => {
             const first = String(row.querySelector("[data-first]")?.value || "").trim();
             const second = Number(row.querySelector("[data-second]")?.value || 0);
-            return {
+            const third = String(row.querySelector("[data-third]")?.value || "").trim();
+            const item = {
               first,
               second: Number.isFinite(second) ? second : 0,
             };
+            if (third) {
+              item.third = third;
+            }
+            return item;
           })
           .filter((item) => item.first);
       };
@@ -3411,9 +3560,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         if (serviceDurationList) serviceDurationList.innerHTML = "";
         if (servicePackageList) servicePackageList.innerHTML = "";
         if (serviceAddonList) serviceAddonList.innerHTML = "";
-        (Array.isArray(data.durations) ? data.durations : []).forEach((item) =>
-          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price", item.first, item.second)
-        );
+        (Array.isArray(data.durations) ? data.durations : []).forEach((item) => createDurationServiceRow(item));
         (Array.isArray(data.packages) ? data.packages : []).forEach((item) =>
           createMenuListRow(servicePackageList, "Package entries (comma)", "Price", item.first, item.second)
         );
@@ -3421,7 +3568,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           createMenuListRow(serviceAddonList, "Addon item", "Price", item.first, item.second)
         );
         if (!serviceDurationList?.children.length) {
-          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
+          createDurationServiceRow();
         }
         if (!servicePackageList?.children.length) {
           createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
@@ -3735,11 +3882,6 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         });
       }
 
-      if (addServiceDurationBtn) {
-        addServiceDurationBtn.addEventListener("click", () => {
-          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
-        });
-      }
       if (addServicePackageBtn) {
         addServicePackageBtn.addEventListener("click", () => {
           createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
@@ -3975,6 +4117,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       let tourPartners = [];
       let citySchedules = [];
       let autoTemplateBlocksEnabled = false;
+      let selectedRecurringIndex = -1;
       let autoSaveTimer = null;
       let autoSaveInFlight = false;
       let autoSaveQueued = false;
@@ -4284,6 +4427,107 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             city,
           });
         }
+      };
+
+      const minutesToStamp = (dateKey, minutesValue) => {
+        const date = parseDateKey(dateKey);
+        if (!date || !Number.isFinite(minutesValue)) return null;
+        return Math.floor(date.getTime() / 60000) + minutesValue;
+      };
+
+      const getBlockRangeFromForm = () => {
+        const startDate = String(blockedDate?.value || "").trim();
+        const endDate = String(blockedEndDate?.value || "").trim() || startDate;
+        const startTime = String(blockedStart?.value || "").trim();
+        const endTime = String(blockedEnd?.value || "").trim();
+        const reason = String(blockedReason?.value || "").trim();
+        if (!startDate || !endDate || !startTime || !endTime) {
+          return { error: "Set from day, from time, to day, and to time." };
+        }
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutesRaw = timeToMinutes(endTime);
+        if (startMinutes === null || endMinutesRaw === null) {
+          return { error: "Invalid time format." };
+        }
+        const endMinutes = endMinutesRaw >= 1439 ? 1440 : endMinutesRaw;
+        const startStamp = minutesToStamp(startDate, startMinutes);
+        const endStamp = minutesToStamp(endDate, endMinutes);
+        if (startStamp === null || endStamp === null || endStamp <= startStamp) {
+          return { error: "End must be after start." };
+        }
+        return {
+          startDate,
+          endDate,
+          startMinutes,
+          endMinutes,
+          startStamp,
+          endStamp,
+          reason,
+        };
+      };
+
+      const pushManualRangeForDate = (dateKey, startMinutes, endMinutes, reason, city = "") => {
+        if (!dateKey) return;
+        const safeStart = Math.max(0, Math.min(1439, Math.floor(startMinutes)));
+        const safeEnd = Math.max(0, Math.min(1440, Math.floor(endMinutes)));
+        if (safeEnd <= safeStart) return;
+        for (let minutes = safeStart; minutes < safeEnd; minutes += SLOT_MINUTES) {
+          const next = Math.min(minutes + SLOT_MINUTES, safeEnd);
+          blockedSlots.push({
+            date: dateKey,
+            start: minutesToTime(minutes),
+            end: next >= 1440 ? "23:59" : minutesToTime(next),
+            reason: String(reason || "").trim(),
+            kind: "manual",
+            city,
+          });
+        }
+      };
+
+      const addManualBlockRange = (range) => {
+        const startDateObj = parseDateKey(range.startDate);
+        const endDateObj = parseDateKey(range.endDate);
+        if (!startDateObj || !endDateObj || startDateObj > endDateObj) return;
+        const cursor = new Date(startDateObj.getTime());
+        while (cursor <= endDateObj) {
+          const dateKey = toDateKey(cursor);
+          const isStartDay = dateKey === range.startDate;
+          const isEndDay = dateKey === range.endDate;
+          const dayStart = isStartDay ? range.startMinutes : 0;
+          const dayEnd = isEndDay ? range.endMinutes : 1440;
+          const city = getTourCityForDate(dateKey);
+          pushManualRangeForDate(dateKey, dayStart, dayEnd, range.reason, city);
+          cursor.setUTCDate(cursor.getUTCDate() + 1);
+        }
+      };
+
+      const removeManualBlocksInRange = (range) => {
+        let removed = 0;
+        blockedSlots = blockedSlots.filter((slot) => {
+          if (!slot || slot.kind !== "manual") return true;
+          const slotStartMinutes = timeToMinutes(slot.start);
+          const slotEndRaw = timeToMinutes(slot.end);
+          if (slotStartMinutes === null || slotEndRaw === null) return true;
+          const slotEndMinutes = slotEndRaw >= 1439 ? 1440 : slotEndRaw;
+          const slotStartStamp = minutesToStamp(slot.date, slotStartMinutes);
+          const slotEndStamp = minutesToStamp(slot.date, slotEndMinutes);
+          if (slotStartStamp === null || slotEndStamp === null) return true;
+          const overlaps = slotStartStamp < range.endStamp && slotEndStamp > range.startStamp;
+          if (overlaps) {
+            removed += 1;
+            return false;
+          }
+          return true;
+        });
+        return removed;
+      };
+
+      const clearBlockForm = () => {
+        if (blockedDate) blockedDate.value = "";
+        if (blockedEndDate) blockedEndDate.value = "";
+        if (blockedStart) blockedStart.value = "";
+        if (blockedEnd) blockedEnd.value = "";
+        if (blockedReason) blockedReason.value = "";
       };
 
       const normalizeBlockedSlots = (slots) => {
@@ -5009,9 +5253,27 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           .map((group, index) => {
             const reason = group.reason ? ` - ${group.reason}` : "";
             const city = group.city ? ` (${group.city})` : "";
-            return `<div data-index="${index}">${group.date} ${formatRangeTime(group.startMinutes)}-${formatRangeTime(group.endMinutes)}${city}${reason} <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button></div>`;
+            return `<div class="block-list-row" data-index="${index}">
+              <span>${group.date} ${formatRangeTime(group.startMinutes)}-${formatRangeTime(group.endMinutes)}${city}${reason}</span>
+              <button data-fill="${index}" class="btn ghost" type="button">Use</button>
+              <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button>
+            </div>`;
           })
           .join("");
+        blockedList.querySelectorAll("button[data-fill]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.dataset.fill);
+            if (Number.isNaN(idx)) return;
+            const group = manualGroups[idx];
+            if (!group) return;
+            if (blockedDate) blockedDate.value = group.date;
+            if (blockedEndDate) blockedEndDate.value = group.date;
+            if (blockedStart) blockedStart.value = formatRangeTime(group.startMinutes);
+            if (blockedEnd) blockedEnd.value = group.endMinutes >= 1440 ? "23:59" : formatRangeTime(group.endMinutes);
+            if (blockedReason) blockedReason.value = group.reason || "";
+            if (blockedStatus) blockedStatus.textContent = "Block loaded. Edit values then click Edit block.";
+          });
+        });
         blockedList.querySelectorAll("button[data-remove]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const idx = Number(btn.dataset.remove);
@@ -5056,6 +5318,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const renderRecurringList = () => {
         if (!recurringList) return;
         if (!recurringBlocks.length) {
+          selectedRecurringIndex = -1;
           recurringList.textContent = "No recurring blocks yet.";
           return;
         }
@@ -5064,14 +5327,42 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             const daysLabel = formatRecurringDays(block.days);
             const timeLabel = block.all_day ? "All day" : `${block.start || ""}-${block.end || ""}`;
             const reason = block.reason ? ` - ${block.reason}` : "";
-            return `<div data-index=\"${index}\">${daysLabel} | ${timeLabel}${reason} <button data-remove=\"${index}\" class=\"btn ghost\" type=\"button\">${t("remove")}</button></div>`;
+            return `<div class="recurring-list-row" data-index="${index}">
+              <span>${daysLabel} | ${timeLabel}${reason}</span>
+              <button data-use="${index}" class="btn ghost" type="button">Use</button>
+              <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button>
+            </div>`;
           })
           .join("");
+        recurringList.querySelectorAll("button[data-use]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.dataset.use);
+            if (Number.isNaN(idx) || !recurringBlocks[idx]) return;
+            const block = recurringBlocks[idx];
+            selectedRecurringIndex = idx;
+            if (recurringDays) {
+              recurringDays.querySelectorAll("input[type=\"checkbox\"]").forEach((input) => {
+                const dayValue = Number(input.value);
+                input.checked = Array.isArray(block.days) && block.days.includes(dayValue);
+              });
+            }
+            if (recurringAllDay) recurringAllDay.checked = !!block.all_day;
+            if (recurringStart) recurringStart.value = block.start || "";
+            if (recurringEnd) recurringEnd.value = block.end || "";
+            if (recurringReason) recurringReason.value = block.reason || "";
+            if (recurringStatus) recurringStatus.textContent = "Recurring row loaded. Edit values then click Edit recurring.";
+          });
+        });
         recurringList.querySelectorAll("button[data-remove]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const idx = Number(btn.dataset.remove);
             if (Number.isNaN(idx)) return;
             recurringBlocks = recurringBlocks.filter((_, i) => i !== idx);
+            if (selectedRecurringIndex === idx) {
+              selectedRecurringIndex = -1;
+            } else if (selectedRecurringIndex > idx) {
+              selectedRecurringIndex -= 1;
+            }
             renderRecurringList();
             renderCalendarView();
             queueAutoSave(t("saving_city_schedule"), { persist: true });
@@ -6981,91 +7272,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           queueAutoSave(t("saving_city_schedule"), { persist: true });
         });
       }
-      addBlockedBtn.addEventListener("click", () => {
-        blockedStatus.textContent = "";
-        const date = blockedDate.value;
-        const start = blockedStart.value;
-        const end = blockedEnd.value;
-        if (!date || !start || !end) {
-          blockedStatus.textContent = "Add date, start time, and end time.";
-          return;
-        }
-        const startMinutes = timeToMinutes(start);
-        const endMinutes = timeToMinutes(end);
-        if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
-          blockedStatus.textContent = "End time must be after start time.";
-          return;
-        }
-        for (let minutes = startMinutes; minutes < endMinutes; minutes += SLOT_MINUTES) {
-          blockedSlots.push({
-            date,
-            start: minutesToTime(minutes),
-            end: minutesToTime(Math.min(minutes + SLOT_MINUTES, endMinutes)),
-            reason: blockedReason.value.trim(),
-            kind: "manual",
-          });
-        }
-        blockedDate.value = "";
-        blockedStart.value = "";
-        blockedEnd.value = "";
-        blockedReason.value = "";
-        renderBlockedSlots();
-        renderCalendarView();
-        queueAutoSave(t("saving_city_schedule"), { persist: true });
-      });
-      blockFullDayBtn.addEventListener("click", () => {
-        blockedStatus.textContent = "";
-        const date = blockedDate.value;
-        if (!date) {
-          blockedStatus.textContent = "Add a date first.";
-          return;
-        }
-        const reason = blockedReason.value.trim();
-        blockFullDayForDate(date, reason);
-        blockedDate.value = "";
-        blockedStart.value = "";
-        blockedEnd.value = "";
-        blockedReason.value = "";
-        blockedStatus.textContent = "Full day blocked.";
-        renderBlockedSlots();
-        renderCalendarView();
-        queueAutoSave(t("saving_city_schedule"), { persist: true });
-      });
-      blockFullRangeBtn.addEventListener("click", () => {
-        blockedStatus.textContent = "";
-        const startValue = blockedFullRangeStart.value;
-        const endValue = blockedFullRangeEnd.value;
-        if (!startValue || !endValue) {
-          blockedStatus.textContent = "Add a start and end date.";
-          return;
-        }
-        const startDate = parseDateKey(startValue);
-        const endDate = parseDateKey(endValue);
-        if (!startDate || !endDate || startDate > endDate) {
-          blockedStatus.textContent = "End date must be after start date.";
-          return;
-        }
-        const reason = blockedReason.value.trim();
-        const current = new Date(startDate.getTime());
-        while (current <= endDate) {
-          blockFullDayForDate(toDateKey(current), reason);
-          current.setUTCDate(current.getUTCDate() + 1);
-        }
-        blockedFullRangeStart.value = "";
-        blockedFullRangeEnd.value = "";
-        blockedReason.value = "";
-        blockedStatus.textContent = "Full-day range blocked.";
-        renderBlockedSlots();
-        renderCalendarView();
-        queueAutoSave(t("saving_city_schedule"), { persist: true });
-      });
-      addRecurringBtn.addEventListener("click", () => {
-        if (!recurringStatus) return;
-        recurringStatus.textContent = "";
+      const readRecurringFormPayload = () => {
         const days = getSelectedRecurringDays();
         if (!days.length) {
-          recurringStatus.textContent = "Pick at least one day.";
-          return;
+          return { error: "Pick at least one day." };
         }
         const allDay = recurringAllDay && recurringAllDay.checked;
         const start = recurringStart ? recurringStart.value : "";
@@ -7074,17 +7284,21 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           const startMinutes = timeToMinutes(start);
           const endMinutes = timeToMinutes(end);
           if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
-            recurringStatus.textContent = "End time must be after start time.";
-            return;
+            return { error: "End time must be after start time." };
           }
         }
-        recurringBlocks.push({
-          days,
-          all_day: !!allDay,
-          start: allDay ? "" : start,
-          end: allDay ? "" : end,
-          reason: recurringReason ? recurringReason.value.trim() : "",
-        });
+        return {
+          entry: {
+            days,
+            all_day: !!allDay,
+            start: allDay ? "" : start,
+            end: allDay ? "" : end,
+            reason: recurringReason ? recurringReason.value.trim() : "",
+          },
+        };
+      };
+
+      const resetRecurringForm = () => {
         if (recurringDays) {
           recurringDays.querySelectorAll("input[type=\"checkbox\"]:checked").forEach((input) => {
             input.checked = false;
@@ -7094,11 +7308,173 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         if (recurringStart) recurringStart.value = "";
         if (recurringEnd) recurringEnd.value = "";
         if (recurringReason) recurringReason.value = "";
-        recurringStatus.textContent = "Recurring block added.";
-        renderRecurringList();
-        renderCalendarView();
-        queueAutoSave(t("saving_city_schedule"), { persist: true });
-      });
+        selectedRecurringIndex = -1;
+      };
+
+      if (addBlockedBtn) {
+        addBlockedBtn.addEventListener("click", () => {
+          if (!blockedStatus) return;
+          blockedStatus.textContent = "";
+          const range = getBlockRangeFromForm();
+          if (range.error) {
+            blockedStatus.textContent = range.error;
+            return;
+          }
+          addManualBlockRange(range);
+          blockedStatus.textContent = "Block added.";
+          clearBlockForm();
+          renderBlockedSlots();
+          renderCalendarView();
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+      if (blockedDate && blockedEndDate) {
+        blockedDate.addEventListener("change", () => {
+          if (!blockedEndDate.value) {
+            blockedEndDate.value = blockedDate.value;
+          }
+        });
+      }
+
+      if (editBlockedBtn) {
+        editBlockedBtn.addEventListener("click", () => {
+          if (!blockedStatus) return;
+          blockedStatus.textContent = "";
+          const range = getBlockRangeFromForm();
+          if (range.error) {
+            blockedStatus.textContent = range.error;
+            return;
+          }
+          removeManualBlocksInRange(range);
+          addManualBlockRange(range);
+          blockedStatus.textContent = "Block updated.";
+          clearBlockForm();
+          renderBlockedSlots();
+          renderCalendarView();
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+
+      if (deleteBlockedBtn) {
+        deleteBlockedBtn.addEventListener("click", () => {
+          if (!blockedStatus) return;
+          blockedStatus.textContent = "";
+          const range = getBlockRangeFromForm();
+          if (range.error) {
+            blockedStatus.textContent = range.error;
+            return;
+          }
+          const removed = removeManualBlocksInRange(range);
+          blockedStatus.textContent = removed ? "Block removed." : "No matching block found.";
+          clearBlockForm();
+          renderBlockedSlots();
+          renderCalendarView();
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+
+      if (addRecurringBtn) {
+        addRecurringBtn.addEventListener("click", () => {
+          if (!recurringStatus) return;
+          recurringStatus.textContent = "";
+          const payload = readRecurringFormPayload();
+          if (payload.error) {
+            recurringStatus.textContent = payload.error;
+            return;
+          }
+          recurringBlocks.push(payload.entry);
+          recurringStatus.textContent = "Recurring block added.";
+          resetRecurringForm();
+          renderRecurringList();
+          renderCalendarView();
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+
+      if (editRecurringBtn) {
+        editRecurringBtn.addEventListener("click", () => {
+          if (!recurringStatus) return;
+          recurringStatus.textContent = "";
+          if (selectedRecurringIndex < 0 || !recurringBlocks[selectedRecurringIndex]) {
+            recurringStatus.textContent = "Click Use on a recurring row first.";
+            return;
+          }
+          const payload = readRecurringFormPayload();
+          if (payload.error) {
+            recurringStatus.textContent = payload.error;
+            return;
+          }
+          recurringBlocks[selectedRecurringIndex] = payload.entry;
+          recurringStatus.textContent = "Recurring block updated.";
+          resetRecurringForm();
+          renderRecurringList();
+          renderCalendarView();
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+
+      if (deleteRecurringBtn) {
+        deleteRecurringBtn.addEventListener("click", () => {
+          if (!recurringStatus) return;
+          recurringStatus.textContent = "";
+          if (selectedRecurringIndex < 0 || !recurringBlocks[selectedRecurringIndex]) {
+            recurringStatus.textContent = "Click Use on a recurring row first.";
+            return;
+          }
+          recurringBlocks = recurringBlocks.filter((_, index) => index !== selectedRecurringIndex);
+          recurringStatus.textContent = "Recurring block removed.";
+          resetRecurringForm();
+          renderRecurringList();
+          renderCalendarView();
+          queueAutoSave(t("saving_city_schedule"), { persist: true });
+        });
+      }
+
+      if (scheduleCalendarSyncBtn) {
+        scheduleCalendarSyncBtn.addEventListener("click", () => {
+          if (!scheduleCalendarStatus) return;
+          scheduleCalendarStatus.textContent = "";
+          const target = String(scheduleCalendarTarget?.value || "").trim();
+          if (!target) {
+            scheduleCalendarStatus.textContent = "Choose a calendar first.";
+            return;
+          }
+          const range = getBlockRangeFromForm();
+          if (range.error) {
+            scheduleCalendarStatus.textContent = range.error;
+            return;
+          }
+          const tempItem = {
+            id: `block-${Date.now()}`,
+            name: "Blocked time",
+            phone: "",
+            city: getTourCityForDate(range.startDate),
+            preferred_date: range.startDate,
+            preferred_time: minutesToTime(range.startMinutes),
+            duration_hours: Math.max(0.5, (range.endStamp - range.startStamp) / 60),
+            tour_timezone: getActiveTimezone(),
+          };
+          if (target === "google") {
+            const calendarUrl = buildGoogleCalendarUrl(tempItem);
+            if (!calendarUrl) {
+              scheduleCalendarStatus.textContent = "Unable to build calendar link.";
+              return;
+            }
+            const popup = window.open(calendarUrl, "_blank", "noopener");
+            if (!popup) {
+              window.location.href = calendarUrl;
+            }
+            return;
+          }
+          if (target === "samsung") {
+            downloadIcsFile(tempItem, "samsung");
+            return;
+          }
+          if (target === "icloud") {
+            downloadIcsFile(tempItem, "icloud");
+          }
+        });
+      }
 
       if (addTourRowBtn) {
         addTourRowBtn.addEventListener("click", () => {

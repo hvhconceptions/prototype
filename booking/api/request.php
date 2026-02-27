@@ -180,6 +180,11 @@ function is_fly_me_city(string $city): bool
     return normalize_city_name($city) === 'fly me to you';
 }
 
+function is_excluded_booking_city(string $city): bool
+{
+    return normalize_city_name($city) === 'vacation';
+}
+
 function get_touring_city_for_date(string $dateKey): string
 {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateKey)) {
@@ -422,6 +427,9 @@ if (!isset($errors['preferred_date']) && !isset($errors['preferred_time'])) {
 }
 
 $requestedCity = trim((string) ($payload['city'] ?? ''));
+if (is_excluded_booking_city($requestedCity)) {
+    $errors['city'] = 'Invalid city';
+}
 
 if (!empty($errors)) {
     json_response(['error' => 'Validation failed', 'fields' => $errors], 422);

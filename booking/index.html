@@ -2478,6 +2478,7 @@
           .replace(/\s+/g, " ");
 
       const isFlyMeCity = (value) => normalizeCityName(value) === "fly me to you";
+      const isExcludedBookingCity = (value) => normalizeCityName(value) === "vacation";
 
       const CITY_TIMEZONE_FALLBACKS = {
         montreal: "America/Toronto",
@@ -2498,7 +2499,7 @@
       const defaultCityOptions = citySelect
         ? Array.from(citySelect.options)
             .map((option) => String(option.value || "").trim())
-            .filter((value) => value && !isFlyMeCity(value))
+            .filter((value) => value && !isFlyMeCity(value) && !isExcludedBookingCity(value))
         : [];
 
       const syncCityOptions = () => {
@@ -2516,7 +2517,7 @@
         cityPool.forEach((city) => {
           const cityLabel = String(city || "").trim();
           const cityKey = normalizeCityName(cityLabel);
-          if (!cityKey || seen.has(cityKey) || isFlyMeCity(cityLabel)) return;
+          if (!cityKey || seen.has(cityKey) || isFlyMeCity(cityLabel) || isExcludedBookingCity(cityLabel)) return;
           seen.add(cityKey);
           uniqueCities.push(cityLabel);
         });

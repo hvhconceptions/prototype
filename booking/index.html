@@ -1939,6 +1939,7 @@
         },
         social: {
           3: 1000,
+          4: 1500,
         },
       };
       let longSessionMin = 8;
@@ -2160,7 +2161,12 @@
         }
         const socialAmount = Number(rates?.social?.amount || 0);
         if (Number.isFinite(socialAmount) && socialAmount > 0) {
-          RATE_TABLE.social = { 3: Math.round(socialAmount) };
+          RATE_TABLE.social = {
+            3: Math.round(socialAmount),
+            4: Number.isFinite(Number(rates?.social?.amount_4)) && Number(rates?.social?.amount_4) > 0
+              ? Math.round(Number(rates?.social?.amount_4))
+              : 1500,
+          };
         }
         const longMin = Number(rates?.long_session?.min || 0);
         const longMax = Number(rates?.long_session?.max || 0);
@@ -2189,7 +2195,8 @@
         if (!Number.isFinite(hours) || hours <= 0) return 0;
         const normalized = normalizeExperience(experience);
         if (normalized === "social") {
-          return RATE_TABLE.social[3];
+          if (hours >= 4) return RATE_TABLE.social[4] || 1500;
+          return RATE_TABLE.social[3] || 1000;
         }
         if (hours >= DAY_PLUS_HOURS) {
           return DAY_PLUS_RATE;
@@ -2366,7 +2373,7 @@
 
         for (const entry of DURATION_OPTIONS) {
           if (requestId !== durationOptionsRequestId) return;
-          if (currentExperience === "social" && Number(entry.hours) < 3) {
+          if (currentExperience === "social" && ![3, 4].includes(Number(entry.hours))) {
             continue;
           }
           const option = document.createElement("option");

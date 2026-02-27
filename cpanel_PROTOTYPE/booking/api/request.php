@@ -64,7 +64,8 @@ function get_site_rate_config(): array
     $cached = [
         'gfe' => $gfe,
         'pse' => $pse,
-        'social_amount' => isset($social['amount']) && is_numeric($social['amount']) ? (int) round((float) $social['amount']) : 1000,
+        'social_amount_3' => isset($social['amount']) && is_numeric($social['amount']) ? (int) round((float) $social['amount']) : 1000,
+        'social_amount_4' => isset($social['amount_4']) && is_numeric($social['amount_4']) ? (int) round((float) $social['amount_4']) : 1500,
         'long_min' => isset($longSession['min']) && is_numeric($longSession['min']) ? (float) $longSession['min'] : 8.0,
         'long_max' => isset($longSession['max']) && is_numeric($longSession['max']) ? (float) $longSession['max'] : 12.0,
         'long_amount' => isset($longSession['amount']) && is_numeric($longSession['amount']) ? (int) round((float) $longSession['amount']) : 3000,
@@ -267,7 +268,10 @@ function get_base_rate(float $hours, string $experience, string $rateKey): int
     $rateConfig = get_site_rate_config();
     $normalized = normalize_experience($experience);
     if ($normalized === 'social') {
-        return (int) ($rateConfig['social_amount'] ?? 1000);
+        if ($hours >= 4) {
+            return (int) ($rateConfig['social_amount_4'] ?? 1500);
+        }
+        return (int) ($rateConfig['social_amount_3'] ?? 1000);
     }
     if ($hours >= 24) {
         return (int) ($rateConfig['day_plus_amount'] ?? 4000);
@@ -467,6 +471,12 @@ if (in_array($depositCurrency, ['USDC', 'BTC', 'LTC'], true)) {
 $hours = is_numeric($payload['duration_hours']) ? (float) $payload['duration_hours'] : 0.0;
 $rateKey = '';
 $experience = normalize_experience((string) ($payload['experience'] ?? ''));
+if ($experience === 'social' && !in_array($hours, [3.0, 4.0], true)) {
+    $errors['duration_hours'] = 'Social introduction only supports 3 or 4 hours';
+}
+if (!empty($errors)) {
+    json_response(['error' => 'Validation failed', 'fields' => $errors], 422);
+}
 $baseRate = get_base_rate($hours, $experience, $rateKey);
 $serviceAddonAmount = get_service_addon_amount($experience);
 $totalRate = $baseRate + $serviceAddonAmount;

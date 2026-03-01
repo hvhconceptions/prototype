@@ -1889,12 +1889,29 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           grid-template-columns: 1fr;
         }
 
+        .menu-list-row.has-third {
+          grid-template-columns: 1fr;
+        }
+
         .menu-row-actions {
           width: 100%;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 6px;
+          border: 0;
+          background: transparent;
+          border-radius: 0;
         }
 
         .menu-row-actions .btn {
-          flex: 1 1 50%;
+          flex: none;
+          white-space: normal;
+          border: 1px solid var(--line);
+          border-radius: 12px;
+        }
+
+        .menu-row-actions .btn + .btn {
+          border-left: 1px solid var(--line);
         }
 
         .folder-switcher {

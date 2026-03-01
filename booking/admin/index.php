@@ -608,7 +608,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       .menu-list-row {
         display: grid;
         grid-template-columns: 1fr minmax(88px, 120px) auto;
-        gap: 8px;
+        gap: 6px;
+        align-items: center;
       }
 
       .menu-list-row.has-third {
@@ -620,14 +621,32 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       }
 
       .menu-row-actions {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+        display: flex;
+        align-items: stretch;
+        justify-self: start;
+        width: max-content;
+        gap: 0;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
       }
 
       .menu-list-row .btn {
         padding: 8px 10px;
         white-space: nowrap;
+        min-width: 0;
+      }
+
+      .menu-row-actions .btn {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        min-height: 40px;
+      }
+
+      .menu-row-actions .btn + .btn {
+        border-left: 1px solid var(--line);
       }
 
       .menu-avatar-preview {
@@ -1868,6 +1887,14 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         .menu-inline-grid,
         .menu-list-row {
           grid-template-columns: 1fr;
+        }
+
+        .menu-row-actions {
+          width: 100%;
+        }
+
+        .menu-row-actions .btn {
+          flex: 1 1 50%;
         }
 
         .folder-switcher {

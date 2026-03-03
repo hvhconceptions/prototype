@@ -4,6 +4,8 @@
 
   const BLOCK_KEY = "hvh_perma_404_lock";
   const BLOCK_PATH = "/404.html";
+  const CAPTURE_ARM_WINDOW_MS = 5000;
+  const QUICK_HIDE_LOCK_MS = 1400;
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
   const searchParams = new URLSearchParams(window.location.search);
   const shouldUnlock = searchParams.get("hvh_unlock") === "1";
@@ -36,6 +38,12 @@
     window.location.replace(BLOCK_PATH);
     return;
   }
+
+  let captureArmedAt = 0;
+  const armCaptureLock = () => {
+    captureArmedAt = Date.now();
+  };
+  const isCaptureArmed = () => Date.now() - captureArmedAt <= CAPTURE_ARM_WINDOW_MS;
 
   (function setupAntiScriptCaptcha() {
     const MIN_FILL_TIME_MS = 3500;
@@ -209,15 +217,33 @@
       (event) => {
         const key = event.key.toLowerCase();
         const ctrlOrMeta = event.ctrlKey || event.metaKey;
+        const screenshotCombo =
+          key === "printscreen" ||
+          (event.metaKey && event.shiftKey && key === "s") ||
+          (event.shiftKey && key === "printscreen");
         const blocked =
           (ctrlOrMeta && ["s", "u", "p"].includes(key)) ||
           (ctrlOrMeta && event.shiftKey && ["i", "j", "c"].includes(key)) ||
           key === "f12" ||
-          key === "printscreen";
+          screenshotCombo;
 
         if (!blocked) return;
         event.preventDefault();
         event.stopPropagation();
+        if (screenshotCombo) {
+          armCaptureLock();
+        }
+        lockTo404();
+      },
+      true
+    );
+
+    document.addEventListener(
+      "keyup",
+      (event) => {
+        const key = event.key.toLowerCase();
+        if (key !== "printscreen") return;
+        armCaptureLock();
         lockTo404();
       },
       true
@@ -256,12 +282,57 @@
     document.addEventListener(
       "keydown",
       (event) => {
-        if (event.key.toLowerCase() !== "printscreen") return;
+        const key = event.key.toLowerCase();
+        const screenshotCombo =
+          key === "printscreen" ||
+          (event.metaKey && event.shiftKey && key === "s") ||
+          (event.shiftKey && key === "printscreen");
+        if (!screenshotCombo) return;
         flash.style.opacity = "0.78";
         window.setTimeout(() => {
           flash.style.opacity = "0";
         }, 140);
+        armCaptureLock();
         lockTo404();
+      },
+      true
+    );
+
+    let hiddenAt = 0;
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (document.hidden) {
+          hiddenAt = Date.now();
+          return;
+        }
+        if (!hiddenAt) return;
+        const elapsed = Date.now() - hiddenAt;
+        hiddenAt = 0;
+        if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
+          lockTo404();
+        }
+      },
+      true
+    );
+
+    let blurredAt = 0;
+    window.addEventListener(
+      "blur",
+      () => {
+        blurredAt = Date.now();
+      },
+      true
+    );
+    window.addEventListener(
+      "focus",
+      () => {
+        if (!blurredAt) return;
+        const elapsed = Date.now() - blurredAt;
+        blurredAt = 0;
+        if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
+          lockTo404();
+        }
       },
       true
     );

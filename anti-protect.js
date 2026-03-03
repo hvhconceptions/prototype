@@ -3,11 +3,13 @@
   window.hvhAntiProtectLoaded = true;
 
   const BLOCK_KEY = "hvh_perma_404_lock";
+  const STRIKE_KEY = "hvh_capture_strikes";
   const BLOCK_PATH = "/404.html";
   const CAPTURE_ARM_WINDOW_MS = 5000;
   const QUICK_HIDE_LOCK_MS = 1400;
-  const AGGRESSIVE_BLUR_LOCK = true;
+  const AGGRESSIVE_BLUR_LOCK = false;
   const STARTUP_GRACE_MS = 2500;
+  const SCREENSHOT_EVENT_COOLDOWN_MS = 1200;
   const scriptStartedAt = Date.now();
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
   const searchParams = new URLSearchParams(window.location.search);
@@ -16,6 +18,7 @@
   if (shouldUnlock) {
     try {
       window.localStorage.removeItem(BLOCK_KEY);
+      window.localStorage.removeItem(STRIKE_KEY);
     } catch (_error) {}
   }
 
@@ -27,14 +30,52 @@
     }
   })();
 
-  const lockTo404 = () => {
-    try {
-      window.localStorage.setItem(BLOCK_KEY, "1");
-    } catch (_error) {}
-
+  const redirectTo404 = () => {
     if (!is404Page) {
       window.location.replace(BLOCK_PATH);
     }
+  };
+
+  const lockTo404Forever = () => {
+    try {
+      window.localStorage.setItem(BLOCK_KEY, "1");
+    } catch (_error) {}
+    redirectTo404();
+  };
+
+  const readStrikeCount = () => {
+    try {
+      const raw = window.localStorage.getItem(STRIKE_KEY);
+      const value = Number(raw);
+      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+    } catch (_error) {
+      return 0;
+    }
+  };
+
+  const writeStrikeCount = (value) => {
+    try {
+      window.localStorage.setItem(STRIKE_KEY, String(value));
+    } catch (_error) {}
+  };
+
+  let lastScreenshotEventAt = 0;
+  const registerScreenshotViolation = () => {
+    const now = Date.now();
+    if (now - lastScreenshotEventAt <= SCREENSHOT_EVENT_COOLDOWN_MS) {
+      return;
+    }
+    lastScreenshotEventAt = now;
+
+    const strikes = readStrikeCount() + 1;
+    writeStrikeCount(strikes);
+
+    if (strikes >= 2) {
+      lockTo404Forever();
+      return;
+    }
+
+    redirectTo404();
   };
 
   const canAggressiveLock = () => Date.now() - scriptStartedAt >= STARTUP_GRACE_MS;
@@ -199,7 +240,7 @@
           (target.closest(mediaSelector) || target.closest(mediaWrapperSelector))
         ) {
           event.preventDefault();
-          lockTo404();
+          redirectTo404();
         }
       },
       true
@@ -211,7 +252,7 @@
         const target = event.target;
         if (target instanceof Element && target.closest(mediaSelector)) {
           event.preventDefault();
-          lockTo404();
+          redirectTo404();
         }
       },
       true
@@ -237,8 +278,10 @@
         event.stopPropagation();
         if (screenshotCombo) {
           armCaptureLock();
+          registerScreenshotViolation();
+          return;
         }
-        lockTo404();
+        redirectTo404();
       },
       true
     );
@@ -249,7 +292,7 @@
         const key = event.key.toLowerCase();
         if (key !== "printscreen") return;
         armCaptureLock();
-        lockTo404();
+        registerScreenshotViolation();
       },
       true
     );
@@ -298,7 +341,7 @@
           flash.style.opacity = "0";
         }, 140);
         armCaptureLock();
-        lockTo404();
+        registerScreenshotViolation();
       },
       true
     );
@@ -308,7 +351,7 @@
       "visibilitychange",
       () => {
         if (AGGRESSIVE_BLUR_LOCK && document.hidden && canAggressiveLock()) {
-          lockTo404();
+          lockTo404Forever();
           return;
         }
 
@@ -320,7 +363,7 @@
         const elapsed = Date.now() - hiddenAt;
         hiddenAt = 0;
         if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
-          lockTo404();
+          registerScreenshotViolation();
         }
       },
       true
@@ -331,7 +374,7 @@
       "blur",
       () => {
         if (AGGRESSIVE_BLUR_LOCK && canAggressiveLock()) {
-          lockTo404();
+          lockTo404Forever();
           return;
         }
         blurredAt = Date.now();
@@ -345,7 +388,7 @@
         const elapsed = Date.now() - blurredAt;
         blurredAt = 0;
         if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
-          lockTo404();
+          registerScreenshotViolation();
         }
       },
       true
@@ -355,7 +398,7 @@
       "pagehide",
       () => {
         if (AGGRESSIVE_BLUR_LOCK && canAggressiveLock()) {
-          lockTo404();
+          lockTo404Forever();
         }
       },
       true

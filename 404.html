@@ -839,6 +839,134 @@
         });
       })();
     </script>
+    <script>
+      (function setup404Lockdown() {
+        const stormRateMs = 200; // 5 times per second
+        const historyPadCount = 40;
+        const activeHotkeys = new Set(["ArrowLeft", "ArrowRight", "Backspace", "BrowserBack", "BrowserForward"]);
+        const xpAlertSrc = "https://www.myinstants.com/media/sounds/windows-error-sound-effect.mp3";
+        let stormTimer = null;
+        let stormBootstrapped = false;
+
+        const layer = document.createElement("div");
+        layer.setAttribute("aria-hidden", "true");
+        layer.style.cssText =
+          "position:fixed;inset:0;pointer-events:none;z-index:2147483646;overflow:hidden;";
+        document.body.appendChild(layer);
+
+        const baseAudio = new Audio(xpAlertSrc);
+        baseAudio.preload = "auto";
+        baseAudio.volume = 1;
+
+        const playAlert = () => {
+          try {
+            const clone = baseAudio.cloneNode();
+            clone.volume = 1;
+            clone.play().catch(() => {});
+            return;
+          } catch (_error) {}
+
+          try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "square";
+            osc.frequency.setValueAtTime(960, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.32, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.18);
+          } catch (_error) {}
+        };
+
+        const spawnStormWindow = () => {
+          const pane = document.createElement("div");
+          const x = Math.max(2, Math.floor(Math.random() * 82));
+          const y = Math.max(3, Math.floor(Math.random() * 72));
+          pane.style.cssText =
+            "position:absolute;width:min(320px,84vw);background:#c0c0c0;border:2px solid #000;box-shadow:4px 4px 0 #000;color:#000;font:700 13px/1.2 Tahoma,Arial,sans-serif;left:" +
+            x +
+            "%;top:" +
+            y +
+            "%;transform:translate(-50%,-50%);animation:hvh404shake .17s linear 5;";
+
+          pane.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;background:#000080;color:#fff;padding:6px 8px;letter-spacing:.4px;">' +
+            "<span>Critical 404 Security Alert</span>" +
+            "<span>X</span>" +
+            "</div>" +
+            '<div style="padding:12px 10px;font-size:12px;text-transform:uppercase;">' +
+            "Back navigation blocked. Unauthorized exit detected." +
+            "</div>";
+
+          layer.appendChild(pane);
+          playAlert();
+
+          window.setTimeout(() => {
+            pane.remove();
+          }, 1600);
+        };
+
+        const ensureKeyframes = () => {
+          if (document.getElementById("hvh404-lock-style")) return;
+          const style = document.createElement("style");
+          style.id = "hvh404-lock-style";
+          style.textContent =
+            "@keyframes hvh404shake{0%{transform:translate(-50%,-50%) translate(0,0);}15%{transform:translate(-50%,-50%) translate(-10px,6px);}30%{transform:translate(-50%,-50%) translate(10px,-6px);}45%{transform:translate(-50%,-50%) translate(-8px,4px);}60%{transform:translate(-50%,-50%) translate(8px,-4px);}75%{transform:translate(-50%,-50%) translate(-6px,3px);}100%{transform:translate(-50%,-50%) translate(0,0);}}";
+          document.head.appendChild(style);
+        };
+
+        const seedHistory = () => {
+          try {
+            for (let i = 0; i < historyPadCount; i += 1) {
+              history.pushState({ hvh404: true, n: Date.now() + i }, "", window.location.href);
+            }
+          } catch (_error) {}
+        };
+
+        const startStorm = () => {
+          ensureKeyframes();
+          if (!stormBootstrapped) {
+            stormBootstrapped = true;
+            for (let i = 0; i < 6; i += 1) {
+              window.setTimeout(spawnStormWindow, i * 60);
+            }
+          }
+          if (!stormTimer) {
+            stormTimer = window.setInterval(spawnStormWindow, stormRateMs);
+          }
+        };
+
+        seedHistory();
+
+        window.addEventListener(
+          "popstate",
+          () => {
+            seedHistory();
+            startStorm();
+          },
+          true
+        );
+
+        document.addEventListener(
+          "keydown",
+          (event) => {
+            const key = event.key;
+            const isBackHotkey =
+              (event.altKey && (key === "ArrowLeft" || key === "ArrowRight")) ||
+              activeHotkeys.has(key);
+            if (!isBackHotkey) return;
+            event.preventDefault();
+            event.stopPropagation();
+            seedHistory();
+            startStorm();
+          },
+          true
+        );
+      })();
+    </script>
   </body>
 </html>
 

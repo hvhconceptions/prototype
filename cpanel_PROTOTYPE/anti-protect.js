@@ -6,6 +6,9 @@
   const BLOCK_PATH = "/404.html";
   const CAPTURE_ARM_WINDOW_MS = 5000;
   const QUICK_HIDE_LOCK_MS = 1400;
+  const AGGRESSIVE_BLUR_LOCK = true;
+  const STARTUP_GRACE_MS = 2500;
+  const scriptStartedAt = Date.now();
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
   const searchParams = new URLSearchParams(window.location.search);
   const shouldUnlock = searchParams.get("hvh_unlock") === "1";
@@ -33,6 +36,8 @@
       window.location.replace(BLOCK_PATH);
     }
   };
+
+  const canAggressiveLock = () => Date.now() - scriptStartedAt >= STARTUP_GRACE_MS;
 
   if (isLocked && !is404Page) {
     window.location.replace(BLOCK_PATH);
@@ -302,6 +307,11 @@
     document.addEventListener(
       "visibilitychange",
       () => {
+        if (AGGRESSIVE_BLUR_LOCK && document.hidden && canAggressiveLock()) {
+          lockTo404();
+          return;
+        }
+
         if (document.hidden) {
           hiddenAt = Date.now();
           return;
@@ -320,6 +330,10 @@
     window.addEventListener(
       "blur",
       () => {
+        if (AGGRESSIVE_BLUR_LOCK && canAggressiveLock()) {
+          lockTo404();
+          return;
+        }
         blurredAt = Date.now();
       },
       true
@@ -331,6 +345,16 @@
         const elapsed = Date.now() - blurredAt;
         blurredAt = 0;
         if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
+          lockTo404();
+        }
+      },
+      true
+    );
+
+    window.addEventListener(
+      "pagehide",
+      () => {
+        if (AGGRESSIVE_BLUR_LOCK && canAggressiveLock()) {
           lockTo404();
         }
       },

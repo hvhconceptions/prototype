@@ -3,7 +3,8 @@
   window.hvhAntiProtectLoaded = true;
 
   const BLOCK_KEY = "hvh_perma_404_lock";
-  const STRIKE_KEY = "hvh_capture_strikes";
+  const SCREENSHOT_STRIKE_KEY = "hvh_capture_strikes";
+  const INSULT_STRIKE_KEY = "hvh_insult_strikes";
   const BLOCK_PATH = "/404.html";
   const CAPTURE_ARM_WINDOW_MS = 5000;
   const QUICK_HIDE_LOCK_MS = 1400;
@@ -19,7 +20,8 @@
   if (shouldUnlock) {
     try {
       window.localStorage.removeItem(BLOCK_KEY);
-      window.localStorage.removeItem(STRIKE_KEY);
+      window.localStorage.removeItem(SCREENSHOT_STRIKE_KEY);
+      window.localStorage.removeItem(INSULT_STRIKE_KEY);
     } catch (_error) {}
   }
 
@@ -44,9 +46,9 @@
     redirectTo404();
   };
 
-  const readStrikeCount = () => {
+  const readStrikeCount = (key) => {
     try {
-      const raw = window.localStorage.getItem(STRIKE_KEY);
+      const raw = window.localStorage.getItem(key);
       const value = Number(raw);
       return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
     } catch (_error) {
@@ -54,14 +56,14 @@
     }
   };
 
-  const writeStrikeCount = (value) => {
+  const writeStrikeCount = (key, value) => {
     try {
-      window.localStorage.setItem(STRIKE_KEY, String(value));
+      window.localStorage.setItem(key, String(value));
     } catch (_error) {}
   };
 
   let isCaptureRedirectPending = false;
-  const showCaptureAlertAndRedirect = (permanent) => {
+  const showViolentAlertAndRedirect = (message, permanent) => {
     if (is404Page) {
       if (permanent) {
         lockTo404Forever();
@@ -89,9 +91,7 @@
     const popup = document.createElement("div");
     popup.style.cssText =
       "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(86vw,540px);padding:20px 18px;background:#140005;border:2px solid #ff1f5a;border-radius:16px;color:#fff;font:700 22px/1.25 Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:center;box-shadow:0 0 30px rgba(255,0,76,0.75);animation:hvhViolentShake 0.22s linear 5;";
-    popup.textContent = permanent
-      ? "SCREEN CAPTURE DETECTED AGAIN. ACCESS PERMANENTLY BLOCKED."
-      : "SCREEN CAPTURE DETECTED. REDIRECTING TO 404.";
+    popup.textContent = message;
 
     overlay.appendChild(popup);
     if (document.body) {
@@ -113,24 +113,42 @@
     }, ALERT_REDIRECT_DELAY_MS);
   };
 
-  let lastScreenshotEventAt = 0;
-  const registerScreenshotViolation = () => {
+  let lastViolationEventAt = 0;
+  const registerTwoStrikeViolation = (strikeKey, firstMessage, secondMessage) => {
     const now = Date.now();
-    if (now - lastScreenshotEventAt <= SCREENSHOT_EVENT_COOLDOWN_MS) {
+    if (now - lastViolationEventAt <= SCREENSHOT_EVENT_COOLDOWN_MS) {
       return;
     }
-    lastScreenshotEventAt = now;
+    lastViolationEventAt = now;
 
-    const strikes = readStrikeCount() + 1;
-    writeStrikeCount(strikes);
+    const strikes = readStrikeCount(strikeKey) + 1;
+    writeStrikeCount(strikeKey, strikes);
 
     if (strikes >= 2) {
-      showCaptureAlertAndRedirect(true);
+      showViolentAlertAndRedirect(secondMessage, true);
       return;
     }
 
-    showCaptureAlertAndRedirect(false);
+    showViolentAlertAndRedirect(firstMessage, false);
   };
+
+  const registerScreenshotViolation = () => {
+    registerTwoStrikeViolation(
+      SCREENSHOT_STRIKE_KEY,
+      "SCREEN CAPTURE DETECTED. REDIRECTING TO 404.",
+      "SCREEN CAPTURE DETECTED AGAIN. ACCESS PERMANENTLY BLOCKED."
+    );
+  };
+
+  const registerInsultViolation = () => {
+    registerTwoStrikeViolation(
+      INSULT_STRIKE_KEY,
+      "INSULT DETECTED. REDIRECTING TO 404.",
+      "INSULT DETECTED AGAIN. ACCESS PERMANENTLY BLOCKED."
+    );
+  };
+
+  window.hvhHandleInsultViolation = registerInsultViolation;
 
   const canAggressiveLock = () => Date.now() - scriptStartedAt >= STARTUP_GRACE_MS;
 

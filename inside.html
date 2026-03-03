@@ -5916,6 +5916,9 @@
             if (containsProfanity(currentValue)) {
               field.value = field.dataset.cleanValue || "";
               showBadVibe();
+              if (typeof window.hvhHandleInsultViolation === "function") {
+                window.hvhHandleInsultViolation();
+              }
               field.blur();
               window.setTimeout(() => {
                 try {
@@ -6205,6 +6208,9 @@
             if (containsProfanity(currentValue)) {
               field.value = field.dataset.cleanValue || "";
               setStatus("Please keep it respectful.", "error");
+              if (typeof window.hvhHandleInsultViolation === "function") {
+                window.hvhHandleInsultViolation();
+              }
               field.blur();
               window.setTimeout(() => {
                 try {

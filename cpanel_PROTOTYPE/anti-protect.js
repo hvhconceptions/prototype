@@ -434,28 +434,6 @@
   })();
 
   (function setupScreenCaptureDeterrents() {
-    const layer = document.createElement("div");
-    layer.id = "hvh-watermark-layer";
-    layer.setAttribute("aria-hidden", "true");
-    layer.style.cssText =
-      "position:fixed;inset:0;pointer-events:none;z-index:2147483646;overflow:hidden;";
-
-    const now = new Date();
-    const stamp = now.toISOString().replace("T", " ").slice(0, 19);
-    const label = (window.location.hostname || "protected") + " | " + stamp;
-
-    for (let i = 0; i < 16; i++) {
-      const mark = document.createElement("span");
-      mark.textContent = label;
-      mark.style.cssText =
-        "position:absolute;color:rgba(255,255,255,0.16);font:700 14px/1 Arial,sans-serif;transform:rotate(-28deg);white-space:nowrap;letter-spacing:1px;text-shadow:0 0 2px rgba(0,0,0,0.4);";
-      const x = (i % 4) * 25 + 2;
-      const y = Math.floor(i / 4) * 25 + 6;
-      mark.style.left = x + "%";
-      mark.style.top = y + "%";
-      layer.appendChild(mark);
-    }
-
     const flash = document.createElement("div");
     flash.id = "hvh-capture-flash";
     flash.setAttribute("aria-hidden", "true");
@@ -540,11 +518,9 @@
     );
 
     if (document.body) {
-      document.body.appendChild(layer);
       document.body.appendChild(flash);
     } else {
       window.addEventListener("DOMContentLoaded", () => {
-        document.body.appendChild(layer);
         document.body.appendChild(flash);
       });
     }

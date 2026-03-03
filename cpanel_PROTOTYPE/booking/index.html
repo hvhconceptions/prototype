@@ -549,6 +549,16 @@
         transform: translateY(-1px);
       }
 
+      #recordSessionField .radio-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      #recordSessionField .radio-card {
+        justify-content: center;
+      }
+
       #bookingTypeField .radio-card input:focus-visible + span {
         box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.26);
       }
@@ -1073,6 +1083,11 @@
           padding: 10px 12px;
         }
 
+        #recordSessionField .radio-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
         #bookingTypeField .radio-row {
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 10px;
@@ -1162,7 +1177,6 @@
       <div class="back-row">
         <a class="back-link" id="backInsideLink" href="/inside.html">Back to inside</a>
       </div>
-      <div class="tag">Heidi Van Horny</div>
       <h1 id="bookingTitle">Van Booking Portal</h1>
       <p class="subtitle" id="bookingSubtitle">
         Simple, private scheduling. Send your request and I email the payment details. Your booking is confirmed after
@@ -2195,8 +2209,7 @@
         placeholder.textContent = t("choose_option");
         filmingHoursSelect.appendChild(placeholder);
 
-        const maxHours = Math.floor(getSelectedDurationHours());
-        for (let hour = 1; hour <= maxHours; hour += 1) {
+        for (let hour = 1; hour <= 8; hour += 1) {
           const option = document.createElement("option");
           option.value = String(hour);
           option.textContent = formatHourLabel(hour);

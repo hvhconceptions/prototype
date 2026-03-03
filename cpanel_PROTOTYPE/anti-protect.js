@@ -11,7 +11,7 @@
   const AGGRESSIVE_BLUR_LOCK = false;
   const STARTUP_GRACE_MS = 2500;
   const SCREENSHOT_EVENT_COOLDOWN_MS = 1200;
-  const ALERT_REDIRECT_DELAY_MS = 1100;
+  const ALERT_REDIRECT_DELAY_MS = 1200;
   const scriptStartedAt = Date.now();
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
   const searchParams = new URLSearchParams(window.location.search);
@@ -63,6 +63,26 @@
   };
 
   let isCaptureRedirectPending = false;
+  const triggerViolentScreenShake = () => {
+    const styleId = "hvh-violent-page-shake-style";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent =
+        "@keyframes hvhPageViolentShake{0%{transform:translate(0,0) rotate(0deg);}10%{transform:translate(-14px,8px) rotate(-1.4deg);}20%{transform:translate(14px,-8px) rotate(1.4deg);}30%{transform:translate(-12px,7px) rotate(-1.2deg);}40%{transform:translate(12px,-7px) rotate(1.2deg);}50%{transform:translate(-10px,6px) rotate(-1deg);}60%{transform:translate(10px,-6px) rotate(1deg);}70%{transform:translate(-8px,5px) rotate(-0.8deg);}80%{transform:translate(8px,-5px) rotate(0.8deg);}90%{transform:translate(-6px,3px) rotate(-0.4deg);}100%{transform:translate(0,0) rotate(0deg);}}";
+      document.head.appendChild(style);
+    }
+
+    const root = document.documentElement;
+    const body = document.body;
+    if (root) {
+      root.style.animation = "hvhPageViolentShake 0.18s linear 7";
+    }
+    if (body) {
+      body.style.animation = "hvhPageViolentShake 0.16s linear 8";
+    }
+  };
+
   const showViolentAlertAndRedirect = (message, permanent) => {
     if (is404Page) {
       if (permanent) {
@@ -73,6 +93,7 @@
 
     if (isCaptureRedirectPending) return;
     isCaptureRedirectPending = true;
+    triggerViolentScreenShake();
 
     const styleId = "hvh-capture-alert-style";
     if (!document.getElementById(styleId)) {
@@ -101,7 +122,7 @@
     }
 
     if (navigator.vibrate) {
-      navigator.vibrate([120, 50, 120, 50, 120, 50, 120]);
+      navigator.vibrate([140, 40, 140, 40, 140, 40, 140, 40, 140]);
     }
 
     window.setTimeout(() => {

@@ -171,6 +171,90 @@
         box-shadow: 0 8px 24px rgba(255, 86, 137, 0.25);
       }
 
+      .unlock-panel {
+        width: min(920px, calc(100% - 28px));
+        margin: 0 auto 20px;
+        padding: clamp(14px, 2.5vw, 20px);
+        border: 1px solid rgba(0, 255, 153, 0.26);
+        border-radius: 14px;
+        background: rgba(0, 12, 9, 0.86);
+        box-shadow: 0 14px 28px rgba(0, 255, 153, 0.16);
+      }
+
+      .unlock-title {
+        margin: 0 0 6px;
+        font-size: clamp(16px, 2.4vw, 22px);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .unlock-copy {
+        margin: 0 0 12px;
+        color: rgba(248, 255, 248, 0.86);
+        font-size: 13px;
+      }
+
+      .unlock-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+      }
+
+      .unlock-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 153, 0.32);
+        background: rgba(0, 255, 153, 0.12);
+        color: #ecfffb;
+        text-decoration: none;
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .unlock-link:hover,
+      .unlock-link:focus-visible {
+        background: rgba(0, 255, 153, 0.24);
+        outline: none;
+      }
+
+      .unlock-link.recommended {
+        border-color: rgba(255, 86, 137, 0.45);
+        background: rgba(255, 86, 137, 0.2);
+      }
+
+      .unlock-contact {
+        margin-top: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(248, 255, 248, 0.3);
+        text-decoration: none;
+        color: #fff;
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        background: rgba(248, 255, 248, 0.1);
+      }
+
+      .unlock-contact:hover,
+      .unlock-contact:focus-visible {
+        background: rgba(248, 255, 248, 0.2);
+        outline: none;
+      }
+
+      .unlock-note {
+        margin: 8px 0 0;
+        font-size: 11px;
+        color: rgba(248, 255, 248, 0.65);
+      }
+
       @media (max-width: 520px) {
         header {
           letter-spacing: 3px;
@@ -266,6 +350,44 @@
       <a href="eyecandy.html" target="_blank" rel="noopener noreferrer">eye candy</a>
       <a class="secondary" href="index.html">checkpoint</a>
     </div>
+
+    <section class="unlock-panel" aria-labelledby="unlock-title">
+      <h2 id="unlock-title" class="unlock-title">Blocked Session Unblock</h2>
+      <p class="unlock-copy">
+        Bad energy fee: <strong>$20 CAD</strong>. Complete payment then send your transaction ID for manual unlock.
+      </p>
+      <div class="unlock-grid">
+        <a
+          class="unlock-link recommended"
+          href="https://throne.com/heidivanhorny"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Pay $20 via Throne</a
+        >
+        <a
+          class="unlock-link"
+          href="https://ccbill.com/industries/adult-business"
+          target="_blank"
+          rel="noopener noreferrer"
+          >CCBill Processor</a
+        >
+        <a
+          class="unlock-link"
+          href="https://segpay.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Segpay Processor</a
+        >
+      </div>
+        <a
+          class="unlock-contact"
+        href="mailto:hvh.conceptions@gmail.com?subject=Unblock%20Request%20-%20%2420%20Fee&body=Amount%20Paid:%20%2420%20CAD%0AProcessor:%20%0ATransaction%20ID:%20%0AName:%20%0A"
+        >Send Payment Proof</a
+      >
+      <p class="unlock-note">
+        Replace processor links with your direct checkout URLs to automate this flow.
+      </p>
+    </section>
 
     <script>
       const root = document.documentElement;

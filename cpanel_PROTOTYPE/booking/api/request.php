@@ -9,7 +9,7 @@ function normalize_experience(string $experience): string
     if ($normalized === 'duo_gfe') {
         return 'gfe';
     }
-    if (in_array($normalized, ['gfe', 'pse', 'filming', 'social'], true)) {
+    if (in_array($normalized, ['gfe', 'pse', 'social'], true)) {
         return $normalized;
     }
     return 'gfe';
@@ -20,9 +20,6 @@ function format_experience_label(string $experience): string
     $normalized = normalize_experience($experience);
     if ($normalized === 'pse') {
         return 'PSE';
-    }
-    if ($normalized === 'filming') {
-        return 'Filming';
     }
     if ($normalized === 'social') {
         return 'Social introduction';
@@ -74,22 +71,24 @@ function get_site_rate_config(): array
     return $cached;
 }
 
-function get_service_addon_amount(string $experience): int
+function get_service_addon_amount(bool $recordSession, float $filmingHours): int
 {
-    $normalized = normalize_experience($experience);
-    if ($normalized === 'filming') {
-        return 500;
+    if (!$recordSession) {
+        return 0;
     }
-    return 0;
+    if (!is_finite($filmingHours) || $filmingHours <= 0) {
+        return 0;
+    }
+    return (int) round($filmingHours * 500);
 }
 
-function get_service_addon_label(string $experience): string
+function get_service_addon_label(bool $recordSession, float $filmingHours): string
 {
-    $normalized = normalize_experience($experience);
-    if ($normalized === 'filming') {
-        return 'Filming add-on';
+    if (!$recordSession || !is_finite($filmingHours) || $filmingHours <= 0) {
+        return '';
     }
-    return '';
+    $hoursText = rtrim(rtrim(number_format($filmingHours, 2, '.', ''), '0'), '.');
+    return 'Filming add-on (' . $hoursText . 'h)';
 }
 
 function normalize_city_name(string $city): string
@@ -245,18 +244,22 @@ function get_city_schedule_for_request(array $availability, string $city, string
     return [];
 }
 
-function is_template_generated_block_entry(array $entry): bool
+function is_confirmed_booking_block_entry(array $entry): bool
 {
-    $kind = strtolower(trim((string) ($entry['kind'] ?? '')));
-    if ($kind === 'template') {
-        return true;
-    }
     $bookingId = trim((string) ($entry['booking_id'] ?? ''));
-    if ($bookingId !== '') {
+    if ($bookingId === '') {
         return false;
     }
-    $reason = strtolower(trim((string) ($entry['reason'] ?? '')));
-    return in_array($reason, ['after leave-day end', 'sleep', 'break'], true);
+    $kind = strtolower(trim((string) ($entry['kind'] ?? '')));
+    $bookingStatus = strtolower(trim((string) ($entry['booking_status'] ?? ($entry['status'] ?? ''))));
+    $paymentStatus = strtolower(trim((string) ($entry['payment_status'] ?? '')));
+    if ($paymentStatus === 'paid') {
+        return true;
+    }
+    if (in_array($bookingStatus, ['accepted', 'paid'], true)) {
+        return true;
+    }
+    return $kind === 'booking';
 }
 
 function get_base_rate(float $hours, string $experience, string $rateKey): int
@@ -471,21 +474,34 @@ if (in_array($depositCurrency, ['USDC', 'BTC', 'LTC'], true)) {
 $hours = is_numeric($payload['duration_hours']) ? (float) $payload['duration_hours'] : 0.0;
 $rateKey = '';
 $experience = normalize_experience((string) ($payload['experience'] ?? ''));
+$recordSessionRaw = strtolower(trim((string) ($payload['record_session'] ?? 'no')));
+$recordSession = in_array($recordSessionRaw, ['yes', 'true', '1', 'on'], true);
+$filmingHoursRaw = $payload['filming_hours'] ?? 0;
+$filmingHours = is_numeric($filmingHoursRaw) ? (float) $filmingHoursRaw : 0.0;
+if (!$recordSession) {
+    $filmingHours = 0.0;
+}
 if ($experience === 'social' && !in_array($hours, [3.0, 4.0], true)) {
     $errors['duration_hours'] = 'Social introduction only supports 3 or 4 hours';
+}
+if ($recordSession && $filmingHours <= 0) {
+    $errors['filming_hours'] = 'Filming hours are required when recording is enabled';
+}
+if ($filmingHours > 0 && $hours > 0 && $filmingHours > $hours) {
+    $errors['filming_hours'] = 'Filming hours cannot exceed session duration';
 }
 if (!empty($errors)) {
     json_response(['error' => 'Validation failed', 'fields' => $errors], 422);
 }
 $baseRate = get_base_rate($hours, $experience, $rateKey);
-$serviceAddonAmount = get_service_addon_amount($experience);
+$serviceAddonAmount = get_service_addon_amount($recordSession, $filmingHours);
 $totalRate = $baseRate + $serviceAddonAmount;
 $deposit = $totalRate > 0 ? (int) round(($totalRate * ($depositPercent / 100)) * $displayRate) : 0;
 $billingCurrency = $depositCurrency !== '' ? $depositCurrency : ($currency !== '' ? $currency : 'CAD');
 $displayTotalRate = (int) round($totalRate * $displayRate);
 $displayServiceAddonAmount = (int) round($serviceAddonAmount * $displayRate);
 $displayBaseRate = max(0, $displayTotalRate - $displayServiceAddonAmount);
-$serviceAddonLabel = get_service_addon_label($experience);
+$serviceAddonLabel = get_service_addon_label($recordSession, $filmingHours);
 
 $availability = read_json_file(DATA_DIR . '/availability.json', [
     'availability_mode' => 'open',
@@ -493,10 +509,8 @@ $availability = read_json_file(DATA_DIR . '/availability.json', [
     'blocked' => [],
     'city_schedules' => [],
 ]);
-$availabilityMode = (string) ($availability['availability_mode'] ?? 'open');
 $bufferMinutes = (int) ($availability['buffer_minutes'] ?? DEFAULT_BUFFER_MINUTES);
 $blockedSlots = $availability['blocked'] ?? [];
-$recurringBlocks = $availability['recurring'] ?? [];
 $selectedCitySchedule = [];
 if ($requestedCity !== '' && $preferredDate !== '' && !is_fly_me_city($requestedCity)) {
     $selectedCitySchedule = get_city_schedule_for_request($availability, $requestedCity, $preferredDate);
@@ -511,13 +525,6 @@ if ($selectedCitySchedule) {
 }
 if (!is_array($blockedSlots)) {
     $blockedSlots = [];
-}
-if (!is_array($recurringBlocks)) {
-    $recurringBlocks = [];
-}
-
-if ($availabilityMode === 'closed') {
-    json_response(['error' => 'Currently unavailable'], 409);
 }
 
 if ($hours > 0) {
@@ -538,36 +545,11 @@ if ($hours > 0) {
                 $endMinutes = $startMinutes + $durationMinutes;
                 $windowStart = max(0, $startMinutes - $bufferMinutes);
                 $windowEnd = min(1440, $endMinutes + $bufferMinutes);
-                $weekdayIndex = (int) $tourTime->format('w');
-                foreach ($recurringBlocks as $block) {
-                    if (!is_array($block)) {
-                        continue;
-                    }
-                    $days = $block['days'] ?? [];
-                    if (!is_array($days) || !in_array($weekdayIndex, $days, true)) {
-                        continue;
-                    }
-                    if (!empty($block['all_day'])) {
-                        json_response(['error' => 'Selected time is unavailable'], 409);
-                    }
-                    $start = (string) ($block['start'] ?? '');
-                    $end = (string) ($block['end'] ?? '');
-                    if (!preg_match('/^\d{1,2}:\d{2}$/', $start) || !preg_match('/^\d{1,2}:\d{2}$/', $end)) {
-                        continue;
-                    }
-                    [$sHour, $sMin] = array_map('intval', explode(':', $start));
-                    [$eHour, $eMin] = array_map('intval', explode(':', $end));
-                    $blockStart = $sHour * 60 + $sMin;
-                    $blockEnd = $eHour * 60 + $eMin;
-                    if ($windowStart < $blockEnd && $windowEnd > $blockStart) {
-                        json_response(['error' => 'Selected time is unavailable'], 409);
-                    }
-                }
                 foreach ($blockedSlots as $entry) {
                     if (!is_array($entry)) {
                         continue;
                     }
-                    if (is_template_generated_block_entry($entry)) {
+                    if (!is_confirmed_booking_block_entry($entry)) {
                         continue;
                     }
                     $entryCity = normalize_city_name((string) ($entry['city'] ?? ''));
@@ -657,6 +639,11 @@ if ($requestEmail !== '') {
     $body .= "Base rate: " . $displayBaseRate . " " . $currencyLabel . "\n";
     $body .= "Service: " . $experienceLabel . "\n";
     $body .= "Duration: " . ($payload['duration_label'] ?? '') . "\n";
+    $body .= "Record session: " . ($recordSession ? 'yes' : 'no') . "\n";
+    if ($filmingHours > 0) {
+        $hoursText = rtrim(rtrim(number_format($filmingHours, 2, '.', ''), '0'), '.');
+        $body .= "Filming hours: " . $hoursText . "h\n";
+    }
     if ($displayServiceAddonAmount > 0) {
         $body .= ($serviceAddonLabel !== '' ? $serviceAddonLabel : 'Service add-on') . ": +" . $displayServiceAddonAmount . " " . $currencyLabel . "\n";
     }
@@ -697,6 +684,8 @@ $request = [
     'booking_type' => (string) $payload['booking_type'],
     'outcall_address' => trim((string) ($payload['outcall_address'] ?? '')),
     'experience' => $experience,
+    'record_session' => $recordSession ? 'yes' : 'no',
+    'filming_hours' => $filmingHours > 0 ? rtrim(rtrim(number_format($filmingHours, 2, '.', ''), '0'), '.') : '0',
     'duration_label' => (string) $payload['duration_label'],
     'duration_hours' => (string) $payload['duration_hours'],
     'preferred_date' => (string) $payload['preferred_date'],
@@ -717,7 +706,7 @@ $request = [
     'deposit_currency' => $depositCurrency,
     'deposit_percent' => (string) $depositPercent,
     'base_rate' => $baseRate,
-    'pse_addon' => $experience === 'pse' ? $serviceAddonAmount : 0,
+    'pse_addon' => 0,
     'service_addon' => $serviceAddonAmount,
     'service_addon_label' => $serviceAddonLabel,
     'total_rate' => $totalRate,
@@ -748,6 +737,10 @@ $adminBody .= "City: " . ($request['city'] ?? '') . "\n";
 $adminBody .= "Currency: " . ($request['currency'] ?? '') . "\n";
 $adminBody .= "Type: " . ($request['booking_type'] ?? '') . "\n";
 $adminBody .= "Service: " . $experienceLabel . "\n";
+$adminBody .= "Record session: " . ($recordSession ? 'yes' : 'no') . "\n";
+if ($filmingHours > 0) {
+    $adminBody .= "Filming hours: " . rtrim(rtrim(number_format($filmingHours, 2, '.', ''), '0'), '.') . "h\n";
+}
 $adminBody .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
 $adminBody .= "Preferred: " . ($request['preferred_date'] ?? '') . " " . ($request['preferred_time'] ?? '') . "\n";
 $adminBody .= "Base rate (CAD): " . $baseRate . "\n";

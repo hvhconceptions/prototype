@@ -1290,7 +1290,6 @@
                 <option value="" disabled selected>chose an option</option>
                 <option value="gfe">GFE</option>
                 <option value="pse">PSE</option>
-                <option value="filming">Filming</option>
                 <option value="social">Social introduction</option>
               </select>
             </div>
@@ -1308,6 +1307,26 @@
                 hidden
                 >Discuss it with me on WhatsApp</a
               >
+            </div>
+            <div class="field span-2" id="recordSessionField">
+              <label>Do you wish to record the session?</label>
+              <div class="radio-row">
+                <label class="radio-card">
+                  <input type="radio" name="record_session" value="no" checked />
+                  <span>No</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="record_session" value="yes" />
+                  <span>Yes</span>
+                </label>
+              </div>
+            </div>
+            <div class="field hidden" id="filmingHoursField">
+              <label for="filming_hours">How many hours do you wanna film?</label>
+              <select id="filming_hours" name="filming_hours">
+                <option value="" selected disabled>chose option</option>
+              </select>
+              <p class="hint" id="filmingHoursHint">$500 per filmed hour.</p>
             </div>
             <div class="field span-2" id="bookingTypeField">
               <label>Location</label>
@@ -1419,6 +1438,9 @@
       const form = document.getElementById("bookingForm");
       const durationSelect = document.getElementById("duration");
       const experienceSelect = document.getElementById("experience");
+
+      const filmingHoursField = document.getElementById("filmingHoursField");
+      const filmingHoursSelect = document.getElementById("filming_hours");
       const currencySelect = document.getElementById("currency");
       const citySelect = document.getElementById("city");
       const cityMismatchWarning = document.getElementById("cityMismatchWarning");
@@ -1523,8 +1545,11 @@
           service_choose_option: "chose an option",
           service_gfe: "GFE",
           service_pse: "PSE",
-          service_filming: "Filming",
           service_social: "Social introduction",
+          label_record_session: "Do you wish to record the session?",
+          label_filming_hours: "How many hours do you want to film?",
+          filming_rule: "$500 per filmed hour.",
+          filming_hours_invalid: "Filming hours must be within your selected session duration.",
           label_location: "Location",
           incall: "Incall",
           outcall: "Outcall",
@@ -1538,7 +1563,7 @@
           base_rate: "Base rate:",
           service_addon: "Service add-on:",
           pse_addon: "PSE add-on:",
-          filming_addon: "Filming add-on:",
+          filming_addon: "Filming add-on",
           total_rate: "Total:",
           deposit_rate: "20% deposit:",
           deposit_note: "Deposit is 20% of total.",
@@ -1657,8 +1682,11 @@
           service_choose_option: "choisir une option",
           service_gfe: "GFE",
           service_pse: "PSE",
-          service_filming: "Filming",
           service_social: "Introduction sociale",
+          label_record_session: "Voulez-vous enregistrer la session?",
+          label_filming_hours: "Combien d'heures voulez-vous filmer?",
+          filming_rule: "500 $ par heure filmee.",
+          filming_hours_invalid: "Les heures filmees doivent rester dans la duree choisie.",
           label_location: "Lieu",
           incall: "Incall",
           outcall: "Outcall",
@@ -1672,7 +1700,7 @@
           base_rate: "Tarif de base:",
           service_addon: "Supplement service:",
           pse_addon: "Supplement PSE:",
-          filming_addon: "Supplement filming:",
+          filming_addon: "Supplement filming",
           total_rate: "Total:",
           deposit_rate: "Acompte 20%:",
           deposit_note: "L'acompte est de 20% du total.",
@@ -1849,9 +1877,7 @@
       let bufferMinutes = 30;
       let selectedTourTimezone = tourTz;
       let selectedBufferMinutes = bufferMinutes;
-      let availabilityMode = "open";
       let blockedSlots = [];
-      let recurringBlocks = [];
       let citySchedules = [];
       let selectedSlotButton = null;
       let wizardStepIndex = 0;
@@ -1872,7 +1898,7 @@
       );
       const BASE_CURRENCY = "CAD";
       const DEPOSIT_PERCENT = 20;
-      const FILMING_BILL_ADDON = 500;
+      const FILMING_RATE_PER_HOUR = 500;
       const FIAT_CURRENCIES = ["CAD", "USD", "EUR", "GBP"];
       const CRYPTO_CURRENCIES = ["USDC", "BTC", "LTC"];
       const FX_OVERRIDES = {
@@ -2095,7 +2121,6 @@
 
       const normalizeExperience = (value) => {
         if (value === "pse") return "pse";
-        if (value === "filming") return "filming";
         if (value === "social") return "social";
         return "gfe";
       };
@@ -2142,17 +2167,85 @@
         }
       };
 
-      const getServiceAddonBase = (experience, baseRate) => {
-        if (!Number.isFinite(baseRate) || baseRate <= 0) return 0;
-        const normalized = normalizeExperience(experience);
-        if (normalized === "filming") return FILMING_BILL_ADDON;
-        return 0;
+      const getRecordingChoice = () =>
+        document.querySelector('input[name="record_session"]:checked')?.value === "yes" ? "yes" : "no";
+
+      const getSelectedDurationHours = () => {
+        const selected = durationSelect?.selectedOptions?.[0];
+        if (!selected) return 0;
+        const hours = Number(selected.dataset.hours || 0);
+        if (!Number.isFinite(hours) || hours <= 0) return 0;
+        return hours;
       };
 
-      const getServiceAddonLabel = (experience) => {
-        const normalized = normalizeExperience(experience);
-        if (normalized === "filming") return t("filming_addon");
-        return t("service_addon");
+      const formatHourLabel = (hours) => {
+        if (!Number.isFinite(hours) || hours <= 0) return "0h";
+        const rounded = Math.round(hours * 10) / 10;
+        return Number.isInteger(rounded) ? `${rounded}h` : `${rounded.toFixed(1)}h`;
+      };
+
+      const syncFilmingHoursOptions = () => {
+        if (!filmingHoursSelect) return;
+        const previous = filmingHoursSelect.value;
+        filmingHoursSelect.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = t("choose_option");
+        filmingHoursSelect.appendChild(placeholder);
+
+        const maxHours = Math.floor(getSelectedDurationHours());
+        for (let hour = 1; hour <= maxHours; hour += 1) {
+          const option = document.createElement("option");
+          option.value = String(hour);
+          option.textContent = formatHourLabel(hour);
+          filmingHoursSelect.appendChild(option);
+        }
+
+        if (previous && Array.from(filmingHoursSelect.options).some((option) => option.value === previous)) {
+          filmingHoursSelect.value = previous;
+        }
+      };
+
+      const toggleFilmingHoursField = () => {
+        if (!filmingHoursField || !filmingHoursSelect) return;
+        const recording = getRecordingChoice() === "yes";
+        filmingHoursField.classList.toggle("hidden", !recording);
+        if (!recording) {
+          filmingHoursSelect.required = false;
+          filmingHoursSelect.value = "";
+          filmingHoursSelect.setCustomValidity("");
+          return;
+        }
+        syncFilmingHoursOptions();
+        filmingHoursSelect.required = true;
+        const maxHours = Math.floor(getSelectedDurationHours());
+        if (maxHours < 1) {
+          filmingHoursSelect.setCustomValidity(t("filming_hours_invalid"));
+        } else {
+          filmingHoursSelect.setCustomValidity("");
+        }
+      };
+
+      const getFilmingHours = () => {
+        if (getRecordingChoice() !== "yes") return 0;
+        const value = Number(filmingHoursSelect?.value || 0);
+        if (!Number.isFinite(value) || value <= 0) return 0;
+        const maxHours = Math.floor(getSelectedDurationHours());
+        return Math.max(0, Math.min(value, maxHours));
+      };
+
+      const getServiceAddonBase = () => {
+        const filmingHours = getFilmingHours();
+        if (filmingHours <= 0) return 0;
+        return Math.round(filmingHours * FILMING_RATE_PER_HOUR);
+      };
+
+      const getServiceAddonLabel = () => {
+        const filmingHours = getFilmingHours();
+        if (filmingHours <= 0) return t("service_addon");
+        return `${t("filming_addon")} (${formatHourLabel(filmingHours)})`;
       };
 
       const getBaseRate = (hours, experience, rateKey) => {
@@ -2292,7 +2385,7 @@
           return;
         }
         const baseRate = getBaseRate(hours, experience, rateKey);
-        const serviceAddonBase = getServiceAddonBase(experience, baseRate);
+        const serviceAddonBase = getServiceAddonBase();
         const totalBase = baseRate + serviceAddonBase;
         const depositBase = Math.round(totalBase * (DEPOSIT_PERCENT / 100));
         const baseLabel = await formatRateLabel(baseRate, currency);
@@ -2305,7 +2398,7 @@
           if (serviceAddonBase > 0) {
             const addonLabel = await formatRateLabel(serviceAddonBase, currency);
             serviceAddonDisplay.textContent = addonLabel;
-            setDepositRowPrefix("#serviceAddonRow", getServiceAddonLabel(experience));
+            setDepositRowPrefix("#serviceAddonRow", getServiceAddonLabel());
             serviceAddonRow.classList.remove("hidden");
           } else {
             serviceAddonDisplay.textContent = "--";
@@ -2371,6 +2464,8 @@
           durationSelect.value = "";
         }
         updateDurationOptions.lastExperience = currentExperience;
+        syncFilmingHoursOptions();
+        toggleFilmingHoursField();
         await updatePaymentSummary();
         renderDayCalendar();
       };
@@ -2429,8 +2524,8 @@
         const normalizedAlias = rawCity
           .normalize("NFKD")
           .replace(/[\u0300-\u036f]/g, "")
-          .replace(/ß/gi, "ss")
-          .replace(/ß/gi, "b")
+          .replace(/ï¿½/gi, "ss")
+          .replace(/ï¿½/gi, "b")
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, " ")
           .replace(/\s+/g, " ")
@@ -2691,62 +2786,29 @@
         if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
         return hour * 60 + minute;
       };
-
-      const weekdayLabelToIndex = (label) => {
-        const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-        return map[label] ?? 0;
-      };
-
-      const getWeekdayIndex = (dateKey) => {
-        const [year, month, day] = String(dateKey).split("-").map((value) => Number(value));
-        if (!year || !month || !day) return 0;
-        const base = new Date(Date.UTC(year, month - 1, day, 12, 0));
-        const label = new Intl.DateTimeFormat("en-US", {
-          timeZone: selectedTourTimezone || tourTz,
-          weekday: "short",
-        }).format(base);
-        return weekdayLabelToIndex(label);
-      };
-
-      const isRecurringBlocked = (dateKey, windowStart, windowEnd) => {
-        if (!Array.isArray(recurringBlocks) || !recurringBlocks.length) return false;
-        const weekdayIndex = getWeekdayIndex(dateKey);
-        return recurringBlocks.some((block) => {
-          if (!block) return false;
-          const days = Array.isArray(block.days) ? block.days : [];
-          if (!days.includes(weekdayIndex)) return false;
-          if (block.all_day) return true;
-          const startMinutes = timeToMinutes(block.start);
-          const endMinutes = timeToMinutes(block.end);
-          if (startMinutes === null || endMinutes === null) return false;
-          return windowStart < endMinutes && windowEnd > startMinutes;
-        });
-      };
-
-      const isTemplateGeneratedBlock = (entry) => {
+      const isConfirmedBookingBlock = (entry) => {
         if (!entry || typeof entry !== "object") return false;
+        const bookingId = String(entry.booking_id || "").trim();
+        if (!bookingId) return false;
         const kind = String(entry.kind || "").trim().toLowerCase();
-        if (kind === "template") return true;
-        const hasBookingId = String(entry.booking_id || "").trim() !== "";
-        if (hasBookingId) return false;
-        const reason = String(entry.reason || "").trim().toLowerCase();
-        return reason === "after leave-day end" || reason === "sleep" || reason === "break";
+        const bookingStatus = String(entry.booking_status || entry.status || "").trim().toLowerCase();
+        const paymentStatus = String(entry.payment_status || "").trim().toLowerCase();
+        if (paymentStatus === "paid") return true;
+        if (bookingStatus === "accepted" || bookingStatus === "paid") return true;
+        // Backward compatibility with older booking blocks that only carried booking_id/kind.
+        return kind === "booking";
       };
 
       const isSlotBlocked = (dateKey, startMinutes, endMinutes) => {
-        if (availabilityMode === "closed") return true;
         if (!Array.isArray(blockedSlots) || !blockedSlots.length) {
-          return isRecurringBlocked(dateKey, startMinutes, endMinutes);
+          return false;
         }
         const activeBuffer = Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes;
         const windowStart = Math.max(0, startMinutes - activeBuffer);
         const windowEnd = Math.min(1440, endMinutes + activeBuffer);
-        if (isRecurringBlocked(dateKey, windowStart, windowEnd)) {
-          return true;
-        }
         return blockedSlots.some((entry) => {
           if (!entry || entry.date !== dateKey) return false;
-          if (isTemplateGeneratedBlock(entry)) return false;
+          if (!isConfirmedBookingBlock(entry)) return false;
           const blockCityKey = normalizeCityName(entry.city || "");
           const selectedCityValue = citySelect?.value || getCityForDate(dateKey) || "";
           const selectedCityKey = normalizeCityName(selectedCityValue);
@@ -2932,6 +2994,7 @@
       const dateField = preferredDate ? preferredDate.closest(".field") : null;
       const durationField = durationSelect ? durationSelect.closest(".field") : null;
       const experienceField = experienceSelect ? experienceSelect.closest(".field") : null;
+      const recordSessionField = document.getElementById("recordSessionField");
       const currencyField = currencySelect ? currencySelect.closest(".field") : null;
       const nameField = nameInput ? nameInput.closest(".field") : null;
       const phoneField = phoneInput ? phoneInput.closest(".field") : null;
@@ -2962,7 +3025,7 @@
           key: "location-duration-service",
           titleKey: "step_location_duration_service",
           panels: [panelRequest, panelAvailability],
-          requestFields: [bookingTypeField, outcallField, experienceField, durationField],
+          requestFields: [bookingTypeField, outcallField, experienceField, durationField, recordSessionField, filmingHoursField],
           validate: () => {
             toggleOutcall();
             const selected = document.querySelector('input[name="booking_type"]:checked');
@@ -2974,6 +3037,11 @@
             if (!okDuration) return false;
             const okService = experienceSelect?.reportValidity() ?? true;
             if (!okService) return false;
+            toggleFilmingHoursField();
+            if (getRecordingChoice() === "yes") {
+              const okFilmingHours = filmingHoursSelect?.reportValidity() ?? false;
+              if (!okFilmingHours) return false;
+            }
             if (!validateDateNotPast()) {
               preferredDate?.reportValidity();
               return false;
@@ -3120,6 +3188,7 @@
           emailInput,
           notesInput,
           outcallInput,
+          filmingHoursSelect,
         ];
         for (const control of controls) {
           if (!control) continue;
@@ -3188,9 +3257,7 @@
           bufferMinutes = Number(data.buffer_minutes) || bufferMinutes;
           selectedTourTimezone = tourTz;
           selectedBufferMinutes = bufferMinutes;
-          availabilityMode = data.availability_mode || availabilityMode;
           blockedSlots = Array.isArray(data.blocked) ? data.blocked : [];
-          recurringBlocks = Array.isArray(data.recurring) ? data.recurring : [];
           citySchedules = normalizeCityScheduleList(data.city_schedules || []);
           syncCityOptions();
           updateSelectedTourContext();
@@ -3221,8 +3288,17 @@
           updateDurationOptions();
         }
         if (event.target.id === "duration") {
+          syncFilmingHoursOptions();
+          toggleFilmingHoursField();
           updatePaymentSummary();
           renderDayCalendar();
+        }
+        if (event.target.name === "record_session") {
+          toggleFilmingHoursField();
+          updatePaymentSummary();
+        }
+        if (event.target.id === "filming_hours") {
+          updatePaymentSummary();
         }
       });
 
@@ -3332,6 +3408,8 @@
         payload.currency = currencySelect.value || "";
         payload.deposit_percent = String(DEPOSIT_PERCENT);
         payload.deposit_confirm = formData.get("deposit_confirm") ? "1" : "";
+        payload.record_session = getRecordingChoice();
+        payload.filming_hours = String(getFilmingHours());
         payload.tour_timezone = selectedTourTimezone || tourTz;
         payload.tour_city = sanitizeCityLabel(getCityForDate(preferredDate.value));
         payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
@@ -3380,7 +3458,12 @@
           phoneInput?.setCustomValidity("");
           emailInput?.setCustomValidity("");
           currencySelect.value = detectDefaultCurrency();
+          const recordNoInput = document.querySelector('input[name="record_session"][value="no"]');
+          if (recordNoInput) {
+            recordNoInput.checked = true;
+          }
           await updateDurationOptions();
+          toggleFilmingHoursField();
           toggleOutcall();
           setBookingDateFloor();
           validateCityForDate({ showMessage: true });
@@ -3446,6 +3529,7 @@
         setLabelText("currency", t("label_currency"));
         setLabelText("duration", t("label_duration"));
         setLabelText("experience", t("label_service"));
+        setLabelText("filming_hours", t("label_filming_hours"));
         setLabelText("outcall_address", t("outcall_address"));
         setLabelText("preferred_time", t("selected_time"));
         setLabelText("payment_method", t("label_payment_method"));
@@ -3473,7 +3557,11 @@
         setRadioLabelText("contact_followup_email", "no", t("no"));
         setRadioLabelText("booking_type", "incall", t("incall"));
         setRadioLabelText("booking_type", "outcall", t("outcall"));
+        setRadioLabelText("record_session", "yes", t("yes"));
+        setRadioLabelText("record_session", "no", t("no"));
 
+        const recordSessionLabel = document.querySelector("#recordSessionField > label:not(.radio-card)");
+        if (recordSessionLabel) recordSessionLabel.textContent = t("label_record_session");
         const bookingLocationLabel = document.querySelector("#bookingTypeField > label:not(.radio-card)");
         if (bookingLocationLabel) bookingLocationLabel.textContent = t("label_location");
         const outcallHint = document.querySelector("#bookingTypeField .hint");
@@ -3496,6 +3584,8 @@
         }
         if (availabilityNote) availabilityNote.textContent = t("availability_note_default");
         if (durationHint) durationHint.textContent = t("duration_hint");
+        const filmingHoursHint = document.getElementById("filmingHoursHint");
+        if (filmingHoursHint) filmingHoursHint.textContent = t("filming_rule");
         if (whatsappDiscuss) {
           whatsappDiscuss.textContent = t("discuss_whatsapp");
           whatsappDiscuss.setAttribute("aria-label", t("discuss_whatsapp"));
@@ -3507,8 +3597,8 @@
         setOptionText("experience", "", t("service_choose_option"));
         setOptionText("experience", "gfe", t("service_gfe"));
         setOptionText("experience", "pse", t("service_pse"));
-        setOptionText("experience", "filming", t("service_filming"));
         setOptionText("experience", "social", t("service_social"));
+        setOptionText("filming_hours", "", t("choose_option"));
         setOptionText("payment_method", "", t("choose_option"));
         setOptionText("payment_method", "interac", t("etransfer_canada"));
 
@@ -3567,6 +3657,7 @@
       syncCityOptions();
       setBookingDateFloor();
       updateDurationOptions();
+      toggleFilmingHoursField();
       toggleOutcall();
       validateCityForDate({ showMessage: true });
       renderDayCalendar();

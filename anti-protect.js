@@ -2,6 +2,41 @@
   if (window.hvhAntiProtectLoaded) return;
   window.hvhAntiProtectLoaded = true;
 
+  const BLOCK_KEY = "hvh_perma_404_lock";
+  const BLOCK_PATH = "/404.html";
+  const is404Page = /\/404\.html$/i.test(window.location.pathname);
+  const searchParams = new URLSearchParams(window.location.search);
+  const shouldUnlock = searchParams.get("hvh_unlock") === "1";
+
+  if (shouldUnlock) {
+    try {
+      window.localStorage.removeItem(BLOCK_KEY);
+    } catch (_error) {}
+  }
+
+  const isLocked = (() => {
+    try {
+      return window.localStorage.getItem(BLOCK_KEY) === "1";
+    } catch (_error) {
+      return false;
+    }
+  })();
+
+  const lockTo404 = () => {
+    try {
+      window.localStorage.setItem(BLOCK_KEY, "1");
+    } catch (_error) {}
+
+    if (!is404Page) {
+      window.location.replace(BLOCK_PATH);
+    }
+  };
+
+  if (isLocked && !is404Page) {
+    window.location.replace(BLOCK_PATH);
+    return;
+  }
+
   (function setupAntiScriptCaptcha() {
     const MIN_FILL_TIME_MS = 3500;
     const targets = [
@@ -151,6 +186,7 @@
           (target.closest(mediaSelector) || target.closest(mediaWrapperSelector))
         ) {
           event.preventDefault();
+          lockTo404();
         }
       },
       true
@@ -162,6 +198,7 @@
         const target = event.target;
         if (target instanceof Element && target.closest(mediaSelector)) {
           event.preventDefault();
+          lockTo404();
         }
       },
       true
@@ -181,6 +218,7 @@
         if (!blocked) return;
         event.preventDefault();
         event.stopPropagation();
+        lockTo404();
       },
       true
     );
@@ -223,6 +261,7 @@
         window.setTimeout(() => {
           flash.style.opacity = "0";
         }, 140);
+        lockTo404();
       },
       true
     );

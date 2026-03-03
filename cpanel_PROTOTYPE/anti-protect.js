@@ -10,6 +10,7 @@
   const AGGRESSIVE_BLUR_LOCK = false;
   const STARTUP_GRACE_MS = 2500;
   const SCREENSHOT_EVENT_COOLDOWN_MS = 1200;
+  const ALERT_REDIRECT_DELAY_MS = 1100;
   const scriptStartedAt = Date.now();
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
   const searchParams = new URLSearchParams(window.location.search);
@@ -59,6 +60,59 @@
     } catch (_error) {}
   };
 
+  let isCaptureRedirectPending = false;
+  const showCaptureAlertAndRedirect = (permanent) => {
+    if (is404Page) {
+      if (permanent) {
+        lockTo404Forever();
+      }
+      return;
+    }
+
+    if (isCaptureRedirectPending) return;
+    isCaptureRedirectPending = true;
+
+    const styleId = "hvh-capture-alert-style";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent =
+        "@keyframes hvhViolentShake{0%{transform:translate(-50%,-50%) translate(0,0) rotate(0deg);}10%{transform:translate(-50%,-50%) translate(-16px,7px) rotate(-2deg);}20%{transform:translate(-50%,-50%) translate(15px,-6px) rotate(2deg);}30%{transform:translate(-50%,-50%) translate(-14px,6px) rotate(-2deg);}40%{transform:translate(-50%,-50%) translate(14px,-6px) rotate(2deg);}50%{transform:translate(-50%,-50%) translate(-12px,6px) rotate(-1.5deg);}60%{transform:translate(-50%,-50%) translate(12px,-6px) rotate(1.5deg);}70%{transform:translate(-50%,-50%) translate(-10px,5px) rotate(-1deg);}80%{transform:translate(-50%,-50%) translate(10px,-5px) rotate(1deg);}90%{transform:translate(-50%,-50%) translate(-6px,3px) rotate(-0.5deg);}100%{transform:translate(-50%,-50%) translate(0,0) rotate(0deg);}}";
+      document.head.appendChild(style);
+    }
+
+    const overlay = document.createElement("div");
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.style.cssText =
+      "position:fixed;inset:0;z-index:2147483647;background:rgba(10,0,0,0.88);pointer-events:none;";
+
+    const popup = document.createElement("div");
+    popup.style.cssText =
+      "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(86vw,540px);padding:20px 18px;background:#140005;border:2px solid #ff1f5a;border-radius:16px;color:#fff;font:700 22px/1.25 Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:center;box-shadow:0 0 30px rgba(255,0,76,0.75);animation:hvhViolentShake 0.22s linear 5;";
+    popup.textContent = permanent
+      ? "SCREEN CAPTURE DETECTED AGAIN. ACCESS PERMANENTLY BLOCKED."
+      : "SCREEN CAPTURE DETECTED. REDIRECTING TO 404.";
+
+    overlay.appendChild(popup);
+    if (document.body) {
+      document.body.appendChild(overlay);
+    } else {
+      document.documentElement.appendChild(overlay);
+    }
+
+    if (navigator.vibrate) {
+      navigator.vibrate([120, 50, 120, 50, 120, 50, 120]);
+    }
+
+    window.setTimeout(() => {
+      if (permanent) {
+        lockTo404Forever();
+      } else {
+        redirectTo404();
+      }
+    }, ALERT_REDIRECT_DELAY_MS);
+  };
+
   let lastScreenshotEventAt = 0;
   const registerScreenshotViolation = () => {
     const now = Date.now();
@@ -71,11 +125,11 @@
     writeStrikeCount(strikes);
 
     if (strikes >= 2) {
-      lockTo404Forever();
+      showCaptureAlertAndRedirect(true);
       return;
     }
 
-    redirectTo404();
+    showCaptureAlertAndRedirect(false);
   };
 
   const canAggressiveLock = () => Date.now() - scriptStartedAt >= STARTUP_GRACE_MS;

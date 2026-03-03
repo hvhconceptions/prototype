@@ -6058,7 +6058,10 @@
               field.value = field.dataset.cleanValue || "";
               showBadVibe();
               if (typeof window.hvhHandleInsultViolation === "function") {
-                window.hvhHandleInsultViolation();
+                window.hvhHandleInsultViolation({
+                  text: currentValue,
+                  context: "booking_form",
+                });
               }
               field.blur();
               window.setTimeout(() => {
@@ -6350,7 +6353,10 @@
               field.value = field.dataset.cleanValue || "";
               setStatus("Please keep it respectful.", "error");
               if (typeof window.hvhHandleInsultViolation === "function") {
-                window.hvhHandleInsultViolation();
+                window.hvhHandleInsultViolation({
+                  text: currentValue,
+                  context: "newsletter_form",
+                });
               }
               field.blur();
               window.setTimeout(() => {

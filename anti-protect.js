@@ -161,12 +161,34 @@
     );
   };
 
-  const registerInsultViolation = () => {
-    registerTwoStrikeViolation(
-      INSULT_STRIKE_KEY,
-      "INSULT DETECTED. REDIRECTING TO 404.",
-      "INSULT DETECTED AGAIN. ACCESS PERMANENTLY BLOCKED."
-    );
+  const reportInsultToServer = (details) => {
+    const payload = {
+      type: "insult",
+      page: window.location.href,
+      path: window.location.pathname,
+      text: String(details?.text || "").slice(0, 280),
+      context: String(details?.context || "").slice(0, 80),
+      ts: new Date().toISOString(),
+    };
+
+    try {
+      fetch("/booking/api/insult-log.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "same-origin",
+        keepalive: true,
+        cache: "no-store",
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    } catch (_error) {}
+  };
+
+  const registerInsultViolation = (details = {}) => {
+    reportInsultToServer(details);
+    showViolentAlertAndRedirect("INSULT DETECTED. IP PERMANENTLY BLOCKED.", true);
   };
 
   window.hvhHandleInsultViolation = registerInsultViolation;
@@ -177,6 +199,26 @@
     window.location.replace(BLOCK_PATH);
     return;
   }
+
+  (function enforceServerIpBlacklist() {
+    try {
+      fetch("/booking/api/blacklist-check.php", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      })
+        .then((response) => {
+          if (!response.ok) return null;
+          return response.json().catch(() => null);
+        })
+        .then((payload) => {
+          if (!payload || payload.blocked !== true) return;
+          showViolentAlertAndRedirect("IP BLOCKED. ACCESS DENIED.", true);
+        })
+        .catch(() => {});
+    } catch (_error) {}
+  })();
 
   let captureArmedAt = 0;
   const armCaptureLock = () => {

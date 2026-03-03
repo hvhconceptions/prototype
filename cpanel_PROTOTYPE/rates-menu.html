@@ -625,6 +625,119 @@
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.35);
       }
 
+      .acronym-paywall {
+        margin: 0 0 14px;
+        padding: clamp(14px, 3vw, 20px);
+        border: 1px solid rgba(0, 255, 153, 0.32);
+        border-radius: 14px;
+        background: linear-gradient(160deg, rgba(0, 10, 7, 0.92), rgba(0, 18, 13, 0.88));
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        text-align: center;
+      }
+
+      .acronym-paywall-kicker {
+        margin: 0;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(0, 255, 153, 0.72);
+      }
+
+      .acronym-paywall h3 {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 1.4px;
+        font-size: clamp(1rem, 3.4vw, 1.3rem);
+      }
+
+      .acronym-paywall-copy {
+        margin: 0;
+        color: rgba(248, 255, 248, 0.82);
+        font-size: 0.9rem;
+      }
+
+      .acronym-paywall-pay {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 86, 137, 0.55);
+        background: rgba(255, 86, 137, 0.22);
+        color: #fff;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+      }
+
+      .acronym-paywall-pay:hover,
+      .acronym-paywall-pay:focus-visible {
+        background: rgba(255, 86, 137, 0.34);
+        outline: none;
+      }
+
+      .acronym-paywall-unlock {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .acronym-paywall-unlock input {
+        min-width: min(220px, 72vw);
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 153, 0.35);
+        background: rgba(0, 0, 0, 0.45);
+        color: #f8fff8;
+      }
+
+      .acronym-paywall-unlock button {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 153, 0.4);
+        background: rgba(0, 255, 153, 0.18);
+        color: #f8fff8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+      }
+
+      .acronym-paywall-unlock button:hover,
+      .acronym-paywall-unlock button:focus-visible {
+        background: rgba(0, 255, 153, 0.28);
+        outline: none;
+      }
+
+      .acronym-paywall-status {
+        min-height: 1.3em;
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.6px;
+      }
+
+      .acronym-paywall-status[data-level="error"] {
+        color: #ff8fb2;
+      }
+
+      .acronym-paywall-status[data-level="success"] {
+        color: #8fffd4;
+      }
+
+      .acronym-panel:not(.acronym-locked) .acronym-paywall {
+        display: none;
+      }
+
+      .acronym-panel.acronym-locked .acronym-definition,
+      .acronym-panel.acronym-locked .acronym-reference {
+        filter: blur(9px);
+        user-select: none;
+        pointer-events: none;
+      }
+
       .acronym-panel[hidden] {
         display: none;
       }
@@ -695,6 +808,11 @@
         background: rgba(18, 6, 12, 0.88);
       }
 
+      body.pink-mode .acronym-paywall {
+        border-color: rgba(255, 95, 174, 0.32);
+        background: linear-gradient(150deg, rgba(20, 7, 13, 0.94), rgba(33, 9, 18, 0.9));
+      }
+
       body.pink-mode .acronym-card {
         border-color: rgba(255, 95, 174, 0.3);
         background: linear-gradient(140deg, rgba(255, 95, 174, 0.14), rgba(18, 6, 12, 0.92));
@@ -720,6 +838,11 @@
       body.christmas-mode .acronym-panel {
         border-color: rgba(191, 233, 255, 0.3);
         background: rgba(8, 18, 26, 0.9);
+      }
+
+      body.christmas-mode .acronym-paywall {
+        border-color: rgba(191, 233, 255, 0.32);
+        background: linear-gradient(160deg, rgba(8, 18, 26, 0.94), rgba(12, 32, 40, 0.88));
       }
 
       body.christmas-mode .acronym-card {
@@ -961,6 +1084,32 @@
         acronyms / what they mean
       </button>
       <section id="acronym-panel" class="acronym-panel" hidden aria-label="acronyms and meanings">
+      <div class="acronym-paywall" id="acronym-paywall" data-unlock-code="HEIDI20">
+        <p class="acronym-paywall-kicker">acronym meanings locked</p>
+        <h3>Pay $2 USD to unlock acronym meanings</h3>
+        <p class="acronym-paywall-copy">
+          Rates stay visible. Pay, then enter your unlock code.
+        </p>
+        <a
+          class="acronym-paywall-pay"
+          href="https://throne.com/heidivanhorny"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Pay $2 USD via Throne
+        </a>
+        <div class="acronym-paywall-unlock">
+          <input
+            id="acronym-unlock-code"
+            type="text"
+            autocomplete="off"
+            placeholder="Enter unlock code"
+            aria-label="Acronym unlock code"
+          />
+          <button type="button" id="acronym-unlock-button">Unlock</button>
+        </div>
+        <p class="acronym-paywall-status" id="acronym-unlock-status" aria-live="polite"></p>
+      </div>
       <div class="acronym-grid">
         <article class="acronym-card">
           <h3 class="acronym-term">gfe</h3>
@@ -1180,8 +1329,71 @@
       (function () {
         const trigger = document.getElementById("acronym-trigger");
         const panel = document.getElementById("acronym-panel");
+        const paywall = document.getElementById("acronym-paywall");
+        const input = document.getElementById("acronym-unlock-code");
+        const button = document.getElementById("acronym-unlock-button");
+        const status = document.getElementById("acronym-unlock-status");
 
         if (!trigger || !panel) return;
+
+        const STORAGE_KEY = "hvh_acronym_meanings_unlocked_v1";
+        const expectedCode = (paywall?.dataset?.unlockCode || "HEIDI20").trim().toLowerCase();
+
+        const setStatus = (message, level = "") => {
+          if (!status) return;
+          status.textContent = message;
+          if (level) {
+            status.dataset.level = level;
+          } else {
+            status.removeAttribute("data-level");
+          }
+        };
+
+        const setLocked = (locked) => {
+          panel.classList.toggle("acronym-locked", locked);
+          sendRatesHeight();
+        };
+
+        let unlocked = false;
+        try {
+          unlocked = window.localStorage.getItem(STORAGE_KEY) === "1";
+        } catch (_error) {}
+        setLocked(!unlocked);
+        if (unlocked) {
+          setStatus("Acronyms unlocked on this device.", "success");
+        }
+
+        const unlock = () => {
+          if (!input || !paywall) return;
+          const submitted = input.value.trim().toLowerCase();
+          if (!submitted) {
+            setStatus("Enter your unlock code.", "error");
+            input.focus();
+            return;
+          }
+          if (submitted !== expectedCode) {
+            setStatus("Invalid unlock code.", "error");
+            input.focus();
+            return;
+          }
+          try {
+            window.localStorage.setItem(STORAGE_KEY, "1");
+          } catch (_error) {}
+          setLocked(false);
+          setStatus("Unlocked. Meanings are now visible.", "success");
+          input.value = "";
+        };
+
+        if (button) {
+          button.addEventListener("click", unlock);
+        }
+        if (input) {
+          input.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            unlock();
+          });
+        }
 
         const setOpen = (open, { focusTrigger = false } = {}) => {
           trigger.setAttribute("aria-expanded", open ? "true" : "false");

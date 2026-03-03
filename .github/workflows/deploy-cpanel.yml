@@ -8,6 +8,7 @@ on:
     paths:
       - "booking/**"
       - "*.html"
+      - "anti-protect.js"
       - "!tmp_*.html"
       - ".htaccess"
       - ".github/workflows/deploy-cpanel.yml"
@@ -29,6 +30,9 @@ jobs:
               cp "$file" "deploy-root/$file"
             fi
           done
+          if [ -f "anti-protect.js" ]; then
+            cp anti-protect.js deploy-root/anti-protect.js
+          fi
           cp .htaccess deploy-root/.htaccess
 
       - name: Deploy root files via FTP

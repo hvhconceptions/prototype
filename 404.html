@@ -42,7 +42,8 @@
         color: var(--fg);
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
       }
 
       header {
@@ -430,12 +431,14 @@
       const header = document.querySelector("header");
       const actions = document.querySelector(".actions");
       const gameContainer = document.querySelector(".game-container");
+      const unlockPanel = document.querySelector(".unlock-panel");
 
       const updateBoardSize = () => {
         const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
         const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
         const headerHeight = header ? header.offsetHeight : 0;
         const actionsHeight = actions ? actions.offsetHeight : 0;
+        const unlockPanelHeight = unlockPanel ? unlockPanel.offsetHeight : 0;
 
         let paddingTop = 0;
         let paddingBottom = 0;
@@ -446,10 +449,16 @@
           paddingBottom = parseFloat(styles.paddingBottom) || 0;
         }
 
-        const spacingBuffer = 40;
+        const spacingBuffer = 56;
         const aspectRatio = 2; // board is 10 columns by 20 rows
         const availableHeight =
-          viewportHeight - headerHeight - actionsHeight - paddingTop - paddingBottom - spacingBuffer;
+          viewportHeight -
+          headerHeight -
+          actionsHeight -
+          unlockPanelHeight -
+          paddingTop -
+          paddingBottom -
+          spacingBuffer;
         const maxWidth = viewportWidth * 0.8;
 
         let boardWidth = Math.min(420, maxWidth, availableHeight / aspectRatio);
@@ -459,7 +468,7 @@
           boardWidth = Math.max(200, Math.min(420, fallbackHeight / aspectRatio));
           document.body.style.overflowY = "auto";
         } else {
-          document.body.style.overflowY = "hidden";
+          document.body.style.overflowY = "auto";
         }
 
         const boardHeight = boardWidth * aspectRatio;

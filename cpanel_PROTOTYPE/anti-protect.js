@@ -3,16 +3,23 @@
   window.hvhAntiProtectLoaded = true;
 
   const BLOCK_KEY = "hvh_perma_404_lock";
+  const SCREENSHOT_TEMP_BLOCK_UNTIL_KEY = "hvh_capture_404_lock_until";
   const SCREENSHOT_STRIKE_KEY = "hvh_capture_strikes";
   const INSULT_STRIKE_KEY = "hvh_insult_strikes";
   const BLOCK_PATH = "/404.html";
   const CAPTURE_ARM_WINDOW_MS = 5000;
   const QUICK_HIDE_LOCK_MS = 1400;
+  const MOBILE_CAPTURE_HEURISTIC_MS = 850;
+  const SCREENSHOT_BLOCK_DURATION_MS = 24 * 60 * 60 * 1000;
   const AGGRESSIVE_BLUR_LOCK = false;
   const STARTUP_GRACE_MS = 2500;
   const SCREENSHOT_EVENT_COOLDOWN_MS = 1200;
   const ALERT_REDIRECT_DELAY_MS = 1200;
+  const ALERT_DISMISS_DELAY_MS = 1700;
   const scriptStartedAt = Date.now();
+  const isLikelyMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(
+    String(navigator.userAgent || "")
+  );
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
   const searchParams = new URLSearchParams(window.location.search);
   const shouldUnlock = searchParams.get("hvh_unlock") === "1";
@@ -20,14 +27,46 @@
   if (shouldUnlock) {
     try {
       window.localStorage.removeItem(BLOCK_KEY);
+      window.localStorage.removeItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY);
       window.localStorage.removeItem(SCREENSHOT_STRIKE_KEY);
       window.localStorage.removeItem(INSULT_STRIKE_KEY);
     } catch (_error) {}
   }
 
+  const getTempScreenshotBlockUntil = () => {
+    try {
+      const raw = window.localStorage.getItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY);
+      const value = Number(raw);
+      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+    } catch (_error) {
+      return 0;
+    }
+  };
+
+  const clearTempScreenshotBlock = () => {
+    try {
+      window.localStorage.removeItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY);
+    } catch (_error) {}
+  };
+
+  const setTempScreenshotBlock = (durationMs = SCREENSHOT_BLOCK_DURATION_MS) => {
+    const until = Date.now() + Math.max(1000, Number(durationMs) || SCREENSHOT_BLOCK_DURATION_MS);
+    try {
+      window.localStorage.setItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY, String(until));
+      window.localStorage.setItem(SCREENSHOT_STRIKE_KEY, "0");
+    } catch (_error) {}
+  };
+
   const isLocked = (() => {
     try {
-      return window.localStorage.getItem(BLOCK_KEY) === "1";
+      const hasPermaLock = window.localStorage.getItem(BLOCK_KEY) === "1";
+      const tempUntil = getTempScreenshotBlockUntil();
+      if (tempUntil > 0 && Date.now() >= tempUntil) {
+        clearTempScreenshotBlock();
+        window.localStorage.removeItem(SCREENSHOT_STRIKE_KEY);
+        return hasPermaLock;
+      }
+      return hasPermaLock || tempUntil > Date.now();
     } catch (_error) {
       return false;
     }
@@ -83,7 +122,14 @@
     }
   };
 
-  const showViolentAlertAndRedirect = (message, permanent) => {
+  const showViolentAlert = (
+    message,
+    {
+      redirect = false,
+      permanent = false,
+      tempBlockMs = 0,
+    } = {}
+  ) => {
     if (is404Page) {
       if (permanent) {
         lockTo404Forever();
@@ -125,9 +171,31 @@
       navigator.vibrate([140, 40, 140, 40, 140, 40, 140, 40, 140]);
     }
 
+    const cleanupOverlay = () => {
+      try {
+        overlay.remove();
+      } catch (_error) {}
+      try {
+        const root = document.documentElement;
+        const body = document.body;
+        if (root) root.style.animation = "";
+        if (body) body.style.animation = "";
+      } catch (_error) {}
+      isCaptureRedirectPending = false;
+    };
+
+    if (!redirect) {
+      window.setTimeout(cleanupOverlay, ALERT_DISMISS_DELAY_MS);
+      return;
+    }
+
     window.setTimeout(() => {
+      isCaptureRedirectPending = false;
       if (permanent) {
         lockTo404Forever();
+      } else if (tempBlockMs > 0) {
+        setTempScreenshotBlock(tempBlockMs);
+        redirectTo404();
       } else {
         redirectTo404();
       }
@@ -146,18 +214,22 @@
     writeStrikeCount(strikeKey, strikes);
 
     if (strikes >= 2) {
-      showViolentAlertAndRedirect(secondMessage, true);
+      showViolentAlert(secondMessage, {
+        redirect: true,
+        permanent: false,
+        tempBlockMs: SCREENSHOT_BLOCK_DURATION_MS,
+      });
       return;
     }
 
-    showViolentAlertAndRedirect(firstMessage, false);
+    showViolentAlert(firstMessage, { redirect: false });
   };
 
   const registerScreenshotViolation = () => {
     registerTwoStrikeViolation(
       SCREENSHOT_STRIKE_KEY,
-      "SCREEN CAPTURE DETECTED. REDIRECTING TO 404.",
-      "SCREEN CAPTURE DETECTED AGAIN. ACCESS PERMANENTLY BLOCKED."
+      "SCREENSHOT IS FORBIDDEN. NEXT ATTEMPT = 24H BLOCK.",
+      "SECOND SCREENSHOT DETECTED. ACCESS BLOCKED FOR 24 HOURS."
     );
   };
 
@@ -188,7 +260,10 @@
 
   const registerInsultViolation = (details = {}) => {
     reportInsultToServer(details);
-    showViolentAlertAndRedirect("INSULT DETECTED. IP PERMANENTLY BLOCKED.", true);
+    showViolentAlert("INSULT DETECTED. IP PERMANENTLY BLOCKED.", {
+      redirect: true,
+      permanent: true,
+    });
   };
 
   window.hvhHandleInsultViolation = registerInsultViolation;
@@ -214,7 +289,10 @@
         })
         .then((payload) => {
           if (!payload || payload.blocked !== true) return;
-          showViolentAlertAndRedirect("IP BLOCKED. ACCESS DENIED.", true);
+          showViolentAlert("IP BLOCKED. ACCESS DENIED.", {
+            redirect: true,
+            permanent: true,
+          });
         })
         .catch(() => {});
     } catch (_error) {}
@@ -477,6 +555,10 @@
         hiddenAt = 0;
         if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
           registerScreenshotViolation();
+          return;
+        }
+        if (isLikelyMobileDevice && elapsed <= MOBILE_CAPTURE_HEURISTIC_MS) {
+          registerScreenshotViolation();
         }
       },
       true
@@ -501,6 +583,10 @@
         const elapsed = Date.now() - blurredAt;
         blurredAt = 0;
         if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
+          registerScreenshotViolation();
+          return;
+        }
+        if (isLikelyMobileDevice && elapsed <= MOBILE_CAPTURE_HEURISTIC_MS) {
           registerScreenshotViolation();
         }
       },

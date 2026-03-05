@@ -47,12 +47,7 @@ $store['events'] = $events;
 $store['updated_at'] = gmdate('c');
 write_json_file($path, $store);
 
-// First insult triggers immediate IP blacklist.
-add_blacklist_entry([
-    'ip' => $ip,
-    'reason' => 'insult_detected',
-    'request_id' => $entry['id'],
-]);
+// Log-only mode: do not auto-blacklist from client-side profanity checks.
 
 $adminBody = "Insult detection event\n\n";
 $adminBody .= "IP: " . $entry['ip'] . "\n";
@@ -71,5 +66,5 @@ if (function_exists('send_admin_email')) {
 json_response([
     'ok' => true,
     'id' => $entry['id'],
-    'blacklisted' => true,
+    'blacklisted' => false,
 ]);

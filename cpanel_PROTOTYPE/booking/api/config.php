@@ -130,6 +130,9 @@ function is_blacklisted(string $email = '', string $phone = '', string $ip = '')
     $emailKey = normalize_email($email);
     $phoneKey = normalize_phone($phone);
     $ipKey = trim($ip);
+    if (strtolower($ipKey) === 'unknown') {
+        $ipKey = '';
+    }
     $store = read_blacklist();
     $entries = $store['entries'] ?? [];
     if (!is_array($entries)) {
@@ -142,6 +145,9 @@ function is_blacklisted(string $email = '', string $phone = '', string $ip = '')
         $entryEmail = normalize_email((string) ($entry['email'] ?? ''));
         $entryPhone = normalize_phone((string) ($entry['phone'] ?? ''));
         $entryIp = trim((string) ($entry['ip'] ?? ''));
+        if (strtolower($entryIp) === 'unknown') {
+            $entryIp = '';
+        }
         if ($emailKey !== '' && $entryEmail !== '' && $emailKey === $entryEmail) {
             return true;
         }
@@ -160,6 +166,9 @@ function add_blacklist_entry(array $entry): void
     $email = normalize_email((string) ($entry['email'] ?? ''));
     $phone = normalize_phone((string) ($entry['phone'] ?? ''));
     $ip = trim((string) ($entry['ip'] ?? ''));
+    if (strtolower($ip) === 'unknown') {
+        $ip = '';
+    }
     if ($email === '' && $phone === '' && $ip === '') {
         return;
     }

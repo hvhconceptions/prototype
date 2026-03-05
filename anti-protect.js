@@ -17,6 +17,8 @@
   const ALERT_REDIRECT_DELAY_MS = 1200;
   const ALERT_DISMISS_DELAY_MS = 1700;
   const scriptStartedAt = Date.now();
+  const ENFORCE_INSULT_LOCK = false;
+  const ENFORCE_SERVER_BLACKLIST = false;
   const isLikelyMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(
     String(navigator.userAgent || "")
   );
@@ -32,6 +34,11 @@
       window.localStorage.removeItem(INSULT_STRIKE_KEY);
     } catch (_error) {}
   }
+
+  // Emergency safety: clear historical permanent locks so visitors can re-enter.
+  try {
+    window.localStorage.removeItem(BLOCK_KEY);
+  } catch (_error) {}
 
   const getTempScreenshotBlockUntil = () => {
     try {
@@ -260,10 +267,14 @@
 
   const registerInsultViolation = (details = {}) => {
     reportInsultToServer(details);
-    showViolentAlert("INSULT DETECTED. IP PERMANENTLY BLOCKED.", {
-      redirect: true,
-      permanent: true,
-    });
+    if (ENFORCE_INSULT_LOCK) {
+      showViolentAlert("INSULT DETECTED. IP PERMANENTLY BLOCKED.", {
+        redirect: true,
+        permanent: true,
+      });
+      return;
+    }
+    showViolentAlert("RESPECTFUL LANGUAGE ONLY.", { redirect: false });
   };
 
   window.hvhHandleInsultViolation = registerInsultViolation;
@@ -276,6 +287,9 @@
   }
 
   (function enforceServerIpBlacklist() {
+    if (!ENFORCE_SERVER_BLACKLIST) {
+      return;
+    }
     try {
       fetch("/booking/api/blacklist-check.php", {
         method: "GET",

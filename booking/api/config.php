@@ -745,7 +745,7 @@ function build_email_html(string $subject, string $plainBody): string
     $subjectSafe = escape_html($subject);
     $bodyHtml = linkify_text_for_email($plainBody);
     $year = gmdate('Y');
-    $siteUrl = 'https://heidi.bombacloud.com';
+    $siteUrl = 'https://heidivanhorny.com';
     return '<!doctype html>
 <html lang="en">
   <head>
@@ -773,7 +773,7 @@ function build_email_html(string $subject, string $plainBody): string
             <tr>
               <td style="padding:16px 24px 24px;color:#d8a8c2;font-size:12px;line-height:1.5;">
                 This message was sent by Heidi Van Horny booking system.<br>
-                <a href="' . $siteUrl . '" target="_blank" rel="noopener noreferrer" style="color:#ff70bb;text-decoration:underline;">heidi.bombacloud.com</a>
+                <a href="' . $siteUrl . '" target="_blank" rel="noopener noreferrer" style="color:#ff70bb;text-decoration:underline;">heidivanhorny.com</a>
                 &nbsp;|&nbsp;
                 ' . $year . '
               </td>

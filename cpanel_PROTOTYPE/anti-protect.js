@@ -3,25 +3,12 @@
   window.hvhAntiProtectLoaded = true;
 
   const BLOCK_KEY = "hvh_perma_404_lock";
-  const SCREENSHOT_TEMP_BLOCK_UNTIL_KEY = "hvh_capture_404_lock_until";
-  const SCREENSHOT_STRIKE_KEY = "hvh_capture_strikes";
   const INSULT_STRIKE_KEY = "hvh_insult_strikes";
   const BLOCK_PATH = "/404.html";
-  const CAPTURE_ARM_WINDOW_MS = 5000;
-  const QUICK_HIDE_LOCK_MS = 1400;
-  const MOBILE_CAPTURE_HEURISTIC_MS = 850;
-  const SCREENSHOT_BLOCK_DURATION_MS = 24 * 60 * 60 * 1000;
-  const AGGRESSIVE_BLUR_LOCK = false;
-  const STARTUP_GRACE_MS = 2500;
-  const SCREENSHOT_EVENT_COOLDOWN_MS = 1200;
   const ALERT_REDIRECT_DELAY_MS = 1200;
   const ALERT_DISMISS_DELAY_MS = 1700;
-  const scriptStartedAt = Date.now();
   const ENFORCE_INSULT_LOCK = false;
   const ENFORCE_SERVER_BLACKLIST = false;
-  const isLikelyMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(
-    String(navigator.userAgent || "")
-  );
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
   const searchParams = new URLSearchParams(window.location.search);
   const shouldUnlock = searchParams.get("hvh_unlock") === "1";
@@ -29,51 +16,18 @@
   if (shouldUnlock) {
     try {
       window.localStorage.removeItem(BLOCK_KEY);
-      window.localStorage.removeItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY);
-      window.localStorage.removeItem(SCREENSHOT_STRIKE_KEY);
       window.localStorage.removeItem(INSULT_STRIKE_KEY);
     } catch (_error) {}
   }
 
-  // Emergency safety: clear historical permanent locks so visitors can re-enter.
+  // Emergency safety: clear historical locks so visitors can re-enter.
   try {
     window.localStorage.removeItem(BLOCK_KEY);
   } catch (_error) {}
 
-  const getTempScreenshotBlockUntil = () => {
-    try {
-      const raw = window.localStorage.getItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY);
-      const value = Number(raw);
-      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
-    } catch (_error) {
-      return 0;
-    }
-  };
-
-  const clearTempScreenshotBlock = () => {
-    try {
-      window.localStorage.removeItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY);
-    } catch (_error) {}
-  };
-
-  const setTempScreenshotBlock = (durationMs = SCREENSHOT_BLOCK_DURATION_MS) => {
-    const until = Date.now() + Math.max(1000, Number(durationMs) || SCREENSHOT_BLOCK_DURATION_MS);
-    try {
-      window.localStorage.setItem(SCREENSHOT_TEMP_BLOCK_UNTIL_KEY, String(until));
-      window.localStorage.setItem(SCREENSHOT_STRIKE_KEY, "0");
-    } catch (_error) {}
-  };
-
   const isLocked = (() => {
     try {
-      const hasPermaLock = window.localStorage.getItem(BLOCK_KEY) === "1";
-      const tempUntil = getTempScreenshotBlockUntil();
-      if (tempUntil > 0 && Date.now() >= tempUntil) {
-        clearTempScreenshotBlock();
-        window.localStorage.removeItem(SCREENSHOT_STRIKE_KEY);
-        return hasPermaLock;
-      }
-      return hasPermaLock || tempUntil > Date.now();
+      return window.localStorage.getItem(BLOCK_KEY) === "1";
     } catch (_error) {
       return false;
     }
@@ -90,22 +44,6 @@
       window.localStorage.setItem(BLOCK_KEY, "1");
     } catch (_error) {}
     redirectTo404();
-  };
-
-  const readStrikeCount = (key) => {
-    try {
-      const raw = window.localStorage.getItem(key);
-      const value = Number(raw);
-      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
-    } catch (_error) {
-      return 0;
-    }
-  };
-
-  const writeStrikeCount = (key, value) => {
-    try {
-      window.localStorage.setItem(key, String(value));
-    } catch (_error) {}
   };
 
   let isCaptureRedirectPending = false;
@@ -134,7 +72,6 @@
     {
       redirect = false,
       permanent = false,
-      tempBlockMs = 0,
     } = {}
   ) => {
     if (is404Page) {
@@ -200,44 +137,10 @@
       isCaptureRedirectPending = false;
       if (permanent) {
         lockTo404Forever();
-      } else if (tempBlockMs > 0) {
-        setTempScreenshotBlock(tempBlockMs);
-        redirectTo404();
       } else {
         redirectTo404();
       }
     }, ALERT_REDIRECT_DELAY_MS);
-  };
-
-  let lastViolationEventAt = 0;
-  const registerTwoStrikeViolation = (strikeKey, firstMessage, secondMessage) => {
-    const now = Date.now();
-    if (now - lastViolationEventAt <= SCREENSHOT_EVENT_COOLDOWN_MS) {
-      return;
-    }
-    lastViolationEventAt = now;
-
-    const strikes = readStrikeCount(strikeKey) + 1;
-    writeStrikeCount(strikeKey, strikes);
-
-    if (strikes >= 2) {
-      showViolentAlert(secondMessage, {
-        redirect: true,
-        permanent: false,
-        tempBlockMs: SCREENSHOT_BLOCK_DURATION_MS,
-      });
-      return;
-    }
-
-    showViolentAlert(firstMessage, { redirect: false });
-  };
-
-  const registerScreenshotViolation = () => {
-    registerTwoStrikeViolation(
-      SCREENSHOT_STRIKE_KEY,
-      "SCREENSHOT IS FORBIDDEN. NEXT ATTEMPT = 24H BLOCK.",
-      "SECOND SCREENSHOT DETECTED. ACCESS BLOCKED FOR 24 HOURS."
-    );
   };
 
   const reportInsultToServer = (details) => {
@@ -279,8 +182,6 @@
 
   window.hvhHandleInsultViolation = registerInsultViolation;
 
-  const canAggressiveLock = () => Date.now() - scriptStartedAt >= STARTUP_GRACE_MS;
-
   if (isLocked && !is404Page) {
     window.location.replace(BLOCK_PATH);
     return;
@@ -311,12 +212,6 @@
         .catch(() => {});
     } catch (_error) {}
   })();
-
-  let captureArmedAt = 0;
-  const armCaptureLock = () => {
-    captureArmedAt = Date.now();
-  };
-  const isCaptureArmed = () => Date.now() - captureArmedAt <= CAPTURE_ARM_WINDOW_MS;
 
   (function setupAntiScriptCaptcha() {
     const MIN_FILL_TIME_MS = 3500;
@@ -490,139 +385,17 @@
       (event) => {
         const key = event.key.toLowerCase();
         const ctrlOrMeta = event.ctrlKey || event.metaKey;
-        const screenshotCombo =
-          key === "printscreen" ||
-          (event.metaKey && event.shiftKey && key === "s") ||
-          (event.shiftKey && key === "printscreen");
         const blocked =
           (ctrlOrMeta && ["s", "u", "p"].includes(key)) ||
           (ctrlOrMeta && event.shiftKey && ["i", "j", "c"].includes(key)) ||
-          key === "f12" ||
-          screenshotCombo;
+          key === "f12";
 
         if (!blocked) return;
         event.preventDefault();
         event.stopPropagation();
-        if (screenshotCombo) {
-          armCaptureLock();
-          registerScreenshotViolation();
-          return;
-        }
         redirectTo404();
       },
       true
     );
-
-    document.addEventListener(
-      "keyup",
-      (event) => {
-        const key = event.key.toLowerCase();
-        if (key !== "printscreen") return;
-        armCaptureLock();
-        registerScreenshotViolation();
-      },
-      true
-    );
-  })();
-
-  (function setupScreenCaptureDeterrents() {
-    const flash = document.createElement("div");
-    flash.id = "hvh-capture-flash";
-    flash.setAttribute("aria-hidden", "true");
-    flash.style.cssText =
-      "position:fixed;inset:0;pointer-events:none;z-index:2147483647;background:#000;opacity:0;transition:opacity 120ms ease;";
-
-    document.addEventListener(
-      "keydown",
-      (event) => {
-        const key = event.key.toLowerCase();
-        const screenshotCombo =
-          key === "printscreen" ||
-          (event.metaKey && event.shiftKey && key === "s") ||
-          (event.shiftKey && key === "printscreen");
-        if (!screenshotCombo) return;
-        flash.style.opacity = "0.78";
-        window.setTimeout(() => {
-          flash.style.opacity = "0";
-        }, 140);
-        armCaptureLock();
-        registerScreenshotViolation();
-      },
-      true
-    );
-
-    let hiddenAt = 0;
-    document.addEventListener(
-      "visibilitychange",
-      () => {
-        if (AGGRESSIVE_BLUR_LOCK && document.hidden && canAggressiveLock()) {
-          lockTo404Forever();
-          return;
-        }
-
-        if (document.hidden) {
-          hiddenAt = Date.now();
-          return;
-        }
-        if (!hiddenAt) return;
-        const elapsed = Date.now() - hiddenAt;
-        hiddenAt = 0;
-        if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
-          registerScreenshotViolation();
-          return;
-        }
-        if (isLikelyMobileDevice && elapsed <= MOBILE_CAPTURE_HEURISTIC_MS) {
-          registerScreenshotViolation();
-        }
-      },
-      true
-    );
-
-    let blurredAt = 0;
-    window.addEventListener(
-      "blur",
-      () => {
-        if (AGGRESSIVE_BLUR_LOCK && canAggressiveLock()) {
-          lockTo404Forever();
-          return;
-        }
-        blurredAt = Date.now();
-      },
-      true
-    );
-    window.addEventListener(
-      "focus",
-      () => {
-        if (!blurredAt) return;
-        const elapsed = Date.now() - blurredAt;
-        blurredAt = 0;
-        if (elapsed <= QUICK_HIDE_LOCK_MS && isCaptureArmed()) {
-          registerScreenshotViolation();
-          return;
-        }
-        if (isLikelyMobileDevice && elapsed <= MOBILE_CAPTURE_HEURISTIC_MS) {
-          registerScreenshotViolation();
-        }
-      },
-      true
-    );
-
-    window.addEventListener(
-      "pagehide",
-      () => {
-        if (AGGRESSIVE_BLUR_LOCK && canAggressiveLock()) {
-          lockTo404Forever();
-        }
-      },
-      true
-    );
-
-    if (document.body) {
-      document.body.appendChild(flash);
-    } else {
-      window.addEventListener("DOMContentLoaded", () => {
-        document.body.appendChild(flash);
-      });
-    }
   })();
 })();

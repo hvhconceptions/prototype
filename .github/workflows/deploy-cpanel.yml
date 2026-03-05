@@ -57,11 +57,37 @@ jobs:
           server-dir: /booking/
           dangerous-clean-slate: false
 
+      - name: Deploy root files to heidi.bombacloud.com via FTP
+        id: deploy_root_bombacloud
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: deploy-root/
+          server-dir: /heidi.bombacloud.com/
+          dangerous-clean-slate: false
+
+      - name: Deploy booking portal to heidi.bombacloud.com via FTP
+        id: deploy_booking_bombacloud
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: booking/
+          server-dir: /heidi.bombacloud.com/booking/
+          dangerous-clean-slate: false
+
       - name: Deploy summary
         if: always()
         run: |
           echo "Root primary conclusion: ${{ steps.deploy_root_primary.conclusion }}"
           echo "Booking primary conclusion: ${{ steps.deploy_booking_primary.conclusion }}"
+          echo "Root bombacloud conclusion: ${{ steps.deploy_root_bombacloud.conclusion }}"
+          echo "Booking bombacloud conclusion: ${{ steps.deploy_booking_bombacloud.conclusion }}"
 
       - name: Fail if root deploy failed
         if: ${{ always() && steps.deploy_root_primary.conclusion != 'success' }}

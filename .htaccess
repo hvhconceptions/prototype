@@ -16,7 +16,7 @@ ErrorDocument 404 /404.html
   <Files "404.html">
     Header set X-Robots-Tag "noindex, nofollow, noarchive"
   </Files>
-  <FilesMatch "\.(html?|php|json)$">
+  <FilesMatch "\.(html?|php|json|js|mjs|css)$">
     Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
     Header set Pragma "no-cache"
     Header set Expires "0"

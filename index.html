@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -749,7 +749,7 @@
     </style>
     <script src="matrix-phone.js" defer></script>
 
-      <script src="/anti-protect.js" defer></script>
+      <script src="/anti-protect.js?v=20260305" defer></script>
   </head>
   <body class="age-gate">
     <div class="age-language" role="group" aria-label="language selector">
@@ -890,11 +890,11 @@
             line2: "RATHER JUST PLAY? TAP NO FOR THE FREE GAMES I FUNDED FOR YOU. ;)",
           },
           fr: {
-            question: "êtes-vous légalement majeur ?",
+            question: "Ãªtes-vous lÃ©galement majeur ?",
             yes: "oui",
             no: "non",
-            line1: "LE PÉRIPLE MINIMUM EST DE 400 DOLLARS CANADIENS POUR 30 MINUTES.",
-            line2: "VOUS VOULEZ JUSTE JOUER ? APPUYEZ SUR NON POUR LES JEUX GRATUITS QUE J'AI FINANCÉS POUR VOUS. ;)",
+            line1: "LE PÃ‰RIPLE MINIMUM EST DE 400 DOLLARS CANADIENS POUR 30 MINUTES.",
+            line2: "VOUS VOULEZ JUSTE JOUER ? APPUYEZ SUR NON POUR LES JEUX GRATUITS QUE J'AI FINANCÃ‰S POUR VOUS. ;)",
           },
         };
 
@@ -1564,13 +1564,13 @@
       const gateSymbols = () => {
         const body = document.body;
         if (body?.classList.contains("pink-mode")) {
-          const heart = "♥";
+          const heart = "â™¥";
           return [...BASE_GATE_SYMBOLS, heart, heart, heart, heart];
         }
         if (body?.classList.contains("christmas-mode")) {
-          const snow = "✻";
-          const snow2 = "❄";
-          const snow3 = "❅";
+          const snow = "âœ»";
+          const snow2 = "â„";
+          const snow3 = "â…";
           // heavily favor snowflakes for Xmas
           return [
             ...Array(40).fill(snow),
@@ -1659,6 +1659,7 @@
 </script>
   </body>
 </html>
+
 
 
 

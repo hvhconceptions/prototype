@@ -93,7 +93,7 @@ if ($durationLabel !== '') {
 }
 $description = implode('\\n', $descriptionParts);
 
-$uid = $id . '@heidivanhorny.com';
+$uid = $id . '@heidi.bombacloud.com';
 $dtstamp = gmdate('Ymd\\THis\\Z');
 
 $lines = [

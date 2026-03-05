@@ -34,6 +34,7 @@ const DATA_DIR = __DIR__ . '/../data';
 const SITE_CONTENT_FILE = DATA_DIR . '/site_content.json';
 const GALLERY_FILE = DATA_DIR . '/gallery.json';
 const BLACKLIST_FILE = DATA_DIR . '/blacklist.json';
+const ENFORCE_BOOKING_BLACKLIST = false;
 const DEFAULT_TOUR_CITY = 'Touring city not set';
 const DEFAULT_TOUR_TZ = 'America/Toronto';
 const DEFAULT_BUFFER_MINUTES = 30;
@@ -127,6 +128,9 @@ function save_blacklist(array $entries): void
 
 function is_blacklisted(string $email = '', string $phone = '', string $ip = ''): bool
 {
+    if (!ENFORCE_BOOKING_BLACKLIST) {
+        return false;
+    }
     $emailKey = normalize_email($email);
     $phoneKey = normalize_phone($phone);
     $ipKey = trim($ip);

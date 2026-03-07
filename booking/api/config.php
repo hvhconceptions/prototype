@@ -7,6 +7,12 @@ const ADMIN_UI_PASSWORD_HASH = '';
 const STRIPE_SECRET_KEY = '';
 const STRIPE_PUBLISHABLE_KEY = '';
 const STRIPE_WEBHOOK_SECRET = '';
+const STRIPE_CURRENCY = 'usd';
+const STRIPE_PRICE_SNAPCHAT_MONTHLY_USD_CENTS = 999;
+const STRIPE_PRICE_PHONE_UNLOCK_USD_CENTS = 200;
+const STRIPE_PRICE_SITE_UNLOCK_USD_CENTS = 10000;
+const SITE_PRIMARY_URL = 'https://heidivanhorny.com';
+const PREMIUM_SITE_URL = 'https://heidi.bombacloud.com';
 const PAYPAL_ME_LINK = 'https://paypal.me/payheidi';
 const PAYPAL_CLIENT_ID = 'AfIK_OpdPFBYQo0LcWO0LAJbn8b3Wu1m0unSPfZ2qJJnUuJgKMrxlcET2Q_aogZHzQ1e1JT5MEW8mK1k';
 const PAYPAL_CURRENCY = 'CAD';
@@ -745,7 +751,12 @@ function build_email_html(string $subject, string $plainBody): string
     $subjectSafe = escape_html($subject);
     $bodyHtml = linkify_text_for_email($plainBody);
     $year = gmdate('Y');
-    $siteUrl = 'https://heidivanhorny.com';
+    $siteUrl = 'https://heidi.bombacloud.com';
+    $siteHost = parse_url($siteUrl, PHP_URL_HOST);
+    $siteLabel = is_string($siteHost) ? preg_replace('/^www\./i', '', $siteHost) : '';
+    if (!is_string($siteLabel) || $siteLabel === '') {
+        $siteLabel = $siteUrl;
+    }
     return '<!doctype html>
 <html lang="en">
   <head>
@@ -773,7 +784,7 @@ function build_email_html(string $subject, string $plainBody): string
             <tr>
               <td style="padding:16px 24px 24px;color:#d8a8c2;font-size:12px;line-height:1.5;">
                 This message was sent by Heidi Van Horny booking system.<br>
-                <a href="' . $siteUrl . '" target="_blank" rel="noopener noreferrer" style="color:#ff70bb;text-decoration:underline;">heidivanhorny.com</a>
+                <a href="' . $siteUrl . '" target="_blank" rel="noopener noreferrer" style="color:#ff70bb;text-decoration:underline;">' . escape_html($siteLabel) . '</a>
                 &nbsp;|&nbsp;
                 ' . $year . '
               </td>

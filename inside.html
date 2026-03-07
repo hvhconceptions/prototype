@@ -4157,7 +4157,8 @@
       }
       .social-links a.social-instagram,
       .social-links a.social-onlyfans,
-      .social-links a.social-bombacloud {
+      .social-links a.social-bombacloud,
+      .social-links a.social-clip4sale {
         overflow: hidden;
       }
 
@@ -4211,6 +4212,20 @@
         border-radius: 50%;
         object-fit: cover;
         filter: drop-shadow(0 0 10px rgba(255, 44, 147, 0.45));
+      }
+      .social-clip4sale {
+        border: 1px solid rgba(255, 112, 187, 0.72);
+        background: radial-gradient(circle at 30% 20%, rgba(255, 132, 197, 0.36), rgba(27, 7, 18, 0.95));
+        color: #ffe8f6;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        box-shadow: 0 0 12px rgba(255, 112, 187, 0.34);
+      }
+      .social-clip4sale span {
+        display: inline-block;
+        line-height: 1;
       }
       .social-links a:hover,
       .social-links a:focus-visible {
@@ -4361,6 +4376,15 @@
             >
               <img src="/BombaCLOUD.png" alt="" loading="lazy" />
             </a>
+            <a
+              class="social-clip4sale"
+              href="https://clip4sale.com/heidivanhorny"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Clip4Sale"
+            >
+              <span>C4S</span>
+            </a>
           </nav>
         </div>
         <main>
@@ -4391,6 +4415,8 @@
                   eye candy
                 </button>
                 <a class="menu-link" href="https://onlyfans.com/heidivanhorny/" target="_blank" rel="noopener noreferrer">onlyfans</a>
+                <a class="menu-link" href="https://clip4sale.com/heidivanhorny" target="_blank" rel="noopener noreferrer">clip4sale</a>
+                <a class="menu-link" href="/premium.html">premium access</a>
                 <a class="menu-link" href="#newsletter">subscribe</a>
               </div>
               <div class="menu-grid" id="menu-full">
@@ -4415,6 +4441,10 @@
                 >
                   onlyfans
                 </a>
+                <a class="menu-link" href="https://clip4sale.com/heidivanhorny" target="_blank" rel="noopener noreferrer">
+                  clip4sale
+                </a>
+                <a class="menu-link" href="/premium.html">premium access</a>
                 <a class="menu-link" href="#newsletter">subscribe</a>
               </div>
       </section>
@@ -4803,6 +4833,15 @@
           >
               <img src="/BombaCLOUD.png" alt="" loading="lazy" />
             </a>
+          <a
+            class="social-clip4sale"
+            href="https://clip4sale.com/heidivanhorny"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Clip4Sale"
+          >
+            <span>C4S</span>
+          </a>
         </nav>
       </footer>
     </div>
@@ -4814,7 +4853,8 @@
     </div>
 
     <script>
-      window.hvhPhoneUnlocked = true;
+      window.hvhPhoneUnlocked = false;
+      window.hvhPhoneUnlockUrl = "/premium.html#phone-unlock";
       window.hvhPhoneLockedWarning =
         window.hvhPhoneLockedWarning ||
         function (message) {
@@ -5235,8 +5275,10 @@
       I18N.fr["touring.cities"] =
         "<strong>Villes de tournee</strong><br />Montreal &middot; Toronto &middot; Vancouver &middot; Londres (UK) &middot; Berlin &middot; Paris";
       I18N.fr["gate.status.current"] = "Actuellement a {city}";
-      I18N.fr["challenge.readBody"] = "En voyage; SMS ou WhatsApp : +1 514 607 6253.";
-      I18N.fr["challenge.lockedMessage"] = "En voyage; SMS ou WhatsApp : +1 514 607 6253.";
+      I18N.en["challenge.readBody"] = "Phone line is locked. Use the booking form or unlock contact for $2.";
+      I18N.en["challenge.lockedMessage"] = "Phone line is locked. Use the booking form or unlock contact for $2.";
+      I18N.fr["challenge.readBody"] = "Ligne telephone verrouillee. Utilise le formulaire booking ou debloque contact pour 2$.";
+      I18N.fr["challenge.lockedMessage"] = "Ligne telephone verrouillee. Utilise le formulaire booking ou debloque contact pour 2$.";
 
       function normalizeLanguage(value) {
         if (!value) return "en";
@@ -5681,7 +5723,9 @@
         const menu = document.getElementById("menu");
         const matrixCanvas = document.getElementById("matrix-canvas");
         const GATE_STORAGE_KEY = "hvh_gate_passed";
-        const hasGatePass = safeStorage.get(GATE_STORAGE_KEY) === "true";
+        const PHONE_UNLOCK_STORAGE_KEY = "hvh_phone_unlock_paid_until";
+        const PHONE_UNLOCK_COOKIE_NAME = "hvh_phone_unlock_paid_until";
+        const PHONE_UNLOCK_DURATION_MS = 1000 * 60 * 60 * 24 * 30;
         const ACCESS_COOKIE = "hvh_access=granted";
 
         let audioCtx;
@@ -5712,6 +5756,54 @@
             document.cookie = `${ACCESS_COOKIE}; Domain=.${apex}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
             safeStorage.set("hvh_access", "1");
           } catch (_error) {}
+        };
+
+        const parseUntil = (value) => {
+          if (!value) return 0;
+          const parsed = Number(value);
+          if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+          return Math.floor(parsed);
+        };
+
+        const readCookieValue = (cookieName) => {
+          const escaped = cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const match = document.cookie.match(new RegExp(`(?:^|; )${escaped}=([^;]*)`));
+          return match ? decodeURIComponent(match[1]) : "";
+        };
+
+        const readPhoneUnlockUntil = () => {
+          const fromStorage = parseUntil(safeStorage.get(PHONE_UNLOCK_STORAGE_KEY));
+          const fromCookie = parseUntil(readCookieValue(PHONE_UNLOCK_COOKIE_NAME));
+          return Math.max(fromStorage, fromCookie);
+        };
+
+        const writePhoneUnlockUntil = (until) => {
+          const safeUntil = Math.max(0, Math.floor(until));
+          safeStorage.set(PHONE_UNLOCK_STORAGE_KEY, String(safeUntil));
+          try {
+            const maxAge = Math.max(0, Math.floor((safeUntil - Date.now()) / 1000));
+            const secure = location.protocol === "https:" ? "; Secure" : "";
+            const apex = location.hostname.split(".").slice(-2).join(".");
+            document.cookie = `${PHONE_UNLOCK_COOKIE_NAME}=${encodeURIComponent(String(safeUntil))}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
+            document.cookie = `${PHONE_UNLOCK_COOKIE_NAME}=${encodeURIComponent(String(safeUntil))}; Domain=.${apex}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
+          } catch (_error) {}
+        };
+
+        const hasPhoneUnlock = () => readPhoneUnlockUntil() > Date.now();
+
+        const bootMainUi = () => {
+          setAccessTokens();
+          safeStorage.set(GATE_STORAGE_KEY, "true");
+          document.body.classList.add("gate-passed");
+          document.body.classList.remove("locked");
+          showFullMenu();
+          if (menuWrapper && menu) {
+            menuWrapper.hidden = false;
+            requestAnimationFrame(() => {
+              menu.classList.add("active");
+              startMatrix(matrixCanvas, menuWrapper);
+            });
+          }
         };
 
         function playAlarm(duration = 2000) {
@@ -5777,16 +5869,15 @@
         }
         window.hvhPlayAlarm = playAlarm;
 
-        const unlockPhoneLine = (skipOverlay = false) => {
+        const unlockPhoneLine = (skipOverlay = false, persistUnlock = false) => {
           window.hvhPhoneUnlocked = true;
-          safeStorage.set(GATE_STORAGE_KEY, "true");
-          setAccessTokens();
-          document.body.classList.add("gate-passed");
-          document.body.classList.remove("locked");
-          showFullMenu();
+          if (persistUnlock) {
+            writePhoneUnlockUntil(Date.now() + PHONE_UNLOCK_DURATION_MS);
+          }
+          bootMainUi();
           if (status) {
             status.textContent =
-              translate("challenge.label") || "Phone line is open. Read the site first, then text me.";
+              "Phone contact unlocked for 30 days on this device.";
             status.className = "challenge-status success";
           }
           if (successOverlay && !skipOverlay) {
@@ -5812,16 +5903,71 @@
           }
         };
 
-        if (hasGatePass) {
-          unlockPhoneLine(true);
-        } else {
-          unlockPhoneLine();
-        }
+        const lockPhoneLine = () => {
+          window.hvhPhoneUnlocked = false;
+          bootMainUi();
+          if (status) {
+            status.textContent = "Phone contact is hidden. Booking stays open. Unlock contact for $2.";
+            status.className = "challenge-status warning";
+          }
+          if (window.hvhPhoneMatrix && typeof window.hvhPhoneMatrix.showButton === "function") {
+            window.hvhPhoneMatrix.showButton();
+          }
+        };
+
+        const consumePhoneUnlockCheckout = () => {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("phone_unlock_success") !== "1") {
+            if (hasPhoneUnlock()) {
+              unlockPhoneLine(true);
+            } else {
+              lockPhoneLine();
+            }
+            return;
+          }
+
+          const sessionId = (params.get("session_id") || "").trim();
+          if (sessionId === "") {
+            lockPhoneLine();
+            return;
+          }
+
+          if (status) {
+            status.textContent = "Verifying payment...";
+            status.className = "challenge-status";
+          }
+
+          fetch(`/booking/api/stripe/verify-session.php?session_id=${encodeURIComponent(sessionId)}`, {
+            cache: "no-store",
+          })
+            .then((response) => (response.ok ? response.json() : Promise.reject(new Error("verify_failed"))))
+            .then((data) => {
+              const purchaseType = String(data?.purchase_type || "").toLowerCase();
+              const paid = !!data?.paid;
+              if (data?.ok && paid && purchaseType === "phone_unlock") {
+                unlockPhoneLine(false, true);
+                params.delete("phone_unlock_success");
+                params.delete("checkout_success");
+                params.delete("purchase_type");
+                params.delete("session_id");
+                const query = params.toString();
+                const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+                window.history.replaceState({}, "", nextUrl);
+                return;
+              }
+              lockPhoneLine();
+            })
+            .catch(() => {
+              lockPhoneLine();
+            });
+        };
+
+        consumePhoneUnlockCheckout();
 
         if (form) {
           form.addEventListener("submit", (event) => {
             event.preventDefault();
-            unlockPhoneLine();
+            window.location.href = "/premium.html#phone-unlock";
           });
         }
       })();

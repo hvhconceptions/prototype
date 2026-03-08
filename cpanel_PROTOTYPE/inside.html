@@ -4706,13 +4706,13 @@
               </div>
             </div>
             <div class="contact-field">
-              <label for="nl-suggestions">Suggestions (major non-USA cities only)</label>
+              <label for="nl-suggestions">Suggestions (major rich cities in Europe only)</label>
               <textarea
                 id="nl-suggestions"
                 class="contact-textarea"
                 name="nl_suggestions"
                 rows="3"
-                placeholder="Example: Berlin, Barcelona, Tokyo"
+                placeholder="Example: Berlin, Zurich, Monaco"
               ></textarea>
             </div>
             <input
@@ -6223,58 +6223,31 @@
           /\bsan diego\b/i,
           /\bphiladelphia\b/i,
         ];
-        const ALLOWED_MAJOR_NON_US_CITIES = new Set([
+        const ALLOWED_MAJOR_RICH_EUROPE_CITIES = new Set([
           "amsterdam",
-          "athens",
-          "auckland",
-          "bangkok",
           "barcelona",
-          "beirut",
           "berlin",
-          "bogota",
           "brussels",
-          "buenos aires",
-          "cape town",
-          "casablanca",
           "copenhagen",
           "dublin",
-          "dubai",
-          "helsinki",
-          "hong kong",
-          "istanbul",
-          "jakarta",
-          "johannesburg",
-          "lima",
+          "frankfurt",
+          "geneva",
+          "hamburg",
           "lisbon",
           "london",
+          "luxembourg city",
           "madrid",
-          "manila",
-          "marrakesh",
-          "medellin",
-          "melbourne",
-          "mexico city",
           "milan",
-          "monterrey",
-          "montreal",
-          "osaka",
+          "monaco",
+          "munich",
           "oslo",
-          "panama city",
           "paris",
           "prague",
-          "rio de janeiro",
           "rome",
-          "santiago",
-          "sao paulo",
-          "seoul",
-          "singapore",
           "stockholm",
-          "sydney",
-          "taipei",
-          "tokyo",
-          "toronto",
-          "vancouver",
           "vienna",
           "warsaw",
+          "zurich",
         ]);
 
         const setStatus = (message, level = "") => {
@@ -6322,7 +6295,7 @@
               return false;
             }
             const normalized = normalizeSuggestedCity(rawCity);
-            if (!normalized || !ALLOWED_MAJOR_NON_US_CITIES.has(normalized)) {
+            if (!normalized || !ALLOWED_MAJOR_RICH_EUROPE_CITIES.has(normalized)) {
               return false;
             }
           }
@@ -6379,7 +6352,7 @@
             if (!validateSuggestedCities(suggestionsField.value)) {
               playCityAlarm();
               setStatus(
-                "Use major non-USA cities only. Otherwise, book Fly Me To You.",
+                "Use major rich cities in Europe only. Any other city: book Fly Me To You.",
                 "error"
               );
               suggestionsField.focus();

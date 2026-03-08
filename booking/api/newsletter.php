@@ -106,77 +106,50 @@ if ($suggestions !== '') {
         '/\bsan diego\b/i',
         '/\bphiladelphia\b/i',
     ];
-    $allowedMajorNonUsCities = [
+    $allowedMajorRichEuropeCities = [
         'amsterdam',
-        'athens',
-        'auckland',
-        'bangkok',
         'barcelona',
-        'beirut',
         'berlin',
-        'bogota',
         'brussels',
-        'buenos aires',
-        'cape town',
-        'casablanca',
         'copenhagen',
         'dublin',
-        'dubai',
-        'helsinki',
-        'hong kong',
-        'istanbul',
-        'jakarta',
-        'johannesburg',
-        'lima',
+        'frankfurt',
+        'geneva',
+        'hamburg',
         'lisbon',
         'london',
+        'luxembourg city',
         'madrid',
-        'manila',
-        'marrakesh',
-        'medellin',
-        'melbourne',
-        'mexico city',
         'milan',
-        'monterrey',
-        'montreal',
-        'osaka',
+        'monaco',
+        'munich',
         'oslo',
-        'panama city',
         'paris',
         'prague',
-        'rio de janeiro',
         'rome',
-        'santiago',
-        'sao paulo',
-        'seoul',
-        'singapore',
         'stockholm',
-        'sydney',
-        'taipei',
-        'tokyo',
-        'toronto',
-        'vancouver',
         'vienna',
         'warsaw',
+        'zurich',
     ];
-    $allowedLookup = array_fill_keys($allowedMajorNonUsCities, true);
+    $allowedLookup = array_fill_keys($allowedMajorRichEuropeCities, true);
     $suggestedCities = $parseSuggestedCities($suggestions);
 
     foreach ($suggestedCities as $suggestedCity) {
         foreach ($blockedPatterns as $pattern) {
             if (preg_match($pattern, $suggestedCity) === 1) {
-                json_response(['error' => 'Use major non-USA cities only. For other places, book Fly Me To You.'], 422);
+                json_response(['error' => 'Use major rich cities in Europe only. Any other city: book Fly Me To You.'], 422);
             }
         }
         foreach ($usaPatterns as $pattern) {
             if (preg_match($pattern, $suggestedCity) === 1) {
-                json_response(['error' => 'Use major non-USA cities only. For other places, book Fly Me To You.'], 422);
+                json_response(['error' => 'Use major rich cities in Europe only. Any other city: book Fly Me To You.'], 422);
             }
         }
 
         $normalized = $normalizeSuggestedCity($suggestedCity);
         if ($normalized === '' || !isset($allowedLookup[$normalized])) {
-            json_response(['error' => 'Use major non-USA cities only. For other places, book Fly Me To You.'], 422);
+            json_response(['error' => 'Use major rich cities in Europe only. Any other city: book Fly Me To You.'], 422);
         }
     }
 }

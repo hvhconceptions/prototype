@@ -13,14 +13,41 @@ if ($honeypot !== '') {
     json_response(['error' => 'Spam detected'], 422);
 }
 
-$antispam = strtolower(trim((string) ($payload['nl_antispam'] ?? '')));
-if ($antispam !== 'matrix') {
-    json_response(['error' => 'Anti-spam failed'], 422);
-}
-
 $email = trim((string) ($payload['nl_email'] ?? ''));
 if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     json_response(['error' => 'Email required'], 422);
+}
+$email = strtolower($email);
+
+$ip = get_client_ip();
+$now = time();
+$guardPath = DATA_DIR . '/newsletter_guard.json';
+$guardStore = read_json_file($guardPath, ['events' => []]);
+$events = $guardStore['events'] ?? [];
+if (!is_array($events)) {
+    $events = [];
+}
+$events = array_values(array_filter($events, static function ($entry) use ($now): bool {
+    if (!is_array($entry)) {
+        return false;
+    }
+    $atUnix = (int) ($entry['at_unix'] ?? 0);
+    return $atUnix >= ($now - 86400);
+}));
+
+$recentIpAttempts = 0;
+$recentEmailAttempts = 0;
+foreach ($events as $entry) {
+    $atUnix = (int) ($entry['at_unix'] ?? 0);
+    if ($ip !== '' && (string) ($entry['ip'] ?? '') === $ip && $atUnix >= ($now - 900)) {
+        $recentIpAttempts++;
+    }
+    if ((string) ($entry['email'] ?? '') === $email && $atUnix >= ($now - 86400)) {
+        $recentEmailAttempts++;
+    }
+}
+if ($recentIpAttempts >= 6 || $recentEmailAttempts >= 3) {
+    json_response(['error' => 'Too many requests. Please try again later.'], 429);
 }
 
 $name = trim((string) ($payload['nl_name'] ?? ''));
@@ -49,6 +76,15 @@ if (!is_array($subscribers)) {
 $subscribers[] = $entry;
 $store['subscribers'] = $subscribers;
 write_json_file($path, $store);
+
+$events[] = [
+    'at_unix' => $now,
+    'at' => gmdate('c'),
+    'ip' => $ip,
+    'email' => $email,
+];
+$guardStore['events'] = $events;
+write_json_file($guardPath, $guardStore);
 
 $adminBody = "New newsletter signup\n\n";
 $adminBody .= "Name: " . $name . "\n";

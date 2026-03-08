@@ -4703,18 +4703,6 @@
                 </label>
               </div>
             </div>
-            <div class="contact-field newsletter-antispam">
-              <label for="nl-antispam">Anti-spam: type MATRIX*</label>
-              <input
-                id="nl-antispam"
-                class="contact-input"
-                name="nl_antispam"
-                type="text"
-                placeholder="matrix"
-                autocomplete="off"
-                required
-              />
-            </div>
             <input
               type="text"
               name="newsletter_signal"
@@ -6285,7 +6273,6 @@
 
         const statusEl = document.getElementById("inline-newsletter-status");
         const honeypot = form.querySelector('input[name="newsletter_signal"]');
-        const antispamInput = document.getElementById("nl-antispam");
         const PROFANITY_PATTERNS = [
           /\b(bitch|biatch|b!tch)\b/i,
           /\b(fuck|fuk|fck|f\*+k)\b/i,
@@ -6355,12 +6342,6 @@
           if (!emailField || !emailField.value.trim()) {
             setStatus("Email is required.", "error");
             if (emailField) emailField.focus();
-            return;
-          }
-
-          if (antispamInput && antispamInput.value.trim().toLowerCase() !== "matrix") {
-            setStatus("type MATRIX to prove you're real.", "error");
-            antispamInput.focus();
             return;
           }
 

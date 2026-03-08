@@ -4699,7 +4699,21 @@
                   <input type="checkbox" name="nl_city[]" value="London (UK)" />
                   <span>London (UK)</span>
                 </label>
+                <label class="contact-checkbox">
+                  <input type="checkbox" name="nl_city[]" value="Berlin" />
+                  <span>Berlin</span>
+                </label>
               </div>
+            </div>
+            <div class="contact-field">
+              <label for="nl-suggestions">Suggestions (major non-USA cities only)</label>
+              <textarea
+                id="nl-suggestions"
+                class="contact-textarea"
+                name="nl_suggestions"
+                rows="3"
+                placeholder="Example: Berlin, Barcelona, Tokyo"
+              ></textarea>
             </div>
             <input
               type="text"
@@ -6164,6 +6178,11 @@
 
         const statusEl = document.getElementById("inline-newsletter-status");
         const honeypot = form.querySelector('input[name="newsletter_signal"]');
+        const suggestionsField = document.getElementById("nl-suggestions");
+        const xpErrorAudio = new Audio(
+          "https://www.myinstants.com/media/sounds/windows-error-sound-effect.mp3"
+        );
+        xpErrorAudio.preload = "auto";
         const PROFANITY_PATTERNS = [
           /\b(bitch|biatch|b!tch)\b/i,
           /\b(fuck|fuk|fck|f\*+k)\b/i,
@@ -6175,6 +6194,88 @@
           /\b(worthless|useless|trash|cheap|pathetic)\b/i,
           /\b(bimbo|dog|ugly)\b/i,
         ];
+        const BLOCKED_SUGGESTION_PATTERNS = [
+          /\bcalgary\b/i,
+          /\bedmonton\b/i,
+          /\bottawa\b/i,
+          /\bjamais\b/i,
+          /\bindia\b/i,
+        ];
+        const USA_PATTERNS = [
+          /\busa\b/i,
+          /\bu\.s\.a\b/i,
+          /\bunited states\b/i,
+          /\bunited states of america\b/i,
+          /\bamerica\b/i,
+          /\bnew york\b/i,
+          /\blos angeles\b/i,
+          /\bchicago\b/i,
+          /\bmiami\b/i,
+          /\blas vegas\b/i,
+          /\bdallas\b/i,
+          /\bhouston\b/i,
+          /\bsan francisco\b/i,
+          /\bseattle\b/i,
+          /\batlanta\b/i,
+          /\bboston\b/i,
+          /\bwashington\b/i,
+          /\bphoenix\b/i,
+          /\bsan diego\b/i,
+          /\bphiladelphia\b/i,
+        ];
+        const ALLOWED_MAJOR_NON_US_CITIES = new Set([
+          "amsterdam",
+          "athens",
+          "auckland",
+          "bangkok",
+          "barcelona",
+          "beirut",
+          "berlin",
+          "bogota",
+          "brussels",
+          "buenos aires",
+          "cape town",
+          "casablanca",
+          "copenhagen",
+          "dublin",
+          "dubai",
+          "helsinki",
+          "hong kong",
+          "istanbul",
+          "jakarta",
+          "johannesburg",
+          "lima",
+          "lisbon",
+          "london",
+          "madrid",
+          "manila",
+          "marrakesh",
+          "medellin",
+          "melbourne",
+          "mexico city",
+          "milan",
+          "monterrey",
+          "montreal",
+          "osaka",
+          "oslo",
+          "panama city",
+          "paris",
+          "prague",
+          "rio de janeiro",
+          "rome",
+          "santiago",
+          "sao paulo",
+          "seoul",
+          "singapore",
+          "stockholm",
+          "sydney",
+          "taipei",
+          "tokyo",
+          "toronto",
+          "vancouver",
+          "vienna",
+          "warsaw",
+        ]);
 
         const setStatus = (message, level = "") => {
           if (!statusEl) return;
@@ -6188,9 +6289,48 @@
 
         const containsProfanity = (value) =>
           PROFANITY_PATTERNS.some((pattern) => pattern.test(value));
+        const playCityAlarm = () => {
+          try {
+            xpErrorAudio.pause();
+            xpErrorAudio.currentTime = 0;
+            xpErrorAudio.play().catch(() => {});
+          } catch (_error) {
+            if (typeof window.hvhPlayAlarm === "function") {
+              window.hvhPlayAlarm(2200);
+            }
+          }
+        };
+        const parseSuggestedCities = (value) =>
+          (value || "")
+            .split(/[\n,;|/]+/)
+            .map((city) => city.trim())
+            .filter(Boolean);
+        const normalizeSuggestedCity = (value) =>
+          value
+            .toLowerCase()
+            .replace(/\(.*?\)/g, "")
+            .replace(/[^a-z\s.'-]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+        const validateSuggestedCities = (value) => {
+          const suggestedCities = parseSuggestedCities(value);
+          for (const rawCity of suggestedCities) {
+            if (BLOCKED_SUGGESTION_PATTERNS.some((pattern) => pattern.test(rawCity))) {
+              return false;
+            }
+            if (USA_PATTERNS.some((pattern) => pattern.test(rawCity))) {
+              return false;
+            }
+            const normalized = normalizeSuggestedCity(rawCity);
+            if (!normalized || !ALLOWED_MAJOR_NON_US_CITIES.has(normalized)) {
+              return false;
+            }
+          }
+          return true;
+        };
 
         const monitoredFields = Array.from(
-          form.querySelectorAll('input[type="text"], input[type="tel"]')
+          form.querySelectorAll('input[type="text"], input[type="tel"], textarea')
         );
 
         monitoredFields.forEach((field) => {
@@ -6235,6 +6375,17 @@
             if (emailField) emailField.focus();
             return;
           }
+          if (suggestionsField && suggestionsField.value.trim()) {
+            if (!validateSuggestedCities(suggestionsField.value)) {
+              playCityAlarm();
+              setStatus(
+                "Use major non-USA cities only. Otherwise, book Fly Me To You.",
+                "error"
+              );
+              suggestionsField.focus();
+              return;
+            }
+          }
 
           setStatus("Sending...", "success");
           const formData = new FormData(form);
@@ -6245,8 +6396,15 @@
             body: formData,
           })
             .then((response) => {
-              if (!response.ok) throw new Error("server");
-              return response;
+              return response
+                .json()
+                .catch(() => ({}))
+                .then((data) => {
+                  if (!response.ok) {
+                    throw new Error(data && data.error ? data.error : "server");
+                  }
+                  return data;
+                });
             })
             .then(() => {
               setStatus("Sent. Watch your inbox (and spam) for my reply.", "success");
@@ -6254,8 +6412,12 @@
                 form.reset();
               } catch (_error) {}
             })
-            .catch(() => {
-              setStatus("Server error. Try again or text me directly.", "error");
+            .catch((error) => {
+              const message =
+                error && error.message && error.message !== "server"
+                  ? error.message
+                  : "Server error. Try again or text me directly.";
+              setStatus(message, "error");
             });
         });
       })();

@@ -57,6 +57,129 @@ if (!is_array($cities)) {
     $cities = [$cities];
 }
 $cities = array_values(array_filter(array_map('trim', array_map('strval', $cities))));
+$suggestions = trim((string) ($payload['nl_suggestions'] ?? ''));
+if (strlen($suggestions) > 800) {
+    json_response(['error' => 'Suggestions are too long'], 422);
+}
+
+$parseSuggestedCities = static function (string $value): array {
+    $parts = preg_split('/[\r\n,;|\/]+/', $value) ?: [];
+    $parts = array_map('trim', $parts);
+    return array_values(array_filter($parts, static fn(string $city): bool => $city !== ''));
+};
+$normalizeSuggestedCity = static function (string $city): string {
+    $city = strtolower($city);
+    $city = (string) preg_replace('/\(.*?\)/', '', $city);
+    $city = (string) preg_replace('/[^a-z\s.\'-]/', ' ', $city);
+    $city = (string) preg_replace('/\s+/', ' ', $city);
+    return trim($city);
+};
+
+$suggestedCities = [];
+if ($suggestions !== '') {
+    $blockedPatterns = [
+        '/\bcalgary\b/i',
+        '/\bedmonton\b/i',
+        '/\bottawa\b/i',
+        '/\bjamais\b/i',
+        '/\bindia\b/i',
+    ];
+    $usaPatterns = [
+        '/\busa\b/i',
+        '/\bu\.s\.a\b/i',
+        '/\bunited states\b/i',
+        '/\bunited states of america\b/i',
+        '/\bamerica\b/i',
+        '/\bnew york\b/i',
+        '/\blos angeles\b/i',
+        '/\bchicago\b/i',
+        '/\bmiami\b/i',
+        '/\blas vegas\b/i',
+        '/\bdallas\b/i',
+        '/\bhouston\b/i',
+        '/\bsan francisco\b/i',
+        '/\bseattle\b/i',
+        '/\batlanta\b/i',
+        '/\bboston\b/i',
+        '/\bwashington\b/i',
+        '/\bphoenix\b/i',
+        '/\bsan diego\b/i',
+        '/\bphiladelphia\b/i',
+    ];
+    $allowedMajorNonUsCities = [
+        'amsterdam',
+        'athens',
+        'auckland',
+        'bangkok',
+        'barcelona',
+        'beirut',
+        'berlin',
+        'bogota',
+        'brussels',
+        'buenos aires',
+        'cape town',
+        'casablanca',
+        'copenhagen',
+        'dublin',
+        'dubai',
+        'helsinki',
+        'hong kong',
+        'istanbul',
+        'jakarta',
+        'johannesburg',
+        'lima',
+        'lisbon',
+        'london',
+        'madrid',
+        'manila',
+        'marrakesh',
+        'medellin',
+        'melbourne',
+        'mexico city',
+        'milan',
+        'monterrey',
+        'montreal',
+        'osaka',
+        'oslo',
+        'panama city',
+        'paris',
+        'prague',
+        'rio de janeiro',
+        'rome',
+        'santiago',
+        'sao paulo',
+        'seoul',
+        'singapore',
+        'stockholm',
+        'sydney',
+        'taipei',
+        'tokyo',
+        'toronto',
+        'vancouver',
+        'vienna',
+        'warsaw',
+    ];
+    $allowedLookup = array_fill_keys($allowedMajorNonUsCities, true);
+    $suggestedCities = $parseSuggestedCities($suggestions);
+
+    foreach ($suggestedCities as $suggestedCity) {
+        foreach ($blockedPatterns as $pattern) {
+            if (preg_match($pattern, $suggestedCity) === 1) {
+                json_response(['error' => 'Use major non-USA cities only. For other places, book Fly Me To You.'], 422);
+            }
+        }
+        foreach ($usaPatterns as $pattern) {
+            if (preg_match($pattern, $suggestedCity) === 1) {
+                json_response(['error' => 'Use major non-USA cities only. For other places, book Fly Me To You.'], 422);
+            }
+        }
+
+        $normalized = $normalizeSuggestedCity($suggestedCity);
+        if ($normalized === '' || !isset($allowedLookup[$normalized])) {
+            json_response(['error' => 'Use major non-USA cities only. For other places, book Fly Me To You.'], 422);
+        }
+    }
+}
 
 $entry = [
     'id' => 'nl_' . gmdate('YmdHis') . '_' . bin2hex(random_bytes(3)),
@@ -65,6 +188,8 @@ $entry = [
     'email' => $email,
     'phone' => $phone,
     'cities' => $cities,
+    'suggestions' => $suggestions,
+    'suggested_cities' => $suggestedCities,
 ];
 
 $path = DATA_DIR . '/newsletter.json';
@@ -94,6 +219,9 @@ if ($phone !== '') {
 }
 if (!empty($cities)) {
     $adminBody .= "Cities: " . implode(', ', $cities) . "\n";
+}
+if ($suggestions !== '') {
+    $adminBody .= "Suggestions: " . $suggestions . "\n";
 }
 send_admin_email($adminBody, 'Newsletter signup');
 

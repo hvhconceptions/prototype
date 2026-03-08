@@ -5862,7 +5862,10 @@
           /\b(bimbo|dog|ugly)\b/i,
         ];
 
+        const BAD_VIBE_DISPLAY_MS = 2000;
         let badVibeActive = false;
+        let badVibeHideTimer = null;
+        let badVibeVisibleUntil = 0;
 
         const playBadVibeSound = () => {
           try {
@@ -5881,16 +5884,30 @@
           if (!badVibeActive) {
             playBadVibeSound();
           }
+          if (badVibeHideTimer) {
+            window.clearTimeout(badVibeHideTimer);
+            badVibeHideTimer = null;
+          }
+          badVibeVisibleUntil = Date.now() + BAD_VIBE_DISPLAY_MS;
           badVibeActive = true;
           badVibeLayer.classList.add("show");
           badVibeLayer.setAttribute("aria-hidden", "false");
           badVibePopup.classList.add("show");
           badVibePopup.setAttribute("aria-hidden", "false");
+          badVibeHideTimer = window.setTimeout(() => {
+            hideBadVibe(true);
+          }, BAD_VIBE_DISPLAY_MS);
         };
 
-        const hideBadVibe = () => {
+        const hideBadVibe = (force = false) => {
           if (!badVibeActive) return;
+          if (!force && Date.now() < badVibeVisibleUntil) return;
+          if (badVibeHideTimer) {
+            window.clearTimeout(badVibeHideTimer);
+            badVibeHideTimer = null;
+          }
           badVibeActive = false;
+          badVibeVisibleUntil = 0;
           badVibeLayer.classList.remove("show");
           badVibeLayer.setAttribute("aria-hidden", "true");
           badVibePopup.classList.remove("show");

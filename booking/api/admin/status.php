@@ -318,6 +318,10 @@ foreach ($requests as $index => &$request) {
     if ($existingPayment !== '') {
         $request['payment_status'] = $existingPayment;
     }
+    $depositAmount = isset($request['deposit_amount']) ? (int) $request['deposit_amount'] : 0;
+    $requestEmail = (string) ($request['email'] ?? '');
+    $paymentMethod = (string) ($request['payment_method'] ?? '');
+    $depositCurrency = (string) ($request['deposit_currency'] ?? '');
 
     if ($status === 'declined') {
         $request['status'] = 'declined';
@@ -325,7 +329,6 @@ foreach ($requests as $index => &$request) {
         $request['decline_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
         append_history_entry($request, 'status', 'Status set to declined' . ($reason !== '' ? " ({$reason})" : ''));
-        $requestEmail = (string) ($request['email'] ?? '');
         if ($requestEmail !== '' && ($request['declined_email_sent_at'] ?? '') === '') {
             $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
             $body .= "Your booking request was declined.\n";
@@ -353,6 +356,17 @@ foreach ($requests as $index => &$request) {
         $request['blacklist_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
         append_history_entry($request, 'status', 'Status set to blacklisted' . ($reason !== '' ? " ({$reason})" : ''));
+        if ($requestEmail !== '' && ($request['blacklisted_email_sent_at'] ?? '') === '') {
+            $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
+            $body .= "Your booking request was blacklisted.\n";
+            if ($reason !== '') {
+                $body .= "Reason: " . $reason . "\n";
+            }
+            $body .= "\nIf this seems incorrect, reply to this email.\n";
+            if (send_payment_email($requestEmail, $body, 'Booking update')) {
+                $request['blacklisted_email_sent_at'] = gmdate('c');
+            }
+        }
         add_blacklist_entry([
             'email' => $request['email'] ?? '',
             'phone' => $request['phone'] ?? '',
@@ -371,7 +385,6 @@ foreach ($requests as $index => &$request) {
         $request['cancel_reason'] = $reason;
         $request['updated_at'] = gmdate('c');
         append_history_entry($request, 'status', 'Status set to cancelled' . ($reason !== '' ? " ({$reason})" : ''));
-        $requestEmail = (string) ($request['email'] ?? '');
         if ($requestEmail !== '' && ($request['cancelled_email_sent_at'] ?? '') === '') {
             $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
             $body .= "Your booking request was cancelled.\n";
@@ -395,12 +408,39 @@ foreach ($requests as $index => &$request) {
             unset($request['maybe_reason']);
         }
         append_history_entry($request, 'status', 'Status set to maybe' . ($reason !== '' ? " ({$reason})" : ''));
+        if ($requestEmail !== '' && ($request['maybe_email_sent_at'] ?? '') === '') {
+            $body = "Hi " . ($request['name'] ?? '') . ",\n\n";
+            $body .= "Your booking is marked as maybe for now.\n\n";
+            $body .= "Date/time: " . ($request['preferred_date'] ?? '') . " " . ($request['preferred_time'] ?? '') . "\n";
+            $body .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
+            if ($reason !== '') {
+                $body .= "Note: " . $reason . "\n";
+            }
+            $body .= "\nI will confirm as soon as possible.\n";
+            if (send_payment_email($requestEmail, $body, 'Booking update')) {
+                $request['maybe_email_sent_at'] = gmdate('c');
+            }
+        }
+        if (($request['maybe_admin_notified_at'] ?? '') === '') {
+            $adminCurrency = $depositCurrency !== '' ? $depositCurrency : (PAYPAL_CURRENCY !== '' ? PAYPAL_CURRENCY : 'USD');
+            $adminMethod = format_payment_method($paymentMethod);
+            $adminBody = "Booking marked maybe\n\n";
+            $adminBody .= "Name: " . ($request['name'] ?? '') . "\n";
+            $adminBody .= "Email: " . ($request['email'] ?? '') . "\n";
+            $adminBody .= "Phone: " . ($request['phone'] ?? '') . "\n";
+            $adminBody .= "Date/time: " . ($request['preferred_date'] ?? '') . " " . ($request['preferred_time'] ?? '') . "\n";
+            $adminBody .= "Duration: " . ($request['duration_label'] ?? '') . "\n";
+            $adminBody .= "Payment method: " . $adminMethod . "\n";
+            $adminBody .= "Deposit: " . $depositAmount . " " . $adminCurrency . "\n";
+            if ($reason !== '') {
+                $adminBody .= "Reason: " . $reason . "\n";
+            }
+            $adminBody .= "Request id: " . ($request['id'] ?? '') . "\n";
+            if (send_admin_email($adminBody, 'Booking maybe')) {
+                $request['maybe_admin_notified_at'] = gmdate('c');
+            }
+        }
     }
-
-    $depositAmount = isset($request['deposit_amount']) ? (int) $request['deposit_amount'] : 0;
-    $requestEmail = (string) ($request['email'] ?? '');
-    $paymentMethod = (string) ($request['payment_method'] ?? '');
-    $depositCurrency = (string) ($request['deposit_currency'] ?? '');
 
     if ($status === 'accepted') {
         $request['status'] = 'accepted';

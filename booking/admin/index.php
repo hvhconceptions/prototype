@@ -1168,6 +1168,17 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         font-size: 0.85rem;
         color: #5f173a;
         margin: 6px 0 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .meta strong {
+        white-space: nowrap;
+      }
+
+      .meta .meta-value {
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .actions {
@@ -6475,8 +6486,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         return btn;
       };
 
-      const formatLine = (label, value) =>
-        value ? `<div class="meta"><strong>${label}:</strong> ${value}</div>` : "";
+      const formatLine = (label, value) => {
+        if (!value) return "";
+        return `<div class="meta"><strong>${escapeHtml(label)}:</strong> <span class="meta-value">${escapeHtml(value)}</span></div>`;
+      };
 
       const formatArray = (list) => (Array.isArray(list) ? list.filter(Boolean).join(", ") : "");
 

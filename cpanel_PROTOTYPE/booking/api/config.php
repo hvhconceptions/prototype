@@ -34,7 +34,7 @@ const EMAIL_FROM = 'bookings@heidivanhorny.com';
 const EMAIL_REPLY_TO = 'bookings@heidivanhorny.com';
 const EMAIL_SUBJECT = 'Booking Heidi Van Horny';
 const ADMIN_NOTIFY_EMAIL = 'pornstar.heidi@gmail.com';
-const CONTACT_SMS_WHATSAPP = '+1 514 607 6253';
+const CONTACT_SMS_WHATSAPP = '+1 (514) 607-6253';
 
 const DATA_DIR = __DIR__ . '/../data';
 const SITE_CONTENT_FILE = DATA_DIR . '/site_content.json';

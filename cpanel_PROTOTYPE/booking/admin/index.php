@@ -4065,7 +4065,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const makeScheduleId = (entry) =>
         `${String(entry?.start || "").trim()}|${String(entry?.end || "").trim()}|${normalizeCityName(entry?.city || "")}`;
 
-      const getDefaultTimezoneForCity = (_city) => DEFAULT_TIMEZONE;
+      const getDefaultTimezoneForCity = (city) => {
+        const normalizedCity = normalizeCityName(city);
+        return CITY_TIMEZONE_MAP[normalizedCity] || DEFAULT_TIMEZONE;
+      };
 
       const isValidTime = (value) => /^\d{2}:\d{2}$/.test(String(value || ""));
       const normalizeBufferMinutes = (value, fallback = 0) => {
@@ -4080,7 +4083,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         const city = String(entry.city || "").trim();
         const start = String(entry.start || "").trim();
         const end = String(entry.end || "").trim();
-        const timezone = getDefaultTimezoneForCity(city);
+        const timezoneCandidate = String(entry.timezone || "").trim();
+        const cityDefaultTimezone = getDefaultTimezoneForCity(city);
+        const shouldUseCityDefault =
+          !timezoneCandidate ||
+          (timezoneCandidate === DEFAULT_TIMEZONE && cityDefaultTimezone !== DEFAULT_TIMEZONE);
+        const timezone = normalizeTimezone(shouldUseCityDefault ? cityDefaultTimezone : timezoneCandidate);
         const dateKeys = (() => {
           const startDate = parseDateKey(start);
           const endDate = parseDateKey(end);
@@ -6372,6 +6380,37 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         )}${pad(stamp.getUTCMinutes())}00`;
       };
 
+      const resolveRequestTimezone = (item) => {
+        const cityKey = normalizeCityName(item?.city || "");
+        const dateKey = String(item?.preferred_date || "").trim();
+        const requestTimezone = normalizeTimezone(item?.tour_timezone);
+
+        if (cityKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+          const matchedSchedule = citySchedules.find((schedule) => {
+            const scheduleCity = normalizeCityName(schedule?.city || "");
+            const scheduleStart = String(schedule?.start || "");
+            const scheduleEnd = String(schedule?.end || "");
+            return (
+              scheduleCity === cityKey &&
+              /^\d{4}-\d{2}-\d{2}$/.test(scheduleStart) &&
+              /^\d{4}-\d{2}-\d{2}$/.test(scheduleEnd) &&
+              scheduleStart <= dateKey &&
+              scheduleEnd >= dateKey
+            );
+          });
+          const scheduleTimezone = normalizeTimezone(matchedSchedule?.timezone);
+          if (scheduleTimezone !== DEFAULT_TIMEZONE) {
+            return scheduleTimezone;
+          }
+        }
+
+        if (requestTimezone !== DEFAULT_TIMEZONE) {
+          return requestTimezone;
+        }
+
+        return getDefaultTimezoneForCity(cityKey);
+      };
+
       const buildGoogleCalendarUrl = (item) => {
         const dateValue = item.preferred_date || "";
         const timeValue = item.preferred_time || "";
@@ -6391,7 +6430,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         const title = encodeURIComponent(titleText);
         const details = encodeURIComponent(detailsText);
         const location = encodeURIComponent(item.city || "");
-        const tz = encodeURIComponent(item.tour_timezone || "America/Toronto");
+        const tz = encodeURIComponent(resolveRequestTimezone(item));
         return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${start}/${end}&ctz=${tz}`;
       };
 
@@ -6426,7 +6465,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         if (!start || !end) return;
 
         const uid = `${item?.id || Date.now()}@bombacloud`;
-        const timezone = String(item?.tour_timezone || "America/Toronto").trim() || "America/Toronto";
+        const timezone = resolveRequestTimezone(item);
         const timezoneEscaped = timezone.replace(/([\\;,])/g, "\\$1");
         const phone = String(item?.phone || "").trim();
         const summary = phone

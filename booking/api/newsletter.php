@@ -81,7 +81,7 @@ if ($suggestions !== '') {
         '/\bcalgary\b/i',
         '/\bedmonton\b/i',
         '/\bottawa\b/i',
-        '/\bjamais\b/i',
+        '/\bjamaica\b/i',
         '/\bindia\b/i',
     ];
     $usaPatterns = [

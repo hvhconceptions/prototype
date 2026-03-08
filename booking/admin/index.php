@@ -2572,6 +2572,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         <h2 id="requestsSectionTitle">Requests</h2>
         <div class="row requests-toolbar">
           <button class="btn secondary" id="refreshRequests">Refresh</button>
+          <button class="btn ghost" id="sendUpcomingConfirmations" type="button">Send upcoming emails</button>
           <a class="btn ghost" href="customers.php" id="customersDirectoryBtn">Customer directory</a>
           <div class="status-filter-tabs" id="statusFilterTabs" role="tablist" aria-label="Request status filters">
             <button type="button" class="status-filter-tab" data-status-tab="all" aria-pressed="true">All</button>
@@ -2681,6 +2682,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const scheduleCalendarSelection = document.getElementById("scheduleCalendarSelection");
       const scheduleCalendarStatus = document.getElementById("scheduleCalendarStatus");
       const refreshBtn = document.getElementById("refreshRequests");
+      const sendUpcomingConfirmationsBtn = document.getElementById("sendUpcomingConfirmations");
       const statusFilter = document.getElementById("statusFilter");
       const statusFilterTabs = document.getElementById("statusFilterTabs");
       const statusFilterTabButtons = statusFilterTabs
@@ -2833,6 +2835,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           short_description: "Short description",
           preview: "Preview",
           refresh: "Refresh",
+          send_upcoming_confirmations: "Send upcoming emails",
+          upcoming_confirmations_sent: "Upcoming emails sent: {count}.",
+          upcoming_confirmations_none: "No upcoming maybe/accepted/paid bookings to email.",
+          failed_send_upcoming_confirmations: "Failed to send upcoming emails.",
           all: "All",
           pending: "Pending",
           maybe: "Maybe",
@@ -3019,6 +3025,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           short_description: "Description courte",
           preview: "Apercu",
           refresh: "Actualiser",
+          send_upcoming_confirmations: "Envoyer emails a venir",
+          upcoming_confirmations_sent: "Emails a venir envoyes : {count}.",
+          upcoming_confirmations_none: "Aucune reservation a venir (peut-etre/acceptee/payee) a envoyer.",
+          failed_send_upcoming_confirmations: "Echec envoi des emails a venir.",
           all: "Tous",
           pending: "En attente",
           maybe: "Peut-etre",
@@ -3822,6 +3832,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         setTextById("savePhotoConfig", t("save_eye_candy"));
         setTextById("requestsSectionTitle", t("requests_title"));
         setTextById("refreshRequests", t("refresh"));
+        setTextById("sendUpcomingConfirmations", t("send_upcoming_confirmations"));
         setTextById("legendBlockedLabel", t("legend_blocked"));
         setTextById("legendBookingLabel", t("legend_booking"));
         setTextById("legendOutcallLabel", t("legend_outcall"));
@@ -7343,6 +7354,43 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         }
       };
 
+      const sendUpcomingConfirmations = async () => {
+        const key = getKey();
+        if (!key) {
+          requestsStatus.textContent = t("admin_key_required");
+          return;
+        }
+        requestsStatus.textContent = "";
+        if (sendUpcomingConfirmationsBtn) {
+          sendUpcomingConfirmationsBtn.disabled = true;
+        }
+        try {
+          const response = await fetch("../api/admin/send-upcoming-confirmations.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Admin-Key": key,
+            },
+            body: JSON.stringify({ force: false }),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "upcoming");
+          const sentCount = Number(result?.sent || 0);
+          if (sentCount > 0) {
+            requestsStatus.textContent = t("upcoming_confirmations_sent", { count: sentCount });
+          } else {
+            requestsStatus.textContent = t("upcoming_confirmations_none");
+          }
+          await loadRequests();
+        } catch (_error) {
+          requestsStatus.textContent = t("failed_send_upcoming_confirmations");
+        } finally {
+          if (sendUpcomingConfirmationsBtn) {
+            sendUpcomingConfirmationsBtn.disabled = false;
+          }
+        }
+      };
+
       saveAvailabilityBtn.addEventListener("click", saveAvailability);
       if (calendarToday) {
         calendarToday.addEventListener("click", () => {
@@ -7718,6 +7766,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         });
       }
       refreshBtn.addEventListener("click", loadRequests);
+      if (sendUpcomingConfirmationsBtn) {
+        sendUpcomingConfirmationsBtn.addEventListener("click", sendUpcomingConfirmations);
+      }
       statusFilter.addEventListener("change", () => {
         syncStatusFilterTabs();
         loadRequests();

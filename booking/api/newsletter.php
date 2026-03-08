@@ -144,18 +144,18 @@ if ($suggestions !== '') {
     foreach ($suggestedCities as $suggestedCity) {
         foreach ($blockedPatterns as $pattern) {
             if (preg_match($pattern, $suggestedCity) === 1) {
-                json_response(['error' => 'Europe only, other cities are Fly Me To You ONLY!'], 422);
+                json_response(['error' => 'EUROPE or FLY ME TO YOU ONLY!'], 422);
             }
         }
         foreach ($usaPatterns as $pattern) {
             if (preg_match($pattern, $suggestedCity) === 1) {
-                json_response(['error' => 'Europe only, other cities are Fly Me To You ONLY!'], 422);
+                json_response(['error' => 'EUROPE or FLY ME TO YOU ONLY!'], 422);
             }
         }
 
         $normalized = $normalizeSuggestedCity($suggestedCity);
         if ($normalized === '' || !isset($allowedLookup[$normalized])) {
-            json_response(['error' => 'Europe only, other cities are Fly Me To You ONLY!'], 422);
+            json_response(['error' => 'EUROPE or FLY ME TO YOU ONLY!'], 422);
         }
     }
 }

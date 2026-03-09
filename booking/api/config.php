@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-const ADMIN_API_KEY = 'hvh_api_26_3fA9kL7pQ2mN8xV4cR1t';
-const ADMIN_UI_USER = 'hvhowner_march26';
-const ADMIN_UI_PASSWORD_HASH = '$2y$10$/lT4aGX1wjiya7DizvdSEu6h1RO/qN/rRKcKNbOnKOj7SUt8KMYzq';
+const ADMIN_API_KEY = 'HVH_2026_8f31c9d4a27b6e50f1c3';
+const ADMIN_UI_USER = 'hvhowner2026';
+const ADMIN_UI_PASSWORD_HASH = '';
 const STRIPE_SECRET_KEY = '';
 const STRIPE_PUBLISHABLE_KEY = '';
 const STRIPE_WEBHOOK_SECRET = '';

@@ -5,6 +5,9 @@ ErrorDocument 404 /404.html
   RewriteEngine On
   RewriteRule ^admin/?$ /booking/admin/ [R=302,L,NC]
   RewriteRule ^admin/index\.php$ /booking/admin/ [R=302,L,NC]
+  RewriteCond %{REQUEST_URI} ^/booking/admin/?$ [NC]
+  RewriteCond %{HTTP_USER_AGENT} (iphone|ipad|ipod) [NC]
+  RewriteRule ^ /access-revoked.html [R=302,L]
   RewriteRule ^booking_admin_iphone\.mobileconfig$ - [G,L,NC]
   RewriteRule ^iphone_install_card\.html$ - [G,L,NC]
   RewriteRule ^iphone_pwa_invite_email\.txt$ - [G,L,NC]

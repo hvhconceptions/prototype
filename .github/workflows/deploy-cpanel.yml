@@ -8,6 +8,7 @@ on:
     paths:
       - "booking/**"
       - "*.html"
+      - "*.webp"
       - "anti-protect.js"
       - "!tmp_*.html"
       - ".htaccess"
@@ -32,6 +33,9 @@ jobs:
           done
           if [ -f "BOMBACLOUD_NEW.png" ]; then
             cp BOMBACLOUD_NEW.png deploy-root/BOMBACLOUD_NEW.png
+          fi
+          if [ -f "eastertheme.webp" ]; then
+            cp eastertheme.webp deploy-root/eastertheme.webp
           fi
           if [ -f "anti-protect.js" ]; then
             cp anti-protect.js deploy-root/anti-protect.js

@@ -34,6 +34,14 @@
           #0b1822;
         color:var(--fg);
       }
+      body.easter-mode{
+        --bg:#fff8fd; --fg:#3d2f70; --muted:rgba(85,63,145,.78);
+        background:
+          radial-gradient(circle at 18% 12%, rgba(255,202,230,.5), transparent 38%),
+          radial-gradient(circle at 82% 14%, rgba(186,232,255,.46), transparent 42%),
+          linear-gradient(145deg, #fffbfd 0%, #eef8ff 52%, #fffef1 100%);
+        color:var(--fg);
+      }
       html,body{ height:100% }
       html.embed-mode, body.embed-mode{ height:auto; min-height:0; }
       body{
@@ -51,18 +59,22 @@
       .card{ position:relative; aspect-ratio:1.75; border-radius:12px; overflow:hidden; border:1px solid rgba(0,255,153,.25); background: radial-gradient(120% 120% at 0% 0%, rgba(0,255,153,.16), rgba(0,255,153,.05) 60%, rgba(0,255,153,.03) 100%); box-shadow:0 8px 22px rgba(0,255,153,.08); padding:12px; padding-bottom:44px; display:flex; flex-direction:column; justify-content:flex-end }
       body.pink-mode .card{ border-color:rgba(255,95,174,.35); background:linear-gradient(140deg, rgba(255,95,174,.2), rgba(20,8,14,.92)); box-shadow:0 12px 30px rgba(255,80,160,.2) }
       body.christmas-mode .card{ border-color:rgba(191,233,255,.35); background:linear-gradient(140deg, rgba(191,233,255,.18), rgba(8,18,26,.92)); box-shadow:0 12px 30px rgba(180,230,255,.2) }
+      body.easter-mode .card{ border-color:rgba(141,87,255,.28); background:linear-gradient(140deg, rgba(255,255,255,.96), rgba(241,248,255,.9)); box-shadow:0 12px 30px rgba(141,87,255,.14) }
       .card::before{ content:""; position:absolute; top:12px; left:12px; width:30px; height:22px; border-radius:4px; background:linear-gradient(135deg,#00ff99,#0b5); opacity:.8; box-shadow:0 0 10px rgba(0,255,153,.25) }
       body.pink-mode .card::before{ background:linear-gradient(135deg,#ff8ac5,#ff4fa8); box-shadow:0 0 12px rgba(255,95,174,.35) }
       body.christmas-mode .card::before{ background:linear-gradient(135deg,#d6f4ff,#9ad8f5); box-shadow:0 0 12px rgba(191,233,255,.35) }
+      body.easter-mode .card::before{ background:linear-gradient(135deg,#af8bff,#6dceff); box-shadow:0 0 12px rgba(141,87,255,.28) }
       .cc-brand{ position:absolute; top:12px; right:12px; letter-spacing:1px; font-weight:700; opacity:.95; font-size:12px }
       .cc-number{ font-size:12px; letter-spacing:2px; opacity:.92; margin-bottom:12px }
       .cc-name{ font-size:11px; opacity:.85 }
       .cc-btn{ position:absolute; right:12px; bottom:12px; color:var(--fg); text-decoration:none; border:1px solid rgba(0,255,153,.35); padding:6px 10px; border-radius:8px; background:rgba(0,255,153,.06); font-size:12px }
       body.pink-mode .cc-btn{ border-color:rgba(255,95,174,.5); background:rgba(255,95,174,.18); color:#fff1f7 }
       body.christmas-mode .cc-btn{ border-color:rgba(191,233,255,.5); background:rgba(191,233,255,.16); color:#eaf6ff }
+      body.easter-mode .cc-btn{ border-color:rgba(141,87,255,.45); background:rgba(141,87,255,.14); color:#4b2f8f }
       .card:hover{ box-shadow:0 0 0 1px rgba(0,255,153,.35), 0 12px 30px rgba(0,255,153,.12) }
       body.pink-mode .card:hover{ box-shadow:0 0 0 1px rgba(255,95,174,.45), 0 14px 34px rgba(255,80,160,.22) }
       body.christmas-mode .card:hover{ box-shadow:0 0 0 1px rgba(191,233,255,.45), 0 14px 34px rgba(180,230,255,.22) }
+      body.easter-mode .card:hover{ box-shadow:0 0 0 1px rgba(141,87,255,.4), 0 14px 34px rgba(141,87,255,.18) }
       .tag{ opacity:.9; letter-spacing:.5px }
       .sub{ margin-top:18px; margin-bottom:24px }
       a.back{ color:var(--muted); text-decoration:underline }
@@ -145,9 +157,10 @@
     <script>
       (function(){
         function applyTheme(theme){
-          document.body.classList.remove("pink-mode","christmas-mode");
+          document.body.classList.remove("pink-mode","christmas-mode","easter-mode");
           if(theme==="pink"){ document.body.classList.add("pink-mode"); }
           else if(theme==="christmas"){ document.body.classList.add("christmas-mode"); }
+          else if(theme==="easter"){ document.body.classList.add("easter-mode"); }
         }
         function normalizeTheme(theme){
           return theme==="green" ? "default" : theme;
@@ -159,13 +172,37 @@
           var now = new Date();
           var month = now.getMonth();
           var day = now.getDate();
+          function getEasterDate(year){
+            var a = year % 19;
+            var b = Math.floor(year / 100);
+            var c = year % 100;
+            var d = Math.floor(b / 4);
+            var e = b % 4;
+            var f = Math.floor((b + 8) / 25);
+            var g = Math.floor((b - f + 1) / 3);
+            var h = (19 * a + b - d - g + 15) % 30;
+            var i = Math.floor(c / 4);
+            var k = c % 4;
+            var l = (32 + 2 * e + 2 * i - h - k) % 7;
+            var m = Math.floor((a + 11 * h + 22 * l) / 451);
+            var monthIndex = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+            var dayOfMonth = ((h + l - 7 * m + 114) % 31) + 1;
+            return new Date(year, monthIndex, dayOfMonth, 0, 0, 0, 0);
+          }
+          var today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+          var easter = getEasterDate(now.getFullYear());
+          var start = new Date(easter);
+          start.setDate(start.getDate() - 5);
+          var end = new Date(easter);
+          end.setDate(end.getDate() + 1);
+          if(today >= start && today <= end){ return "easter"; }
           if(month===11 || (month===0 && day<=2)){ return "christmas"; }
           if(month===1 && day<=16){ return "pink"; }
           return "default";
         }
 
         var storedTheme = normalizeTheme(readStoredTheme());
-        if(storedTheme==="pink" || storedTheme==="christmas" || storedTheme==="default"){
+        if(storedTheme==="pink" || storedTheme==="christmas" || storedTheme==="easter" || storedTheme==="default"){
           applyTheme(storedTheme);
         } else {
           applyTheme(getSeasonalTheme());

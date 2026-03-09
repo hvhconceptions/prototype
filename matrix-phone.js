@@ -14,8 +14,6 @@
   const ICON_FALL_SPEED = 0.35;
   const ENABLE_TOUCH_TRIGGER = false;
   const ENABLE_KEY_TRIGGER = false;
-  const DEFAULT_LOCKED_MESSAGE =
-    "OH-HO! YOU DIDN'T FILL OUT THE PASSCODE! THIS SHOWS ME YOU DIDN'T READ ANYTHING... pay attention! SMS or WhatsApp: +1 514 607 6253.";
   const XP_ERROR_AUDIO_URL = "https://www.myinstants.com/media/sounds/windows-error-sound-effect.mp3";
 
   let spaceCounter = 0;
@@ -30,18 +28,13 @@
   let phoneButton = null;
   let phoneTag = null;
   let phoneOptions = null;
+  let waButton = null;
+  let smsButton = null;
+  let bookingButton = null;
   let styleInjected = false;
   let allowPhoneButton = true;
   let sequenceResolve = null;
   let xpErrorAudio = null;
-
-  const getLockedMessage = () => {
-    const base = window.hvhPhoneLockedWarningMessage || DEFAULT_LOCKED_MESSAGE;
-    if (base.includes(PHONE_NUMBER_DISPLAY)) {
-      return base;
-    }
-    return `${base} SMS or WhatsApp: ${PHONE_NUMBER_DISPLAY}.`;
-  };
 
   const playWarningSound = () => {
     try {
@@ -402,17 +395,9 @@
         </svg>`;
       phoneButton.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (!window.hvhPhoneUnlocked) {
-          closeOptions();
-          const message = getLockedMessage();
-          playWarningSound();
-          if (typeof window.hvhPhoneLockedWarning === "function") {
-            window.hvhPhoneLockedWarning(message);
-          } else {
-            alert(message);
-          }
-          return;
-        }
+        if (waButton) waButton.hidden = false;
+        if (smsButton) smsButton.hidden = false;
+        if (phoneTag) phoneTag.textContent = "TEXT!";
         toggleOptions();
       });
 
@@ -428,33 +413,33 @@
       phoneOptions = document.createElement("div");
       phoneOptions.className = "hvh-phone-options";
 
-      const waBtn = document.createElement("button");
-      waBtn.type = "button";
-      waBtn.textContent = `whatsapp ${PHONE_NUMBER_DISPLAY}`;
-      waBtn.addEventListener("click", (event) => {
+      waButton = document.createElement("button");
+      waButton.type = "button";
+      waButton.textContent = `whatsapp ${PHONE_NUMBER_DISPLAY}`;
+      waButton.addEventListener("click", (event) => {
         event.stopPropagation();
         handleWhatsapp();
       });
 
-      const smsBtn = document.createElement("button");
-      smsBtn.type = "button";
-      smsBtn.textContent = `sms ${PHONE_NUMBER_DISPLAY}`;
-      smsBtn.addEventListener("click", (event) => {
+      smsButton = document.createElement("button");
+      smsButton.type = "button";
+      smsButton.textContent = `sms ${PHONE_NUMBER_DISPLAY}`;
+      smsButton.addEventListener("click", (event) => {
         event.stopPropagation();
         handleSms();
       });
 
-      const bookBtn = document.createElement("button");
-      bookBtn.type = "button";
-      bookBtn.textContent = "book online!";
-      bookBtn.addEventListener("click", (event) => {
+      bookingButton = document.createElement("button");
+      bookingButton.type = "button";
+      bookingButton.textContent = "book online!";
+      bookingButton.addEventListener("click", (event) => {
         event.stopPropagation();
         window.open("/booking/", "_blank", "noopener,noreferrer");
       });
 
-      phoneOptions.appendChild(waBtn);
-      phoneOptions.appendChild(smsBtn);
-      phoneOptions.appendChild(bookBtn);
+      phoneOptions.appendChild(waButton);
+      phoneOptions.appendChild(smsButton);
+      phoneOptions.appendChild(bookingButton);
       document.body.appendChild(phoneOptions);
 
       document.addEventListener("click", (event) => {

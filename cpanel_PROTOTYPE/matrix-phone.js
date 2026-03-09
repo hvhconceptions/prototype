@@ -402,17 +402,6 @@
         </svg>`;
       phoneButton.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (!window.hvhPhoneUnlocked) {
-          closeOptions();
-          const message = getLockedMessage();
-          playWarningSound();
-          if (typeof window.hvhPhoneLockedWarning === "function") {
-            window.hvhPhoneLockedWarning(message);
-          } else {
-            alert(message);
-          }
-          return;
-        }
         toggleOptions();
       });
 

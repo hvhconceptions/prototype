@@ -5271,9 +5271,16 @@
       let currentLanguage = detectLanguage();
       let challengeMessageAnimated = false;
 
+      const isCorruptedCopy = (value) =>
+        typeof value === "string" && /Ã|Â|â€™|â€œ|â€|ï¿½|�/.test(value);
+
       const translate = (key, lang = currentLanguage) => {
         const bucket = I18N[lang] || I18N.en;
-        return bucket[key] || I18N.en[key] || "";
+        const localized = bucket[key];
+        if (isCorruptedCopy(localized)) {
+          return I18N.en[key] || "";
+        }
+        return localized || I18N.en[key] || "";
       };
 
       const formatTemplate = (template, replacements = {}) =>

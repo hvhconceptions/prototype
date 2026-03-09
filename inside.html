@@ -930,6 +930,72 @@
         color: rgba(73, 57, 107, 0.64);
       }
 
+      body.easter-mode .touring {
+        border-color: rgba(141, 87, 255, 0.26);
+        background: linear-gradient(140deg, rgba(214, 237, 255, 0.74), rgba(255, 248, 252, 0.94));
+        box-shadow: 0 20px 38px rgba(141, 87, 255, 0.14);
+      }
+
+      body.easter-mode .touring::before {
+        background: radial-gradient(circle, rgba(141, 87, 255, 0.18) 0, transparent 62%);
+      }
+
+      body.easter-mode .touring-row + .touring-row {
+        border-color: rgba(141, 87, 255, 0.18);
+      }
+
+      body.easter-mode .touring-subtitle,
+      body.easter-mode .touring-date,
+      body.easter-mode .touring-subnote {
+        color: rgba(58, 46, 92, 0.82);
+      }
+
+      body.easter-mode .touring-city {
+        color: #3e2d73;
+      }
+
+      body.easter-mode .touring-plane {
+        color: rgba(119, 69, 227, 0.92);
+        filter: drop-shadow(0 0 10px rgba(119, 69, 227, 0.38));
+      }
+
+      body.easter-mode .touring-dots {
+        background-image: radial-gradient(circle, rgba(119, 69, 227, 0.52) 1px, transparent 1px);
+      }
+
+      body.easter-mode .touring-dots::after {
+        color: rgba(119, 69, 227, 0.9);
+        filter: drop-shadow(0 0 10px rgba(119, 69, 227, 0.32));
+      }
+
+      body.easter-mode #rates-services.section-panel {
+        border-color: rgba(141, 87, 255, 0.24);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(237, 247, 255, 0.86));
+        box-shadow: 0 16px 30px rgba(141, 87, 255, 0.12);
+      }
+
+      body.easter-mode #rates-services .embed-frame {
+        border-color: rgba(141, 87, 255, 0.22);
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: inset 0 0 0 1px rgba(141, 87, 255, 0.1);
+      }
+
+      body.easter-mode .newsletter-panel p,
+      body.easter-mode .contact-field label,
+      body.easter-mode .contact-checkbox,
+      body.easter-mode .contact-brief,
+      body.easter-mode .newsletter-status {
+        color: rgba(58, 46, 92, 0.86);
+      }
+
+      body.easter-mode .newsletter-status[data-level="error"] {
+        color: #c03676;
+      }
+
+      body.easter-mode .newsletter-status[data-level="success"] {
+        color: #6a39d0;
+      }
+
       /* Kill third-party ad banners (especially on the gate) */
       [href*="eurogirlsescort" i],
       [href*="escortguide" i],

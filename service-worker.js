@@ -1,4 +1,4 @@
-const CACHE_NAME = "hvh-site-v2";
+const CACHE_NAME = "hvh-site-v1";
 
 const CORE_ASSETS = [
   "/",
@@ -46,12 +46,6 @@ self.addEventListener("fetch", (event) => {
 
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) {
-    return;
-  }
-
-  // Never cache admin/public API responses to avoid stale touring/schedule data.
-  if (requestUrl.pathname.startsWith("/booking/api/")) {
-    event.respondWith(fetch(event.request));
     return;
   }
 

@@ -22,48 +22,10 @@ const ADMIN_RATE_LIMIT_WINDOW = 900;
 const ADMIN_RATE_LIMIT_BLOCK = 1800;
 const ADMIN_RATE_LIMIT_FILE = DATA_DIR . '/admin_rate_limit.json';
 const ADMIN_EMPLOYEE_FILE = DATA_DIR . '/admin_employees.json';
-const EMPLOYEE_DEFAULT_PERMISSIONS = ['schedule', 'chat'];
-const EMPLOYEE_ALLOWED_PERMISSIONS = ['schedule', 'clients', 'touring', 'services', 'photos', 'account', 'chat'];
 
 function normalize_admin_username(string $value): string
 {
     return strtolower(trim($value));
-}
-
-function normalize_admin_permissions($value): array
-{
-    $raw = [];
-    if (is_array($value)) {
-        $raw = $value;
-    } elseif (is_string($value) && $value !== '') {
-        $raw = explode(',', $value);
-    }
-    $allowed = array_flip(EMPLOYEE_ALLOWED_PERMISSIONS);
-    $clean = [];
-    foreach ($raw as $entry) {
-        $permission = strtolower(trim((string) $entry));
-        if ($permission === '' || !isset($allowed[$permission])) {
-            continue;
-        }
-        if (!in_array($permission, $clean, true)) {
-            $clean[] = $permission;
-        }
-    }
-    if (!$clean) {
-        return EMPLOYEE_DEFAULT_PERMISSIONS;
-    }
-    if (!in_array('chat', $clean, true)) {
-        $clean[] = 'chat';
-    }
-    return $clean;
-}
-
-function admin_has_permission(array $permissions, string $permission): bool
-{
-    if (in_array('*', $permissions, true)) {
-        return true;
-    }
-    return in_array(strtolower(trim($permission)), $permissions, true);
 }
 
 function read_admin_employees(): array
@@ -83,11 +45,9 @@ function read_admin_employees(): array
         if ($username === '' || $hash === '') {
             continue;
         }
-        $permissions = normalize_admin_permissions($entry['permissions'] ?? []);
         $clean[] = [
             'username' => $username,
             'password_hash' => $hash,
-            'permissions' => $permissions,
         ];
     }
     return $clean;
@@ -231,7 +191,7 @@ function require_admin_ui(): array
     }
     if ($isEmployerAuth) {
         clear_admin_rate_record($state, $ip);
-        return ['username' => $user, 'is_employer' => true, 'permissions' => ['*']];
+        return ['username' => $user, 'is_employer' => true];
     }
 
     $employees = read_admin_employees();
@@ -246,11 +206,7 @@ function require_admin_ui(): array
         }
         if (password_verify($pass, $employeeHash)) {
             clear_admin_rate_record($state, $ip);
-            return [
-                'username' => $user,
-                'is_employer' => false,
-                'permissions' => normalize_admin_permissions($employee['permissions'] ?? []),
-            ];
+            return ['username' => $user, 'is_employer' => false];
         }
     }
 
@@ -261,9 +217,6 @@ function require_admin_ui(): array
 $adminSession = require_admin_ui();
 $currentAdminUser = (string) ($adminSession['username'] ?? '');
 $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
-$currentAdminPermissions = $currentAdminIsEmployer
-    ? ['*']
-    : normalize_admin_permissions($adminSession['permissions'] ?? []);
 ?>
 <!doctype html>
 <html lang="en">
@@ -655,93 +608,15 @@ $currentAdminPermissions = $currentAdminIsEmployer
       .menu-list-row {
         display: grid;
         grid-template-columns: 1fr minmax(88px, 120px) auto;
-        gap: 6px;
-        align-items: center;
-      }
-
-      .menu-list-row.has-third {
-        grid-template-columns: minmax(0, 1fr) minmax(88px, 120px) minmax(0, 1fr) auto;
+        gap: 8px;
       }
 
       .menu-list-row input {
         min-width: 0;
       }
 
-      .chat-thread {
-        display: grid;
-        gap: 8px;
-        max-height: 360px;
-        overflow: auto;
-        padding: 4px;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        background: #fff;
-      }
-
-      .chat-item {
-        display: grid;
-        gap: 3px;
-        justify-items: start;
-      }
-
-      .chat-item.mine {
-        justify-items: end;
-      }
-
-      .chat-meta {
-        font-size: 0.72rem;
-        color: #7a1c45;
-        letter-spacing: 0.04em;
-      }
-
-      .chat-bubble {
-        max-width: min(100%, 360px);
-        padding: 9px 11px;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        background: #fff7fc;
-        color: #2a0d1a;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-
-      .chat-item.mine .chat-bubble {
-        background: #ffe5f3;
-        border-color: rgba(255, 0, 110, 0.32);
-      }
-
-      #adminChatInput {
-        min-height: 84px;
-        resize: vertical;
-      }
-
-      .menu-row-actions {
-        display: flex;
-        align-items: stretch;
-        justify-self: start;
-        width: max-content;
-        gap: 0;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        overflow: hidden;
-      }
-
       .menu-list-row .btn {
         padding: 8px 10px;
-        white-space: nowrap;
-        min-width: 0;
-      }
-
-      .menu-row-actions .btn {
-        margin: 0;
-        border: 0;
-        border-radius: 0;
-        min-height: 40px;
-      }
-
-      .menu-row-actions .btn + .btn {
-        border-left: 1px solid var(--line);
       }
 
       .menu-avatar-preview {
@@ -1004,84 +879,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
         flex-wrap: wrap;
         gap: 12px;
         align-items: center;
-      }
-
-      .schedule-blocks-wrap {
-        margin-top: 18px;
-        display: grid;
-        gap: 14px;
-      }
-
-      .schedule-block-card {
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 14px;
-        background: rgba(255, 255, 255, 0.82);
-      }
-
-      .schedule-block-title {
-        margin: 0 0 10px;
-        font-size: 0.82rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #6b173f;
-      }
-
-      .schedule-block-grid {
-        gap: 12px;
-      }
-
-      .schedule-actions {
-        margin-top: 10px;
-      }
-
-      .schedule-sync-field {
-        min-width: 220px;
-        max-width: 320px;
-      }
-
-      .schedule-sync-inline {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .schedule-sync-inline select {
-        min-width: 220px;
-      }
-
-      .schedule-sync-inline .btn {
-        padding: 8px 12px;
-        font-size: 0.72rem;
-        letter-spacing: 0.08em;
-        white-space: nowrap;
-      }
-
-      .schedule-calendar-selection {
-        font-size: 0.8rem;
-        color: #6b173f;
-        margin-top: 4px;
-      }
-
-      #blockedList,
-      #recurringList {
-        display: grid;
-        gap: 8px;
-        margin-top: 12px;
-      }
-
-      .block-list-row,
-      .recurring-list-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        background: #fff;
-        padding: 8px 10px;
-        font-size: 0.82rem;
-        color: #6b173f;
       }
 
       #recurringDays label {
@@ -1528,10 +1325,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
 
       .calendar-slot.booking.paid {
         box-shadow: inset 0 0 0 2px rgba(26, 127, 79, 0.35);
-      }
-
-      .calendar-slot.booking.selected-booking {
-        box-shadow: inset 0 0 0 2px #2a0d1a, 0 0 0 2px rgba(255, 255, 255, 0.72);
       }
 
       .calendar-slot.maybe {
@@ -1995,31 +1788,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           grid-template-columns: 1fr;
         }
 
-        .menu-list-row.has-third {
-          grid-template-columns: 1fr;
-        }
-
-        .menu-row-actions {
-          width: 100%;
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 6px;
-          border: 0;
-          background: transparent;
-          border-radius: 0;
-        }
-
-        .menu-row-actions .btn {
-          flex: none;
-          white-space: normal;
-          border: 1px solid var(--line);
-          border-radius: 12px;
-        }
-
-        .menu-row-actions .btn + .btn {
-          border-left: 1px solid var(--line);
-        }
-
         .folder-switcher {
           gap: 8px;
         }
@@ -2176,18 +1944,17 @@ $currentAdminPermissions = $currentAdminIsEmployer
       </div>
 
       <div id="adminMenuSectionList" class="menu-section-list">
-        <button class="menu-section-btn" type="button" data-menu-open="account" data-required-permission="account">Account center</button>
-        <button class="menu-section-btn" type="button" data-menu-open="schedule" data-required-permission="schedule">Schedule</button>
-        <button class="menu-section-btn" type="button" data-menu-open="touring" data-required-permission="touring">Touring</button>
-        <button class="menu-section-btn" type="button" data-menu-open="services" data-required-permission="services">Services</button>
-        <button class="menu-section-btn" type="button" data-menu-open="photos" data-required-permission="photos">Photos</button>
-        <button class="menu-section-btn" type="button" data-menu-open="chat" data-required-permission="chat">Chat</button>
+        <button class="menu-section-btn" type="button" data-menu-open="account">Account center</button>
+        <button class="menu-section-btn" type="button" data-menu-open="schedule">Schedule</button>
+        <button class="menu-section-btn" type="button" data-menu-open="touring">Touring</button>
+        <button class="menu-section-btn" type="button" data-menu-open="services">Services</button>
+        <button class="menu-section-btn" type="button" data-menu-open="photos">Photos</button>
         <?php if ($currentAdminIsEmployer): ?>
         <button class="menu-section-btn" type="button" data-menu-open="employees">Employees</button>
         <?php endif; ?>
       </div>
 
-      <section class="menu-group hidden" data-menu-page="account" data-menu-title="Account center" data-required-permission="account">
+      <section class="menu-group hidden" data-menu-page="account" data-menu-title="Account center">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Account center</h3>
@@ -2263,7 +2030,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="schedule" data-menu-title="Schedule" data-required-permission="schedule">
+      <section class="menu-group hidden" data-menu-page="schedule" data-menu-title="Schedule">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Schedule</h3>
@@ -2308,7 +2075,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="touring" data-menu-title="Touring" data-required-permission="touring">
+      <section class="menu-group hidden" data-menu-page="touring" data-menu-title="Touring">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Touring</h3>
@@ -2359,19 +2126,20 @@ $currentAdminPermissions = $currentAdminIsEmployer
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="services" data-menu-title="Services" data-required-permission="services">
+      <section class="menu-group hidden" data-menu-page="services" data-menu-title="Services">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Services</h3>
         </div>
         <p class="hint">This saves admin service presets so you can organize prices quickly.</p>
         <div class="field">
-          <label for="serviceNameInput" id="serviceNameLabel">Service name</label>
-          <input id="serviceNameInput" type="text" placeholder="Service name" />
+          <label for="serviceNameInput">Name</label>
+          <input id="serviceNameInput" type="text" placeholder="ex: Heidi Van Horny" />
         </div>
         <div class="field">
-          <label id="serviceDurationLabel">Price + service picture</label>
+          <label>Price per duration</label>
           <div id="serviceDurationList" class="menu-list"></div>
+          <button class="btn secondary" id="addServiceDuration" type="button">Add duration</button>
         </div>
         <div class="field">
           <label>Service package (comma separated) + price</label>
@@ -2389,7 +2157,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="photos" data-menu-title="Photos" data-required-permission="photos">
+      <section class="menu-group hidden" data-menu-page="photos" data-menu-title="Photos">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Photos</h3>
@@ -2418,31 +2186,13 @@ $currentAdminPermissions = $currentAdminIsEmployer
           <span class="status" id="photoStatus"></span>
         </div>
       </section>
-
-      <section class="menu-group hidden" data-menu-page="chat" data-menu-title="Chat" data-required-permission="chat">
-        <div class="menu-page-head">
-          <button class="btn ghost" type="button" data-menu-back>Back</button>
-          <h3>Chat</h3>
-        </div>
-        <p class="hint">Internal admin chat for schedule coordination.</p>
-        <div id="adminChatMessages" class="chat-thread"></div>
-        <div class="field">
-          <label for="adminChatInput">Message</label>
-          <textarea id="adminChatInput" placeholder="Type a message"></textarea>
-        </div>
-        <div class="row">
-          <button class="btn secondary" id="adminChatRefreshBtn" type="button">Refresh chat</button>
-          <button class="btn" id="adminChatSendBtn" type="button">Send</button>
-          <span class="status" id="adminChatStatus"></span>
-        </div>
-      </section>
       <?php if ($currentAdminIsEmployer): ?>
       <section class="menu-group hidden" data-menu-page="employees" data-menu-title="Employees">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Employees</h3>
         </div>
-        <p class="hint">Only employer can add/remove employee logins. Default access is schedule + chat.</p>
+        <p class="hint">Only employer can add/remove employee logins.</p>
         <div class="menu-inline-grid">
           <div class="field">
             <label for="employeeUsername">Employee username</label>
@@ -2451,9 +2201,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           <div class="field">
             <label for="employeePassword">Employee password</label>
             <input id="employeePassword" type="password" placeholder="Minimum 8 characters" />
-          </div>
-          <div class="field">
-            <label><input id="employeeScheduleOnly" type="checkbox" checked /> Schedule + chat only</label>
           </div>
         </div>
         <div class="row">
@@ -2518,97 +2265,77 @@ $currentAdminPermissions = $currentAdminIsEmployer
         <div class="calendar-legend">
           <span class="legend-item"><span class="legend-dot blocked"></span><span id="legendBlockedLabel">Blocked</span></span>
           <span class="legend-item"><span class="legend-dot booking"></span><span id="legendBookingLabel">Booking</span></span>
-          <span class="legend-item"><span class="legend-dot outcall"></span><span id="legendOutcallLabel">Housecall</span></span>
+          <span class="legend-item"><span class="legend-dot outcall"></span><span id="legendOutcallLabel">Outcall</span></span>
           <span class="legend-item"><span class="legend-dot paid"></span><span id="legendPaidLabel">Paid</span></span>
           <span class="legend-item"><span class="legend-dot maybe"></span><span id="legendMaybeLabel">Maybe</span></span>
           <span class="legend-item"><span class="legend-dot city"></span><span id="legendCityLabel">City marker</span></span>
         </div>
-        <div class="schedule-blocks-wrap">
-          <div class="schedule-block-card">
-            <h3 class="schedule-block-title">Block date</h3>
-            <div class="grid schedule-block-grid">
-              <div class="field">
-                <label for="blockedDate">From day</label>
-                <input id="blockedDate" type="date" />
-              </div>
-              <div class="field">
-                <label for="blockedStart">From time</label>
-                <input id="blockedStart" type="time" />
-              </div>
-              <div class="field">
-                <label for="blockedEndDate">To day</label>
-                <input id="blockedEndDate" type="date" />
-              </div>
-              <div class="field">
-                <label for="blockedEnd">To time</label>
-                <input id="blockedEnd" type="time" />
-              </div>
-              <div class="field span-2">
-                <label for="blockedReason">Reason</label>
-                <input id="blockedReason" type="text" placeholder="ex: vacation" />
-              </div>
-            </div>
-            <div class="row schedule-actions">
-              <button class="btn secondary" id="addBlocked" type="button">Add block</button>
-              <button class="btn secondary" id="editBlocked" type="button">Edit block</button>
-              <button class="btn ghost" id="deleteBlocked" type="button">Delete block</button>
-              <span class="status" id="blockedStatus"></span>
-            </div>
-          </div>
 
-          <div class="schedule-block-card">
-            <h3 class="schedule-block-title">Recurring block</h3>
-            <div class="grid schedule-block-grid">
-              <div class="field span-2">
-                <label>Checked day(s)</label>
-                <div id="recurringDays"></div>
-              </div>
-              <div class="field">
-                <label for="recurringAllDay">Full day</label>
-                <input id="recurringAllDay" type="checkbox" />
-              </div>
-              <div class="field">
-                <label for="recurringStart">From time</label>
-                <input id="recurringStart" type="time" />
-              </div>
-              <div class="field">
-                <label for="recurringEnd">To time</label>
-                <input id="recurringEnd" type="time" />
-              </div>
-              <div class="field span-2">
-                <label for="recurringReason">Reason</label>
-                <input id="recurringReason" type="text" placeholder="ex: lunch break" />
-              </div>
-            </div>
-            <div class="row schedule-actions">
-              <button class="btn secondary" id="addRecurring" type="button">Add recurring</button>
-              <button class="btn secondary" id="editRecurring" type="button">Edit recurring</button>
-              <button class="btn ghost" id="deleteRecurring" type="button">Delete recurring</button>
-              <span class="status" id="recurringStatus"></span>
-            </div>
+        <div class="grid">
+          <div class="field">
+            <label for="blockedDate">Block date</label>
+            <input id="blockedDate" type="date" />
           </div>
-
-          <div class="schedule-block-card">
-            <h3 class="schedule-block-title">Synchronize to calendar</h3>
-            <div class="row schedule-actions">
-              <div class="field schedule-sync-field">
-                <label for="scheduleCalendarTarget">Choose calendar</label>
-                <div class="schedule-sync-inline">
-                  <select id="scheduleCalendarTarget">
-                    <option value="">Choose calendar</option>
-                    <option value="google">Google</option>
-                    <option value="samsung">Samsung</option>
-                    <option value="icloud">iCloud</option>
-                  </select>
-                  <button class="btn secondary" id="scheduleCalendarSync" type="button">OK</button>
-                </div>
-                <div class="schedule-calendar-selection" id="scheduleCalendarSelection">Selected: none (click a booking block in grid)</div>
-              </div>
-              <span class="status" id="scheduleCalendarStatus"></span>
-            </div>
+          <div class="field">
+            <label for="blockedStart">Start</label>
+            <input id="blockedStart" type="time" />
+          </div>
+          <div class="field">
+            <label for="blockedEnd">End</label>
+            <input id="blockedEnd" type="time" />
+          </div>
+          <div class="field span-2">
+            <label for="blockedReason">Reason</label>
+            <input id="blockedReason" type="text" placeholder="Optional reason" />
           </div>
         </div>
-        <div id="blockedList"></div>
+        <div class="row">
+          <button class="btn secondary" id="addBlocked" type="button">Block slot</button>
+          <button class="btn ghost" id="blockFullDay" type="button">Block full day</button>
+          <span class="status" id="blockedStatus"></span>
+        </div>
+        <div class="grid">
+          <div class="field">
+            <label for="blockedFullRangeStart">Full-day range start</label>
+            <input id="blockedFullRangeStart" type="date" />
+          </div>
+          <div class="field">
+            <label for="blockedFullRangeEnd">Full-day range end</label>
+            <input id="blockedFullRangeEnd" type="date" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="blockFullRange" type="button">Block full range</button>
+          <button class="btn ghost" id="toggleBlockedList" type="button">Show blocked slots</button>
+        </div>
+        <div id="blockedList" class="hidden"></div>
+
+        <div class="grid">
+          <div class="field span-2">
+            <label>Recurring days</label>
+            <div id="recurringDays"></div>
+          </div>
+          <div class="field">
+            <label for="recurringAllDay">All day</label>
+            <input id="recurringAllDay" type="checkbox" />
+          </div>
+          <div class="field">
+            <label for="recurringStart">Recurring start</label>
+            <input id="recurringStart" type="time" />
+          </div>
+          <div class="field">
+            <label for="recurringEnd">Recurring end</label>
+            <input id="recurringEnd" type="time" />
+          </div>
+          <div class="field span-2">
+            <label for="recurringReason">Recurring reason</label>
+            <input id="recurringReason" type="text" placeholder="Optional reason" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="addRecurring" type="button">Add recurring block</button>
+          <span class="status" id="recurringStatus"></span>
+        </div>
         <div id="recurringList"></div>
       </section>
 
@@ -2689,7 +2416,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
         <h2 id="requestsSectionTitle">Requests</h2>
         <div class="row requests-toolbar">
           <button class="btn secondary" id="refreshRequests">Refresh</button>
-          <button class="btn ghost" id="sendUpcomingConfirmations" type="button">Send upcoming emails</button>
           <a class="btn ghost" href="customers.php" id="customersDirectoryBtn">Customer directory</a>
           <div class="status-filter-tabs" id="statusFilterTabs" role="tablist" aria-label="Request status filters">
             <button type="button" class="status-filter-tab" data-status-tab="all" aria-pressed="true">All</button>
@@ -2724,7 +2450,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const ADMIN_KEY = <?php echo json_encode(ADMIN_API_KEY); ?>;
       const CURRENT_ADMIN_USER = <?php echo json_encode($currentAdminUser); ?>;
       const CURRENT_ADMIN_IS_EMPLOYER = <?php echo $currentAdminIsEmployer ? 'true' : 'false'; ?>;
-      const CURRENT_ADMIN_PERMISSIONS = <?php echo json_encode(array_values($currentAdminPermissions)); ?>;
       const DEFAULT_TIMEZONE = "America/Toronto";
       const TIMEZONES = [
         "America/Toronto",
@@ -2776,31 +2501,25 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const calendarFields = document.querySelectorAll("[data-calendar-field]");
       const blockedDate = document.getElementById("blockedDate");
       const blockedStart = document.getElementById("blockedStart");
-      const blockedEndDate = document.getElementById("blockedEndDate");
       const blockedEnd = document.getElementById("blockedEnd");
       const blockedReason = document.getElementById("blockedReason");
+      const blockedFullRangeStart = document.getElementById("blockedFullRangeStart");
+      const blockedFullRangeEnd = document.getElementById("blockedFullRangeEnd");
       const blockedStatus = document.getElementById("blockedStatus");
       const blockedList = document.getElementById("blockedList");
       const addBlockedBtn = document.getElementById("addBlocked");
-      const editBlockedBtn = document.getElementById("editBlocked");
-      const deleteBlockedBtn = document.getElementById("deleteBlocked");
+      const blockFullDayBtn = document.getElementById("blockFullDay");
+      const blockFullRangeBtn = document.getElementById("blockFullRange");
       const recurringDays = document.getElementById("recurringDays");
       const recurringAllDay = document.getElementById("recurringAllDay");
       const recurringStart = document.getElementById("recurringStart");
       const recurringEnd = document.getElementById("recurringEnd");
       const recurringReason = document.getElementById("recurringReason");
       const addRecurringBtn = document.getElementById("addRecurring");
-      const editRecurringBtn = document.getElementById("editRecurring");
-      const deleteRecurringBtn = document.getElementById("deleteRecurring");
       const recurringStatus = document.getElementById("recurringStatus");
       const recurringList = document.getElementById("recurringList");
       const toggleBlockedListBtn = document.getElementById("toggleBlockedList");
-      const scheduleCalendarTarget = document.getElementById("scheduleCalendarTarget");
-      const scheduleCalendarSyncBtn = document.getElementById("scheduleCalendarSync");
-      const scheduleCalendarSelection = document.getElementById("scheduleCalendarSelection");
-      const scheduleCalendarStatus = document.getElementById("scheduleCalendarStatus");
       const refreshBtn = document.getElementById("refreshRequests");
-      const sendUpcomingConfirmationsBtn = document.getElementById("sendUpcomingConfirmations");
       const statusFilter = document.getElementById("statusFilter");
       const statusFilterTabs = document.getElementById("statusFilterTabs");
       const statusFilterTabButtons = statusFilterTabs
@@ -2857,15 +2576,9 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const accountCenterStatus = document.getElementById("accountCenterStatus");
       const employeeUsernameInput = document.getElementById("employeeUsername");
       const employeePasswordInput = document.getElementById("employeePassword");
-      const employeeScheduleOnlyInput = document.getElementById("employeeScheduleOnly");
       const addEmployeeBtn = document.getElementById("addEmployeeBtn");
       const employeeStatus = document.getElementById("employeeStatus");
       const employeeList = document.getElementById("employeeList");
-      const adminChatMessages = document.getElementById("adminChatMessages");
-      const adminChatInput = document.getElementById("adminChatInput");
-      const adminChatSendBtn = document.getElementById("adminChatSendBtn");
-      const adminChatRefreshBtn = document.getElementById("adminChatRefreshBtn");
-      const adminChatStatus = document.getElementById("adminChatStatus");
       const menuWorkAllDay = document.getElementById("menuWorkAllDay");
       const menuWorkStart = document.getElementById("menuWorkStart");
       const menuWorkEnd = document.getElementById("menuWorkEnd");
@@ -2890,6 +2603,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const serviceDurationList = document.getElementById("serviceDurationList");
       const servicePackageList = document.getElementById("servicePackageList");
       const serviceAddonList = document.getElementById("serviceAddonList");
+      const addServiceDurationBtn = document.getElementById("addServiceDuration");
       const addServicePackageBtn = document.getElementById("addServicePackage");
       const addServiceAddonBtn = document.getElementById("addServiceAddon");
       const saveServicesConfigBtn = document.getElementById("saveServicesConfig");
@@ -2905,19 +2619,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const NOTIFICATIONS_READ_LOCAL_KEY = "hvh_admin_read_notifications";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
       const DEFAULT_ACCENT_COLOR = "#ff006e";
-      const hasAdminPermission = (permission) => {
-        const key = String(permission || "").trim().toLowerCase();
-        if (!key) return true;
-        if (CURRENT_ADMIN_IS_EMPLOYER) return true;
-        return CURRENT_ADMIN_PERMISSIONS.includes("*") || CURRENT_ADMIN_PERMISSIONS.includes(key);
-      };
-      const ADMIN_PANEL_KEYS = ["schedule", "clients"];
-      const ALLOWED_ADMIN_PANELS = ADMIN_PANEL_KEYS.filter((panel) => hasAdminPermission(panel));
-      const DEFAULT_ADMIN_PANEL = ALLOWED_ADMIN_PANELS.includes("schedule")
-        ? "schedule"
-        : ALLOWED_ADMIN_PANELS[0] || "schedule";
-      const CAN_ACCESS_CLIENTS_PANEL = ALLOWED_ADMIN_PANELS.includes("clients");
-      const EMPLOYEE_FULL_PERMISSIONS = ["schedule", "clients", "touring", "services", "photos", "account", "chat"];
       let currentLanguage = "en";
       const I18N = {
         en: {
@@ -2972,10 +2673,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           short_description: "Short description",
           preview: "Preview",
           refresh: "Refresh",
-          send_upcoming_confirmations: "Send upcoming emails",
-          upcoming_confirmations_sent: "Upcoming emails sent: {count}.",
-          upcoming_confirmations_none: "No upcoming maybe/accepted/paid bookings to email.",
-          failed_send_upcoming_confirmations: "Failed to send upcoming emails.",
           all: "All",
           pending: "Pending",
           maybe: "Maybe",
@@ -3100,15 +2797,10 @@ $currentAdminPermissions = $currentAdminIsEmployer
           action_samsung_calendar: "Samsung Calendar (.ics)",
           legend_blocked: "Blocked",
           legend_booking: "Booking",
-          legend_outcall: "Housecall",
+          legend_outcall: "Outcall",
           legend_paid: "Paid",
           legend_maybe: "Maybe",
           legend_city: "City marker",
-          service_name_label: "Service name",
-          service_name_placeholder: "Service name",
-          service_price_picture_label: "Price + service picture",
-          service_picture_placeholder: "Service picture",
-          add_service: "Add service",
         },
         fr: {
           admin_title: "BombaCLOUD!",
@@ -3162,10 +2854,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           short_description: "Description courte",
           preview: "Apercu",
           refresh: "Actualiser",
-          send_upcoming_confirmations: "Envoyer emails a venir",
-          upcoming_confirmations_sent: "Emails a venir envoyes : {count}.",
-          upcoming_confirmations_none: "Aucune reservation a venir (peut-etre/acceptee/payee) a envoyer.",
-          failed_send_upcoming_confirmations: "Echec envoi des emails a venir.",
           all: "Tous",
           pending: "En attente",
           maybe: "Peut-etre",
@@ -3290,15 +2978,10 @@ $currentAdminPermissions = $currentAdminIsEmployer
           action_samsung_calendar: "Samsung Calendar (.ics)",
           legend_blocked: "Bloque",
           legend_booking: "Reservation",
-          legend_outcall: "Housecall",
+          legend_outcall: "Outcall",
           legend_paid: "Paye",
           legend_maybe: "Peut-etre",
           legend_city: "Repere ville",
-          service_name_label: "Nom du service",
-          service_name_placeholder: "Nom du service",
-          service_price_picture_label: "Prix + photo du service",
-          service_picture_placeholder: "Photo du service",
-          add_service: "Ajouter service",
         },
       };
       const formatTemplate = (template, vars = {}) =>
@@ -3336,18 +3019,13 @@ $currentAdminPermissions = $currentAdminIsEmployer
         if (el) el.textContent = text;
       };
       const setAdminPanel = (panel, persist = true) => {
-        const safePanel = ALLOWED_ADMIN_PANELS.includes(panel) ? panel : DEFAULT_ADMIN_PANEL;
+        const allowed = ["schedule", "clients"];
+        const safePanel = allowed.includes(panel) ? panel : "schedule";
         panelButtons.forEach((button) => {
-          const key = String(button.dataset.adminPanel || "").toLowerCase();
-          const allowed = ALLOWED_ADMIN_PANELS.includes(key);
-          button.hidden = !allowed;
-          button.disabled = !allowed;
-          button.setAttribute("aria-pressed", allowed && key === safePanel ? "true" : "false");
+          button.setAttribute("aria-pressed", button.dataset.adminPanel === safePanel ? "true" : "false");
         });
         panelSections.forEach((section) => {
-          const key = String(section.dataset.adminPanelGroup || "").toLowerCase();
-          const allowed = ALLOWED_ADMIN_PANELS.includes(key);
-          section.classList.toggle("admin-panel-hidden", !allowed || key !== safePanel);
+          section.classList.toggle("admin-panel-hidden", section.dataset.adminPanelGroup !== safePanel);
         });
         if (persist) {
           try {
@@ -3358,11 +3036,11 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const getStoredAdminPanel = () => {
         try {
           const stored = window.localStorage.getItem(PANEL_STORAGE_KEY);
-          if (stored && ALLOWED_ADMIN_PANELS.includes(stored)) {
+          if (stored === "schedule" || stored === "clients") {
             return stored;
           }
         } catch (_error) {}
-        return DEFAULT_ADMIN_PANEL;
+        return "schedule";
       };
       const DAY_OPTIONS = [
         { value: 0, label: "Sun" },
@@ -3423,15 +3101,12 @@ $currentAdminPermissions = $currentAdminIsEmployer
         adminMenuDrawer.classList.remove("open");
         adminMenuDrawer.setAttribute("aria-hidden", "true");
         adminMenuBackdrop.hidden = true;
-        stopAdminChatPolling();
         showAdminMenuHome();
       };
 
       const showAdminMenuHome = () => {
-        stopAdminChatPolling();
         if (adminMenuSectionList) {
-          const hasVisible = Array.from(adminMenuOpenButtons).some((button) => !button.hidden);
-          adminMenuSectionList.classList.toggle("hidden", !hasVisible);
+          adminMenuSectionList.classList.remove("hidden");
         }
         adminMenuPages.forEach((section) => section.classList.add("hidden"));
         if (adminMenuTitle) {
@@ -3442,19 +3117,12 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const showAdminMenuPage = (pageKey) => {
         const key = String(pageKey || "").trim().toLowerCase();
         if (!key) return;
-        const opener = Array.from(adminMenuOpenButtons).find(
-          (button) => String(button.getAttribute("data-menu-open") || "").trim().toLowerCase() === key
-        );
-        if (opener && (opener.hidden || opener.disabled)) {
-          return;
-        }
         if (adminMenuSectionList) {
           adminMenuSectionList.classList.add("hidden");
         }
         let selectedTitle = "Admin menu";
         adminMenuPages.forEach((section) => {
-          const isAllowed = section.getAttribute("data-menu-enabled") !== "false";
-          const isMatch = isAllowed && String(section.getAttribute("data-menu-page") || "").toLowerCase() === key;
+          const isMatch = String(section.getAttribute("data-menu-page") || "").toLowerCase() === key;
           section.classList.toggle("hidden", !isMatch);
           if (isMatch) {
             selectedTitle = String(section.getAttribute("data-menu-title") || selectedTitle);
@@ -3462,12 +3130,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
         });
         if (adminMenuTitle) {
           adminMenuTitle.textContent = selectedTitle;
-        }
-        if (key === "chat" && hasAdminPermission("chat")) {
-          loadAdminChat(true);
-          startAdminChatPolling();
-        } else {
-          stopAdminChatPolling();
         }
       };
 
@@ -3715,71 +3377,22 @@ $currentAdminPermissions = $currentAdminIsEmployer
         menuScheduleStatus.textContent = "Schedule applied.";
       };
 
-      const createMenuListRow = (
-        container,
-        firstPlaceholder,
-        secondPlaceholder = "Price",
-        firstValue = "",
-        secondValue = "",
-        options = {}
-      ) => {
+      const createMenuListRow = (container, firstPlaceholder, secondPlaceholder = "Price", firstValue = "", secondValue = "") => {
         if (!container) return null;
-        const config = {
-          thirdPlaceholder: "",
-          thirdValue: "",
-          showAddButton: false,
-          addButtonLabel: "Add",
-          keepAtLeastOne: false,
-          ...options,
-        };
         const row = document.createElement("div");
-        row.className = `menu-list-row${config.thirdPlaceholder ? " has-third" : ""}`;
-        const thirdInputHtml = config.thirdPlaceholder
-          ? `<input type="text" data-third placeholder="${config.thirdPlaceholder}" value="${String(config.thirdValue || "")}" />`
-          : "";
-        const addButtonHtml = config.showAddButton
-          ? `<button class="btn secondary" type="button" data-add-row>${config.addButtonLabel}</button>`
-          : "";
+        row.className = "menu-list-row";
         row.innerHTML = `
           <input type="text" data-first placeholder="${firstPlaceholder}" value="${String(firstValue || "")}" />
           <input type="number" data-second placeholder="${secondPlaceholder}" value="${String(secondValue || "")}" min="0" step="1" />
-          ${thirdInputHtml}
-          <div class="menu-row-actions">
-            <button class="btn ghost" type="button" data-remove-row>${t("remove")}</button>
-            ${addButtonHtml}
-          </div>
+          <button class="btn ghost" type="button" data-remove-row>Remove</button>
         `;
         const removeBtn = row.querySelector("[data-remove-row]");
         if (removeBtn) {
-          removeBtn.addEventListener("click", () => {
-            const allRows = Array.from(container.querySelectorAll(".menu-list-row"));
-            if (config.keepAtLeastOne && allRows.length <= 1) {
-              row.querySelectorAll("input").forEach((input) => {
-                input.value = "";
-              });
-              return;
-            }
-            row.remove();
-          });
-        }
-        const addBtn = row.querySelector("[data-add-row]");
-        if (addBtn) {
-          addBtn.addEventListener("click", () => {
-            createMenuListRow(container, firstPlaceholder, secondPlaceholder, "", "", config);
-          });
+          removeBtn.addEventListener("click", () => row.remove());
         }
         container.appendChild(row);
         return row;
       };
-
-      const createDurationServiceRow = (item = {}) =>
-        createMenuListRow(serviceDurationList, "Service option (ex: 1h)", "Price", item.first, item.second, {
-          thirdPlaceholder: t("service_picture_placeholder"),
-          thirdValue: item.third || "",
-          showAddButton: true,
-          addButtonLabel: t("add_service"),
-          keepAtLeastOne: true,
-        });
 
       const readMenuRows = (container) => {
         if (!container) return [];
@@ -3787,15 +3400,10 @@ $currentAdminPermissions = $currentAdminIsEmployer
           .map((row) => {
             const first = String(row.querySelector("[data-first]")?.value || "").trim();
             const second = Number(row.querySelector("[data-second]")?.value || 0);
-            const third = String(row.querySelector("[data-third]")?.value || "").trim();
-            const item = {
+            return {
               first,
               second: Number.isFinite(second) ? second : 0,
             };
-            if (third) {
-              item.third = third;
-            }
-            return item;
           })
           .filter((item) => item.first);
       };
@@ -3814,7 +3422,9 @@ $currentAdminPermissions = $currentAdminIsEmployer
         if (serviceDurationList) serviceDurationList.innerHTML = "";
         if (servicePackageList) servicePackageList.innerHTML = "";
         if (serviceAddonList) serviceAddonList.innerHTML = "";
-        (Array.isArray(data.durations) ? data.durations : []).forEach((item) => createDurationServiceRow(item));
+        (Array.isArray(data.durations) ? data.durations : []).forEach((item) =>
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price", item.first, item.second)
+        );
         (Array.isArray(data.packages) ? data.packages : []).forEach((item) =>
           createMenuListRow(servicePackageList, "Package entries (comma)", "Price", item.first, item.second)
         );
@@ -3822,7 +3432,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
           createMenuListRow(serviceAddonList, "Addon item", "Price", item.first, item.second)
         );
         if (!serviceDurationList?.children.length) {
-          createDurationServiceRow();
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
         }
         if (!servicePackageList?.children.length) {
           createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
@@ -3990,7 +3600,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
         setTextById("savePhotoConfig", t("save_eye_candy"));
         setTextById("requestsSectionTitle", t("requests_title"));
         setTextById("refreshRequests", t("refresh"));
-        setTextById("sendUpcomingConfirmations", t("send_upcoming_confirmations"));
         setTextById("legendBlockedLabel", t("legend_blocked"));
         setTextById("legendBookingLabel", t("legend_booking"));
         setTextById("legendOutcallLabel", t("legend_outcall"));
@@ -4036,9 +3645,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
         renderTourPartners(tourPartners);
         renderGallery(readGalleryFromUI().length ? readGalleryFromUI() : []);
         renderCityScheduleWizard();
-        if (CAN_ACCESS_CLIENTS_PANEL) {
-          await loadRequests();
-        }
+        await loadRequests();
       };
 
       languageButtons.forEach((button) => {
@@ -4139,6 +3746,11 @@ $currentAdminPermissions = $currentAdminIsEmployer
         });
       }
 
+      if (addServiceDurationBtn) {
+        addServiceDurationBtn.addEventListener("click", () => {
+          createMenuListRow(serviceDurationList, "Duration (ex: 1.5h)", "Price");
+        });
+      }
       if (addServicePackageBtn) {
         addServicePackageBtn.addEventListener("click", () => {
           createMenuListRow(servicePackageList, "Package entries (comma)", "Price");
@@ -4222,147 +3834,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
         return { "X-Admin-Key": key };
       };
 
-      const applyAdminMenuPermissions = () => {
-        adminMenuOpenButtons.forEach((button) => {
-          const required = String(button.getAttribute("data-required-permission") || "").trim().toLowerCase();
-          const allowed = hasAdminPermission(required);
-          button.hidden = !allowed;
-          button.disabled = !allowed;
-        });
-        adminMenuPages.forEach((section) => {
-          const required = String(section.getAttribute("data-required-permission") || "").trim().toLowerCase();
-          const allowed = hasAdminPermission(required);
-          section.setAttribute("data-menu-enabled", allowed ? "true" : "false");
-          if (!allowed) {
-            section.classList.add("hidden");
-          }
-        });
-        if (notifToggleBtn) {
-          notifToggleBtn.hidden = !CAN_ACCESS_CLIENTS_PANEL;
-        }
-      };
-
-      let adminChatItems = [];
-      let adminChatPollTimer = null;
-
-      const formatEmployeePermissions = (permissions) => {
-        const normalized = Array.isArray(permissions)
-          ? permissions.map((item) => String(item || "").trim().toLowerCase()).filter(Boolean)
-          : [];
-        if (!normalized.length) return "Schedule + chat";
-        if (normalized.includes("clients")) return "Full access";
-        return "Schedule + chat";
-      };
-
-      const formatChatTimestamp = (value) => {
-        const stamp = String(value || "").trim();
-        if (!stamp) return "";
-        const parsed = new Date(stamp);
-        if (Number.isNaN(parsed.getTime())) return stamp;
-        return parsed.toLocaleString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      };
-
-      const renderAdminChat = (messages) => {
-        if (!adminChatMessages) return;
-        const rows = Array.isArray(messages) ? messages : [];
-        adminChatMessages.innerHTML = "";
-        if (!rows.length) {
-          adminChatMessages.innerHTML = '<p class="hint">No messages yet.</p>';
-          return;
-        }
-        rows.forEach((entry) => {
-          const user = String(entry?.user || "admin").trim() || "admin";
-          const message = String(entry?.message || "").trim();
-          if (!message) return;
-          const item = document.createElement("div");
-          const mine = user.toLowerCase() === String(CURRENT_ADMIN_USER || "").toLowerCase();
-          item.className = `chat-item${mine ? " mine" : ""}`;
-          const meta = document.createElement("div");
-          meta.className = "chat-meta";
-          meta.textContent = `${user} - ${formatChatTimestamp(entry?.created_at)}`;
-          const bubble = document.createElement("div");
-          bubble.className = "chat-bubble";
-          bubble.textContent = message;
-          item.appendChild(meta);
-          item.appendChild(bubble);
-          adminChatMessages.appendChild(item);
-        });
-        adminChatMessages.scrollTop = adminChatMessages.scrollHeight;
-      };
-
-      const loadAdminChat = async (silent = false) => {
-        if (!hasAdminPermission("chat") || !adminChatMessages) return;
-        if (!silent && adminChatStatus) {
-          adminChatStatus.textContent = "";
-        }
-        try {
-          const response = await fetch("../api/admin/chat.php", {
-            headers: { ...headersWithKey() },
-            cache: "no-store",
-          });
-          const result = await response.json().catch(() => ({}));
-          if (!response.ok || !result.ok) {
-            throw new Error(result.error || `HTTP ${response.status}`);
-          }
-          adminChatItems = Array.isArray(result.messages) ? result.messages : [];
-          renderAdminChat(adminChatItems);
-        } catch (error) {
-          if (!silent && adminChatStatus) {
-            adminChatStatus.textContent = `Failed to load chat${error?.message ? ` (${error.message})` : ""}.`;
-          }
-        }
-      };
-
-      const sendAdminChatMessage = async () => {
-        if (!hasAdminPermission("chat") || !adminChatInput || !adminChatStatus) return;
-        const message = String(adminChatInput.value || "").trim();
-        adminChatStatus.textContent = "";
-        if (!message) {
-          adminChatStatus.textContent = "Write a message first.";
-          return;
-        }
-        try {
-          const response = await fetch("../api/admin/chat.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...headersWithKey(),
-            },
-            body: JSON.stringify({ message }),
-          });
-          const result = await response.json().catch(() => ({}));
-          if (!response.ok || !result.ok) {
-            throw new Error(result.error || `HTTP ${response.status}`);
-          }
-          adminChatInput.value = "";
-          adminChatItems = Array.isArray(result.messages) ? result.messages : [];
-          renderAdminChat(adminChatItems);
-          adminChatStatus.textContent = "Sent.";
-        } catch (error) {
-          adminChatStatus.textContent = `Failed to send${error?.message ? ` (${error.message})` : ""}.`;
-        }
-      };
-
-      const stopAdminChatPolling = () => {
-        if (adminChatPollTimer) {
-          window.clearInterval(adminChatPollTimer);
-          adminChatPollTimer = null;
-        }
-      };
-
-      const startAdminChatPolling = () => {
-        stopAdminChatPolling();
-        adminChatPollTimer = window.setInterval(() => {
-          loadAdminChat(true);
-        }, 15000);
-      };
-
       const renderEmployeeList = (employees) => {
         if (!employeeList) return;
         const rows = Array.isArray(employees) ? employees : [];
@@ -4374,12 +3845,10 @@ $currentAdminPermissions = $currentAdminIsEmployer
         rows.forEach((entry) => {
           const username = String(entry?.username || "").trim();
           if (!username) return;
-          const permissionLabel = formatEmployeePermissions(entry?.permissions);
           const row = document.createElement("div");
-          row.className = "menu-list-row has-third";
+          row.className = "menu-list-row";
           row.innerHTML = `
             <input type="text" value="${username}" readonly />
-            <input type="text" value="${permissionLabel}" readonly />
             <input type="text" value="${String(entry?.created_at || "").trim()}" readonly />
             <button class="btn ghost" type="button">Remove</button>
           `;
@@ -4415,8 +3884,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
         if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeUsernameInput || !employeePasswordInput || !employeeStatus) return;
         const username = String(employeeUsernameInput.value || "").trim().toLowerCase();
         const password = String(employeePasswordInput.value || "");
-        const scheduleOnly = employeeScheduleOnlyInput ? !!employeeScheduleOnlyInput.checked : true;
-        const permissions = scheduleOnly ? ["schedule", "chat"] : EMPLOYEE_FULL_PERMISSIONS;
         employeeStatus.textContent = "";
         if (!/^[a-z0-9._-]{3,40}$/i.test(username)) {
           employeeStatus.textContent = "Use 3-40 chars: letters, numbers, dot, dash, underscore.";
@@ -4433,7 +3900,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
               "Content-Type": "application/json",
               ...headersWithKey(),
             },
-            body: JSON.stringify({ action: "add", username, password, permissions }),
+            body: JSON.stringify({ action: "add", username, password }),
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok || !result.ok) {
@@ -4441,9 +3908,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           }
           employeePasswordInput.value = "";
           employeeUsernameInput.value = "";
-          if (employeeScheduleOnlyInput) {
-            employeeScheduleOnlyInput.checked = true;
-          }
           employeeStatus.textContent = "Employee saved.";
           renderEmployeeList(result.employees || []);
         } catch (error) {
@@ -4522,8 +3986,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
       let tourPartners = [];
       let citySchedules = [];
       let autoTemplateBlocksEnabled = false;
-      let selectedGridBookingId = "";
-      let selectedRecurringIndex = -1;
       let autoSaveTimer = null;
       let autoSaveInFlight = false;
       let autoSaveQueued = false;
@@ -4843,107 +4305,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
         }
       };
 
-      const minutesToStamp = (dateKey, minutesValue) => {
-        const date = parseDateKey(dateKey);
-        if (!date || !Number.isFinite(minutesValue)) return null;
-        return Math.floor(date.getTime() / 60000) + minutesValue;
-      };
-
-      const getBlockRangeFromForm = () => {
-        const startDate = String(blockedDate?.value || "").trim();
-        const endDate = String(blockedEndDate?.value || "").trim() || startDate;
-        const startTime = String(blockedStart?.value || "").trim();
-        const endTime = String(blockedEnd?.value || "").trim();
-        const reason = String(blockedReason?.value || "").trim();
-        if (!startDate || !endDate || !startTime || !endTime) {
-          return { error: "Set from day, from time, to day, and to time." };
-        }
-        const startMinutes = timeToMinutes(startTime);
-        const endMinutesRaw = timeToMinutes(endTime);
-        if (startMinutes === null || endMinutesRaw === null) {
-          return { error: "Invalid time format." };
-        }
-        const endMinutes = endMinutesRaw >= 1439 ? 1440 : endMinutesRaw;
-        const startStamp = minutesToStamp(startDate, startMinutes);
-        const endStamp = minutesToStamp(endDate, endMinutes);
-        if (startStamp === null || endStamp === null || endStamp <= startStamp) {
-          return { error: "End must be after start." };
-        }
-        return {
-          startDate,
-          endDate,
-          startMinutes,
-          endMinutes,
-          startStamp,
-          endStamp,
-          reason,
-        };
-      };
-
-      const pushManualRangeForDate = (dateKey, startMinutes, endMinutes, reason, city = "") => {
-        if (!dateKey) return;
-        const safeStart = Math.max(0, Math.min(1439, Math.floor(startMinutes)));
-        const safeEnd = Math.max(0, Math.min(1440, Math.floor(endMinutes)));
-        if (safeEnd <= safeStart) return;
-        for (let minutes = safeStart; minutes < safeEnd; minutes += SLOT_MINUTES) {
-          const next = Math.min(minutes + SLOT_MINUTES, safeEnd);
-          blockedSlots.push({
-            date: dateKey,
-            start: minutesToTime(minutes),
-            end: next >= 1440 ? "23:59" : minutesToTime(next),
-            reason: String(reason || "").trim(),
-            kind: "manual",
-            city,
-          });
-        }
-      };
-
-      const addManualBlockRange = (range) => {
-        const startDateObj = parseDateKey(range.startDate);
-        const endDateObj = parseDateKey(range.endDate);
-        if (!startDateObj || !endDateObj || startDateObj > endDateObj) return;
-        const cursor = new Date(startDateObj.getTime());
-        while (cursor <= endDateObj) {
-          const dateKey = toDateKey(cursor);
-          const isStartDay = dateKey === range.startDate;
-          const isEndDay = dateKey === range.endDate;
-          const dayStart = isStartDay ? range.startMinutes : 0;
-          const dayEnd = isEndDay ? range.endMinutes : 1440;
-          const city = getTourCityForDate(dateKey);
-          pushManualRangeForDate(dateKey, dayStart, dayEnd, range.reason, city);
-          cursor.setUTCDate(cursor.getUTCDate() + 1);
-        }
-      };
-
-      const removeManualBlocksInRange = (range) => {
-        let removed = 0;
-        blockedSlots = blockedSlots.filter((slot) => {
-          if (!slot || slot.kind !== "manual") return true;
-          const slotStartMinutes = timeToMinutes(slot.start);
-          const slotEndRaw = timeToMinutes(slot.end);
-          if (slotStartMinutes === null || slotEndRaw === null) return true;
-          const slotEndMinutes = slotEndRaw >= 1439 ? 1440 : slotEndRaw;
-          const slotStartStamp = minutesToStamp(slot.date, slotStartMinutes);
-          const slotEndStamp = minutesToStamp(slot.date, slotEndMinutes);
-          if (slotStartStamp === null || slotEndStamp === null) return true;
-          const overlaps = slotStartStamp < range.endStamp && slotEndStamp > range.startStamp;
-          if (overlaps) {
-            removed += 1;
-            return false;
-          }
-          return true;
-        });
-        return removed;
-      };
-
-      const clearBlockForm = () => {
-        if (blockedDate) blockedDate.value = "";
-        if (blockedEndDate) blockedEndDate.value = "";
-        if (blockedStart) blockedStart.value = "";
-        if (blockedEnd) blockedEnd.value = "";
-        if (blockedReason) blockedReason.value = "";
-      };
-
       const normalizeBlockedSlots = (slots) => {
         const normalized = [];
         (Array.isArray(slots) ? slots : []).forEach((slot) => {
@@ -5140,35 +4501,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           card.scrollIntoView({ behavior: "smooth", block: "center" });
           window.setTimeout(() => card.classList.remove("flash-focus"), 1400);
         }, 40);
-      };
-
-      const findRequestById = (requestId) =>
-        latestRequests.find((item) => String(item?.id || "").trim() === String(requestId || "").trim()) || null;
-
-      const updateScheduleCalendarSelectionLabel = () => {
-        if (!scheduleCalendarSelection) return;
-        if (!selectedGridBookingId) {
-          scheduleCalendarSelection.textContent = "Selected: none (click a booking block in grid)";
-          return;
-        }
-        const item = findRequestById(selectedGridBookingId);
-        if (!item) {
-          scheduleCalendarSelection.textContent = "Selected: booking not found, refresh requests";
-          return;
-        }
-        const name = String(item.name || "Client").trim() || "Client";
-        const date = String(item.preferred_date || "").trim();
-        const time = String(item.preferred_time || "").trim();
-        const city = String(item.city || "").trim();
-        const when = [date, time].filter(Boolean).join(" ");
-        const parts = [name, when, city].filter(Boolean);
-        scheduleCalendarSelection.textContent = `Selected: ${parts.join(" - ")}`;
-      };
-
-      const selectGridBookingForCalendar = (bookingId) => {
-        const normalized = String(bookingId || "").trim();
-        selectedGridBookingId = normalized;
-        updateScheduleCalendarSelectionLabel();
       };
 
       const getBookingGroupId = (slot) => {
@@ -5396,10 +4728,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
                 if (entry.booking_status === "paid") {
                   slotButton.classList.add("paid");
                 }
-                const bookingId = String(entry.booking_id || "").trim();
-                if (bookingId && bookingId === selectedGridBookingId) {
-                  slotButton.classList.add("selected-booking");
-                }
                 const key = getBookingGroupId(entry);
                 const startKey = key ? bookingStartMap[key] : "";
                 if (key && startKey === `${entry.date} ${entry.start}`) {
@@ -5442,11 +4770,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
               if (entry && entry.kind === "booking") {
                 const bookingId = String(entry.booking_id || "").trim();
                 if (bookingId) {
-                  selectGridBookingForCalendar(bookingId);
-                  if (scheduleCalendarStatus) {
-                    scheduleCalendarStatus.textContent = "Booking selected for calendar sync.";
-                  }
-                  renderCalendarView();
+                  focusRequestCardById(bookingId);
                 }
                 return;
               }
@@ -5704,27 +5028,9 @@ $currentAdminPermissions = $currentAdminIsEmployer
           .map((group, index) => {
             const reason = group.reason ? ` - ${group.reason}` : "";
             const city = group.city ? ` (${group.city})` : "";
-            return `<div class="block-list-row" data-index="${index}">
-              <span>${group.date} ${formatRangeTime(group.startMinutes)}-${formatRangeTime(group.endMinutes)}${city}${reason}</span>
-              <button data-fill="${index}" class="btn ghost" type="button">Use</button>
-              <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button>
-            </div>`;
+            return `<div data-index="${index}">${group.date} ${formatRangeTime(group.startMinutes)}-${formatRangeTime(group.endMinutes)}${city}${reason} <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button></div>`;
           })
           .join("");
-        blockedList.querySelectorAll("button[data-fill]").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const idx = Number(btn.dataset.fill);
-            if (Number.isNaN(idx)) return;
-            const group = manualGroups[idx];
-            if (!group) return;
-            if (blockedDate) blockedDate.value = group.date;
-            if (blockedEndDate) blockedEndDate.value = group.date;
-            if (blockedStart) blockedStart.value = formatRangeTime(group.startMinutes);
-            if (blockedEnd) blockedEnd.value = group.endMinutes >= 1440 ? "23:59" : formatRangeTime(group.endMinutes);
-            if (blockedReason) blockedReason.value = group.reason || "";
-            if (blockedStatus) blockedStatus.textContent = "Block loaded. Edit values then click Edit block.";
-          });
-        });
         blockedList.querySelectorAll("button[data-remove]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const idx = Number(btn.dataset.remove);
@@ -5769,7 +5075,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
       const renderRecurringList = () => {
         if (!recurringList) return;
         if (!recurringBlocks.length) {
-          selectedRecurringIndex = -1;
           recurringList.textContent = "No recurring blocks yet.";
           return;
         }
@@ -5778,42 +5083,14 @@ $currentAdminPermissions = $currentAdminIsEmployer
             const daysLabel = formatRecurringDays(block.days);
             const timeLabel = block.all_day ? "All day" : `${block.start || ""}-${block.end || ""}`;
             const reason = block.reason ? ` - ${block.reason}` : "";
-            return `<div class="recurring-list-row" data-index="${index}">
-              <span>${daysLabel} | ${timeLabel}${reason}</span>
-              <button data-use="${index}" class="btn ghost" type="button">Use</button>
-              <button data-remove="${index}" class="btn ghost" type="button">${t("remove")}</button>
-            </div>`;
+            return `<div data-index=\"${index}\">${daysLabel} | ${timeLabel}${reason} <button data-remove=\"${index}\" class=\"btn ghost\" type=\"button\">${t("remove")}</button></div>`;
           })
           .join("");
-        recurringList.querySelectorAll("button[data-use]").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const idx = Number(btn.dataset.use);
-            if (Number.isNaN(idx) || !recurringBlocks[idx]) return;
-            const block = recurringBlocks[idx];
-            selectedRecurringIndex = idx;
-            if (recurringDays) {
-              recurringDays.querySelectorAll("input[type=\"checkbox\"]").forEach((input) => {
-                const dayValue = Number(input.value);
-                input.checked = Array.isArray(block.days) && block.days.includes(dayValue);
-              });
-            }
-            if (recurringAllDay) recurringAllDay.checked = !!block.all_day;
-            if (recurringStart) recurringStart.value = block.start || "";
-            if (recurringEnd) recurringEnd.value = block.end || "";
-            if (recurringReason) recurringReason.value = block.reason || "";
-            if (recurringStatus) recurringStatus.textContent = "Recurring row loaded. Edit values then click Edit recurring.";
-          });
-        });
         recurringList.querySelectorAll("button[data-remove]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const idx = Number(btn.dataset.remove);
             if (Number.isNaN(idx)) return;
             recurringBlocks = recurringBlocks.filter((_, i) => i !== idx);
-            if (selectedRecurringIndex === idx) {
-              selectedRecurringIndex = -1;
-            } else if (selectedRecurringIndex > idx) {
-              selectedRecurringIndex -= 1;
-            }
             renderRecurringList();
             renderCalendarView();
             queueAutoSave(t("saving_city_schedule"), { persist: true });
@@ -7374,15 +6651,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
       };
 
       const loadRequests = async () => {
-        if (!CAN_ACCESS_CLIENTS_PANEL) {
-          requestsStatus.textContent = "";
-          requestsList.innerHTML = '<p class="hint">Client requests are not enabled for this login.</p>';
-          latestRequests = [];
-          requestSlots = [];
-          maybeSlots = [];
-          renderCalendarView();
-          return;
-        }
         const requestToken = ++loadRequestsToken;
         requestsStatus.textContent = "";
         requestsList.innerHTML = "";
@@ -7461,10 +6729,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           if (requestToken !== loadRequestsToken) return;
           requestsList.innerHTML = "";
           latestRequests = requests;
-          if (selectedGridBookingId && !findRequestById(selectedGridBookingId)) {
-            selectedGridBookingId = "";
-          }
-          updateScheduleCalendarSelectionLabel();
           renderNotifications(requests);
           requestSlots = buildConfirmedSlotsFromRequests(requests);
           maybeSlots = buildMaybeSlotsFromRequests(requests);
@@ -7701,53 +6965,10 @@ $currentAdminPermissions = $currentAdminIsEmployer
           }
         } catch (_error) {
           latestRequests = [];
-          selectedGridBookingId = "";
-          updateScheduleCalendarSelectionLabel();
           requestSlots = [];
           maybeSlots = [];
           renderCalendarView();
           requestsStatus.textContent = t("failed_load_requests");
-        }
-      };
-
-      const sendUpcomingConfirmations = async () => {
-        if (!CAN_ACCESS_CLIENTS_PANEL) {
-          requestsStatus.textContent = "Not allowed for this login.";
-          return;
-        }
-        const key = getKey();
-        if (!key) {
-          requestsStatus.textContent = t("admin_key_required");
-          return;
-        }
-        requestsStatus.textContent = "";
-        if (sendUpcomingConfirmationsBtn) {
-          sendUpcomingConfirmationsBtn.disabled = true;
-        }
-        try {
-          const response = await fetch("../api/admin/send-upcoming-confirmations.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Admin-Key": key,
-            },
-            body: JSON.stringify({ force: false }),
-          });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || "upcoming");
-          const sentCount = Number(result?.sent || 0);
-          if (sentCount > 0) {
-            requestsStatus.textContent = t("upcoming_confirmations_sent", { count: sentCount });
-          } else {
-            requestsStatus.textContent = t("upcoming_confirmations_none");
-          }
-          await loadRequests();
-        } catch (_error) {
-          requestsStatus.textContent = t("failed_send_upcoming_confirmations");
-        } finally {
-          if (sendUpcomingConfirmationsBtn) {
-            sendUpcomingConfirmationsBtn.disabled = false;
-          }
         }
       };
 
@@ -7812,10 +7033,91 @@ $currentAdminPermissions = $currentAdminIsEmployer
           queueAutoSave(t("saving_city_schedule"), { persist: true });
         });
       }
-      const readRecurringFormPayload = () => {
+      addBlockedBtn.addEventListener("click", () => {
+        blockedStatus.textContent = "";
+        const date = blockedDate.value;
+        const start = blockedStart.value;
+        const end = blockedEnd.value;
+        if (!date || !start || !end) {
+          blockedStatus.textContent = "Add date, start time, and end time.";
+          return;
+        }
+        const startMinutes = timeToMinutes(start);
+        const endMinutes = timeToMinutes(end);
+        if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+          blockedStatus.textContent = "End time must be after start time.";
+          return;
+        }
+        for (let minutes = startMinutes; minutes < endMinutes; minutes += SLOT_MINUTES) {
+          blockedSlots.push({
+            date,
+            start: minutesToTime(minutes),
+            end: minutesToTime(Math.min(minutes + SLOT_MINUTES, endMinutes)),
+            reason: blockedReason.value.trim(),
+            kind: "manual",
+          });
+        }
+        blockedDate.value = "";
+        blockedStart.value = "";
+        blockedEnd.value = "";
+        blockedReason.value = "";
+        renderBlockedSlots();
+        renderCalendarView();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
+      });
+      blockFullDayBtn.addEventListener("click", () => {
+        blockedStatus.textContent = "";
+        const date = blockedDate.value;
+        if (!date) {
+          blockedStatus.textContent = "Add a date first.";
+          return;
+        }
+        const reason = blockedReason.value.trim();
+        blockFullDayForDate(date, reason);
+        blockedDate.value = "";
+        blockedStart.value = "";
+        blockedEnd.value = "";
+        blockedReason.value = "";
+        blockedStatus.textContent = "Full day blocked.";
+        renderBlockedSlots();
+        renderCalendarView();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
+      });
+      blockFullRangeBtn.addEventListener("click", () => {
+        blockedStatus.textContent = "";
+        const startValue = blockedFullRangeStart.value;
+        const endValue = blockedFullRangeEnd.value;
+        if (!startValue || !endValue) {
+          blockedStatus.textContent = "Add a start and end date.";
+          return;
+        }
+        const startDate = parseDateKey(startValue);
+        const endDate = parseDateKey(endValue);
+        if (!startDate || !endDate || startDate > endDate) {
+          blockedStatus.textContent = "End date must be after start date.";
+          return;
+        }
+        const reason = blockedReason.value.trim();
+        const current = new Date(startDate.getTime());
+        while (current <= endDate) {
+          blockFullDayForDate(toDateKey(current), reason);
+          current.setUTCDate(current.getUTCDate() + 1);
+        }
+        blockedFullRangeStart.value = "";
+        blockedFullRangeEnd.value = "";
+        blockedReason.value = "";
+        blockedStatus.textContent = "Full-day range blocked.";
+        renderBlockedSlots();
+        renderCalendarView();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
+      });
+      addRecurringBtn.addEventListener("click", () => {
+        if (!recurringStatus) return;
+        recurringStatus.textContent = "";
         const days = getSelectedRecurringDays();
         if (!days.length) {
-          return { error: "Pick at least one day." };
+          recurringStatus.textContent = "Pick at least one day.";
+          return;
         }
         const allDay = recurringAllDay && recurringAllDay.checked;
         const start = recurringStart ? recurringStart.value : "";
@@ -7824,21 +7126,17 @@ $currentAdminPermissions = $currentAdminIsEmployer
           const startMinutes = timeToMinutes(start);
           const endMinutes = timeToMinutes(end);
           if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
-            return { error: "End time must be after start time." };
+            recurringStatus.textContent = "End time must be after start time.";
+            return;
           }
         }
-        return {
-          entry: {
-            days,
-            all_day: !!allDay,
-            start: allDay ? "" : start,
-            end: allDay ? "" : end,
-            reason: recurringReason ? recurringReason.value.trim() : "",
-          },
-        };
-      };
-
-      const resetRecurringForm = () => {
+        recurringBlocks.push({
+          days,
+          all_day: !!allDay,
+          start: allDay ? "" : start,
+          end: allDay ? "" : end,
+          reason: recurringReason ? recurringReason.value.trim() : "",
+        });
         if (recurringDays) {
           recurringDays.querySelectorAll("input[type=\"checkbox\"]:checked").forEach((input) => {
             input.checked = false;
@@ -7848,169 +7146,11 @@ $currentAdminPermissions = $currentAdminIsEmployer
         if (recurringStart) recurringStart.value = "";
         if (recurringEnd) recurringEnd.value = "";
         if (recurringReason) recurringReason.value = "";
-        selectedRecurringIndex = -1;
-      };
-
-      if (addBlockedBtn) {
-        addBlockedBtn.addEventListener("click", () => {
-          if (!blockedStatus) return;
-          blockedStatus.textContent = "";
-          const range = getBlockRangeFromForm();
-          if (range.error) {
-            blockedStatus.textContent = range.error;
-            return;
-          }
-          addManualBlockRange(range);
-          blockedStatus.textContent = "Block added.";
-          clearBlockForm();
-          renderBlockedSlots();
-          renderCalendarView();
-          queueAutoSave(t("saving_city_schedule"), { persist: true });
-        });
-      }
-      if (blockedDate && blockedEndDate) {
-        blockedDate.addEventListener("change", () => {
-          if (!blockedEndDate.value) {
-            blockedEndDate.value = blockedDate.value;
-          }
-        });
-      }
-
-      if (editBlockedBtn) {
-        editBlockedBtn.addEventListener("click", () => {
-          if (!blockedStatus) return;
-          blockedStatus.textContent = "";
-          const range = getBlockRangeFromForm();
-          if (range.error) {
-            blockedStatus.textContent = range.error;
-            return;
-          }
-          removeManualBlocksInRange(range);
-          addManualBlockRange(range);
-          blockedStatus.textContent = "Block updated.";
-          clearBlockForm();
-          renderBlockedSlots();
-          renderCalendarView();
-          queueAutoSave(t("saving_city_schedule"), { persist: true });
-        });
-      }
-
-      if (deleteBlockedBtn) {
-        deleteBlockedBtn.addEventListener("click", () => {
-          if (!blockedStatus) return;
-          blockedStatus.textContent = "";
-          const range = getBlockRangeFromForm();
-          if (range.error) {
-            blockedStatus.textContent = range.error;
-            return;
-          }
-          const removed = removeManualBlocksInRange(range);
-          blockedStatus.textContent = removed ? "Block removed." : "No matching block found.";
-          clearBlockForm();
-          renderBlockedSlots();
-          renderCalendarView();
-          queueAutoSave(t("saving_city_schedule"), { persist: true });
-        });
-      }
-
-      if (addRecurringBtn) {
-        addRecurringBtn.addEventListener("click", () => {
-          if (!recurringStatus) return;
-          recurringStatus.textContent = "";
-          const payload = readRecurringFormPayload();
-          if (payload.error) {
-            recurringStatus.textContent = payload.error;
-            return;
-          }
-          recurringBlocks.push(payload.entry);
-          recurringStatus.textContent = "Recurring block added.";
-          resetRecurringForm();
-          renderRecurringList();
-          renderCalendarView();
-          queueAutoSave(t("saving_city_schedule"), { persist: true });
-        });
-      }
-
-      if (editRecurringBtn) {
-        editRecurringBtn.addEventListener("click", () => {
-          if (!recurringStatus) return;
-          recurringStatus.textContent = "";
-          if (selectedRecurringIndex < 0 || !recurringBlocks[selectedRecurringIndex]) {
-            recurringStatus.textContent = "Click Use on a recurring row first.";
-            return;
-          }
-          const payload = readRecurringFormPayload();
-          if (payload.error) {
-            recurringStatus.textContent = payload.error;
-            return;
-          }
-          recurringBlocks[selectedRecurringIndex] = payload.entry;
-          recurringStatus.textContent = "Recurring block updated.";
-          resetRecurringForm();
-          renderRecurringList();
-          renderCalendarView();
-          queueAutoSave(t("saving_city_schedule"), { persist: true });
-        });
-      }
-
-      if (deleteRecurringBtn) {
-        deleteRecurringBtn.addEventListener("click", () => {
-          if (!recurringStatus) return;
-          recurringStatus.textContent = "";
-          if (selectedRecurringIndex < 0 || !recurringBlocks[selectedRecurringIndex]) {
-            recurringStatus.textContent = "Click Use on a recurring row first.";
-            return;
-          }
-          recurringBlocks = recurringBlocks.filter((_, index) => index !== selectedRecurringIndex);
-          recurringStatus.textContent = "Recurring block removed.";
-          resetRecurringForm();
-          renderRecurringList();
-          renderCalendarView();
-          queueAutoSave(t("saving_city_schedule"), { persist: true });
-        });
-      }
-
-      if (scheduleCalendarSyncBtn) {
-        scheduleCalendarSyncBtn.addEventListener("click", () => {
-          if (!scheduleCalendarStatus) return;
-          scheduleCalendarStatus.textContent = "";
-          const target = String(scheduleCalendarTarget?.value || "").trim();
-          if (!target) {
-            scheduleCalendarStatus.textContent = "Choose a calendar first.";
-            return;
-          }
-          if (!selectedGridBookingId) {
-            scheduleCalendarStatus.textContent = "Click a customer booking block in the calendar grid first.";
-            return;
-          }
-          const selectedItem = findRequestById(selectedGridBookingId);
-          if (!selectedItem) {
-            scheduleCalendarStatus.textContent = "Selected booking no longer exists. Refresh requests and pick again.";
-            selectedGridBookingId = "";
-            updateScheduleCalendarSelectionLabel();
-            return;
-          }
-          if (target === "google") {
-            const calendarUrl = buildGoogleCalendarUrl(selectedItem);
-            if (!calendarUrl) {
-              scheduleCalendarStatus.textContent = "Unable to build calendar link.";
-              return;
-            }
-            const popup = window.open(calendarUrl, "_blank", "noopener");
-            if (!popup) {
-              window.location.href = calendarUrl;
-            }
-            return;
-          }
-          if (target === "samsung") {
-            downloadIcsFile(selectedItem, "samsung");
-            return;
-          }
-          if (target === "icloud") {
-            downloadIcsFile(selectedItem, "icloud");
-          }
-        });
-      }
+        recurringStatus.textContent = "Recurring block added.";
+        renderRecurringList();
+        renderCalendarView();
+        queueAutoSave(t("saving_city_schedule"), { persist: true });
+      });
 
       if (addTourRowBtn) {
         addTourRowBtn.addEventListener("click", () => {
@@ -8114,22 +7254,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
           }
         });
       }
-      if (adminChatSendBtn) {
-        adminChatSendBtn.addEventListener("click", sendAdminChatMessage);
-      }
-      if (adminChatRefreshBtn) {
-        adminChatRefreshBtn.addEventListener("click", () => {
-          loadAdminChat(false);
-        });
-      }
-      if (adminChatInput) {
-        adminChatInput.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            sendAdminChatMessage();
-          }
-        });
-      }
       if (photoDisplayModeSelect) {
         photoDisplayModeSelect.addEventListener("change", updatePhotoModeUi);
       }
@@ -8141,24 +7265,16 @@ $currentAdminPermissions = $currentAdminIsEmployer
           setBlockedListVisible(isHidden);
         });
       }
-      if (refreshBtn) {
-        refreshBtn.addEventListener("click", loadRequests);
-      }
-      if (sendUpcomingConfirmationsBtn) {
-        sendUpcomingConfirmationsBtn.addEventListener("click", sendUpcomingConfirmations);
-      }
-      if (statusFilter) {
-        statusFilter.addEventListener("change", () => {
-          syncStatusFilterTabs();
-          loadRequests();
-        });
-      }
+      refreshBtn.addEventListener("click", loadRequests);
+      statusFilter.addEventListener("change", () => {
+        syncStatusFilterTabs();
+        loadRequests();
+      });
       // Keep requests stable while reviewing/editing. Use Refresh button when needed.
 
       const initialLanguage = getStoredLanguage() || detectBrowserLanguage();
       currentLanguage = initialLanguage;
       document.documentElement.setAttribute("lang", currentLanguage);
-      applyAdminMenuPermissions();
       setAdminPanel(getStoredAdminPanel(), false);
       createDayChoices(menuWorkDays);
       createDayChoices(menuBreakDays);
@@ -8166,7 +7282,6 @@ $currentAdminPermissions = $currentAdminIsEmployer
       applyScheduleMenuConfigToUi();
       applyServicesConfigToUi();
       updatePhotoModeUi();
-      updateScheduleCalendarSelectionLabel();
       closeAdminMenu();
       if (notifPanel) {
         notifPanel.classList.add("hidden");
@@ -8182,9 +7297,7 @@ $currentAdminPermissions = $currentAdminIsEmployer
       loadAvailability();
       loadTourSchedule();
       loadGallery();
-      if (CAN_ACCESS_CLIENTS_PANEL) {
-        loadRequests();
-      }
+      loadRequests();
       loadEmployees();
       applyLanguage(initialLanguage, true);
     </script>

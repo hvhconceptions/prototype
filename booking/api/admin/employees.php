@@ -6,8 +6,6 @@ require __DIR__ . '/../config.php';
 require_admin();
 
 $employeePath = DATA_DIR . '/admin_employees.json';
-const EMPLOYEE_DEFAULT_PERMISSIONS = ['schedule', 'chat'];
-const EMPLOYEE_ALLOWED_PERMISSIONS = ['schedule', 'clients', 'touring', 'services', 'photos', 'account', 'chat'];
 
 function admin_basic_auth_credentials(): array
 {
@@ -66,51 +64,6 @@ function normalize_employee_username(string $value): string
     return $username;
 }
 
-function normalize_employee_permissions($value): array
-{
-    $raw = [];
-    if (is_array($value)) {
-        $raw = $value;
-    } elseif (is_string($value) && $value !== '') {
-        $raw = explode(',', $value);
-    }
-    $allowed = array_flip(EMPLOYEE_ALLOWED_PERMISSIONS);
-    $clean = [];
-    foreach ($raw as $entry) {
-        $permission = strtolower(trim((string) $entry));
-        if ($permission === '' || !isset($allowed[$permission])) {
-            continue;
-        }
-        if (!in_array($permission, $clean, true)) {
-            $clean[] = $permission;
-        }
-    }
-    if (!$clean) {
-        return EMPLOYEE_DEFAULT_PERMISSIONS;
-    }
-    if (!in_array('chat', $clean, true)) {
-        $clean[] = 'chat';
-    }
-    return $clean;
-}
-
-function resolve_employee_permissions_from_payload(array $payload): ?array
-{
-    if (array_key_exists('permissions', $payload)) {
-        return normalize_employee_permissions($payload['permissions']);
-    }
-    if (array_key_exists('schedule_only', $payload)) {
-        $scheduleOnly = filter_var($payload['schedule_only'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-        if ($scheduleOnly === true) {
-            return EMPLOYEE_DEFAULT_PERMISSIONS;
-        }
-        if ($scheduleOnly === false) {
-            return EMPLOYEE_ALLOWED_PERMISSIONS;
-        }
-    }
-    return null;
-}
-
 function read_employee_store(string $path): array
 {
     $store = read_json_file($path, ['employees' => []]);
@@ -131,7 +84,6 @@ function read_employee_store(string $path): array
         $clean[] = [
             'username' => $username,
             'password_hash' => $hash,
-            'permissions' => normalize_employee_permissions($entry['permissions'] ?? []),
             'created_at' => (string) ($entry['created_at'] ?? ''),
             'updated_at' => (string) ($entry['updated_at'] ?? ''),
         ];
@@ -144,7 +96,6 @@ function public_employee_rows(array $employees): array
     $rows = array_map(static function (array $entry): array {
         return [
             'username' => (string) ($entry['username'] ?? ''),
-            'permissions' => normalize_employee_permissions($entry['permissions'] ?? []),
             'created_at' => (string) ($entry['created_at'] ?? ''),
             'updated_at' => (string) ($entry['updated_at'] ?? ''),
         ];
@@ -177,7 +128,6 @@ $employees = read_employee_store($employeePath);
 if ($action === 'add') {
     $username = normalize_employee_username((string) ($payload['username'] ?? ''));
     $password = (string) ($payload['password'] ?? '');
-    $requestedPermissions = resolve_employee_permissions_from_payload($payload);
     if ($username === '') {
         json_response(['error' => 'Invalid username'], 422);
     }
@@ -196,7 +146,6 @@ if ($action === 'add') {
     foreach ($employees as &$entry) {
         if (hash_equals((string) ($entry['username'] ?? ''), $username)) {
             $entry['password_hash'] = $hash;
-            $entry['permissions'] = $requestedPermissions ?? normalize_employee_permissions($entry['permissions'] ?? []);
             $entry['updated_at'] = gmdate('c');
             if (($entry['created_at'] ?? '') === '') {
                 $entry['created_at'] = (string) $entry['updated_at'];
@@ -211,7 +160,6 @@ if ($action === 'add') {
         $employees[] = [
             'username' => $username,
             'password_hash' => $hash,
-            'permissions' => $requestedPermissions ?? EMPLOYEE_DEFAULT_PERMISSIONS,
             'created_at' => gmdate('c'),
             'updated_at' => gmdate('c'),
         ];

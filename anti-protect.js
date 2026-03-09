@@ -7,6 +7,8 @@
   const BLOCK_PATH = "/404.html";
   const ALERT_REDIRECT_DELAY_MS = 1200;
   const ALERT_DISMISS_DELAY_MS = 1700;
+  const INSULT_NAG_INTERVAL_MS = 120;
+  const INSULT_NAG_TEXT = "RESPECTFUL LANGUAGE ONLY.\nGO BACK NOW.";
   const ENFORCE_INSULT_LOCK = false;
   const ENFORCE_SERVER_BLACKLIST = false;
   const is404Page = /\/404\.html$/i.test(window.location.pathname);
@@ -47,6 +49,48 @@
   };
 
   let isCaptureRedirectPending = false;
+  let insultNagActive = false;
+  let insultNagTimer = null;
+
+  const stopInsultNagLoop = () => {
+    insultNagActive = false;
+    if (insultNagTimer) {
+      window.clearTimeout(insultNagTimer);
+      insultNagTimer = null;
+    }
+  };
+
+  const startInsultNagLoop = (message = INSULT_NAG_TEXT) => {
+    if (is404Page || insultNagActive) return;
+    insultNagActive = true;
+    try {
+      window.history.pushState({ hvhInsultNag: Date.now() }, "", window.location.href);
+    } catch (_error) {}
+
+    const loopAlert = () => {
+      if (!insultNagActive) return;
+      try {
+        window.alert(message);
+      } catch (_error) {}
+      if (navigator.vibrate) {
+        try {
+          navigator.vibrate([180, 60, 180, 60, 180]);
+        } catch (_error) {}
+      }
+      insultNagTimer = window.setTimeout(loopAlert, INSULT_NAG_INTERVAL_MS);
+    };
+
+    loopAlert();
+  };
+
+  window.addEventListener("popstate", () => {
+    stopInsultNagLoop();
+  });
+
+  window.addEventListener("pagehide", () => {
+    stopInsultNagLoop();
+  });
+
   const triggerViolentScreenShake = () => {
     const styleId = "hvh-violent-page-shake-style";
     if (!document.getElementById(styleId)) {
@@ -178,6 +222,7 @@
       return;
     }
     showViolentAlert("RESPECTFUL LANGUAGE ONLY.", { redirect: false });
+    startInsultNagLoop();
   };
 
   window.hvhHandleInsultViolation = registerInsultViolation;

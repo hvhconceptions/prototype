@@ -3,12 +3,37 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#120f1f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Heidi HVH" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/BOMBACLOUD_NEW.png" />
     <title>Heidi Van Horny</title>
+    <script>
+      (function () {
+        const ACCESS_KEY = "hvh_age_gate_verified";
+        const ACCESS_COOKIE = "hvh_age_gate_verified";
+        let hasAccess = false;
+        try {
+          hasAccess = window.localStorage.getItem(ACCESS_KEY) === "true";
+        } catch (_error) {}
+        if (!hasAccess) {
+          const match = document.cookie.match(new RegExp(`(?:^|; )${ACCESS_COOKIE}=([^;]*)`));
+          hasAccess = match ? decodeURIComponent(match[1]) === "true" : false;
+        }
+        if (hasAccess) {
+          document.documentElement.style.visibility = "hidden";
+          window.location.replace("inside.html");
+        }
+      })();
+    </script>
 
     <link
       rel="icon"
       type="image/svg+xml"
-      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><circle cx='256' cy='256' r='248' fill='%23000'/><circle cx='256' cy='256' r='210' fill='none' stroke='%2300ff99' stroke-width='18'/><path d='M140 150c40 0 58-30 58-30M372 150c-40 0-58-30-58-30' stroke='%2300ff99' stroke-width='18' fill='none' stroke-linecap='round'/><text x='256' y='305' text-anchor='middle' font-family='ui-monospace,monospace' font-size='120' fill='%2300ff99' font-weight='700'>HVH</text></svg>"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23000000'/><text x='64' y='78' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='%23ffffff' font-weight='700'>HVH</text></svg>"
     />
 
     <style>
@@ -21,12 +46,18 @@
       }
 
       body.pink-mode {
-        --bg: #ffe6f3;
-        --fg: #1f0b16;
-        --accent: #ff3bbd;
-        --accent-rgb: 255, 59, 189;
-        --muted: #ff9fdc;
-        background: radial-gradient(circle at 14% 8%, rgba(255, 59, 189, 0.25), #ffe6f3);
+        --bg: #0a0608;
+        --fg: #fff1f7;
+        --accent: #ff5fae;
+        --accent-rgb: 255, 95, 174;
+        --muted: rgba(255, 95, 174, 0.35);
+        --card: rgba(255, 95, 174, 0.14);
+        --card-border: rgba(255, 95, 174, 0.34);
+        background:
+          radial-gradient(circle at 18% 12%, rgba(255, 186, 220, 0.22), transparent 36%),
+          radial-gradient(circle at 78% 16%, rgba(255, 140, 200, 0.2), transparent 40%),
+          radial-gradient(circle at 56% 82%, rgba(160, 0, 70, 0.28), transparent 46%),
+          linear-gradient(160deg, #060006 0%, #1a0510 46%, #0b0106 100%);
         color: var(--fg);
       }
 
@@ -35,16 +66,19 @@
         position: fixed;
         inset: 0;
         pointer-events: none;
-        background-image: radial-gradient(circle at 12% 18%, rgba(255, 118, 201, 0.26) 0 12%, transparent 14%),
-          radial-gradient(circle at 78% 10%, rgba(255, 189, 230, 0.28) 0 10%, transparent 12%),
-          radial-gradient(circle at 24% 68%, rgba(255, 94, 180, 0.22) 0 11%, transparent 14%),
-          radial-gradient(circle at 82% 72%, rgba(255, 146, 210, 0.18) 0 13%, transparent 16%),
-          radial-gradient(circle at 46% 40%, rgba(255, 210, 240, 0.2) 0 14%, transparent 18%);
-        background-size: 240px 240px, 220px 220px, 260px 260px, 280px 280px, 320px 320px;
+        background-image:
+          radial-gradient(circle at 16% 18%, rgba(255, 225, 238, 0.12) 0 12%, transparent 14%),
+          radial-gradient(circle at 78% 12%, rgba(255, 220, 235, 0.1) 0 10%, transparent 12%),
+          radial-gradient(circle at 30% 70%, rgba(255, 195, 225, 0.1) 0 12%, transparent 14%),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'><path d='M70 108C70 108 24 76 24 48C24 32 38 20 54 20C64 20 70 28 70 28C70 28 76 20 86 20C102 20 116 32 116 48C116 76 70 108 70 108Z' fill='%23ffd1e6' opacity='0.18'/></svg>");
+        background-size: 240px 240px, 220px 220px, 260px 260px, 200px 200px;
+        background-position: 0 0, 60px 90px, 120px 40px, 0 0;
         mix-blend-mode: screen;
-        opacity: 0.6;
+        opacity: 0.25;
         z-index: 0;
       }
+
+
 
       .theme-switchers {
         position: fixed;
@@ -114,17 +148,17 @@
       }
 
       body.pink-mode main {
-        background: rgba(255, 236, 248, 0.92);
-        border-color: rgba(var(--accent-rgb), 0.32);
-        box-shadow: 0 32px 60px rgba(var(--accent-rgb), 0.2);
+        background: rgba(36, 8, 20, 0.9);
+        border-color: rgba(var(--accent-rgb), 0.4);
+        box-shadow: 0 32px 60px rgba(var(--accent-rgb), 0.26);
       }
 
       body.pink-mode .subscription-card,
       body.pink-mode .yes-message,
       body.pink-mode .cookie-banner {
-        background: rgba(255, 236, 248, 0.31);
+        background: rgba(255, 214, 234, 0.18);
         color: var(--fg);
-        text-shadow: 0 1px 10px rgba(80, 0, 40, 0.55);
+        text-shadow: 0 1px 12px rgba(120, 0, 60, 0.6);
       }
 
       body.pink-mode .cookie-banner {
@@ -135,23 +169,56 @@
       body.pink-mode .subscription-title,
       body.pink-mode .cookie-banner p {
         color: var(--fg);
-        text-shadow: 0 1px 12px rgba(80, 0, 40, 0.6);
+        text-shadow: 0 1px 12px rgba(120, 0, 60, 0.65);
       }
 
       body.pink-mode .choice {
         color: var(--fg);
-        border-bottom-color: rgba(var(--accent-rgb), 0.6);
-        text-shadow: 0 1px 12px rgba(80, 0, 40, 0.6);
+        border-bottom-color: rgba(var(--accent-rgb), 0.7);
+        text-shadow: 0 1px 12px rgba(120, 0, 60, 0.65);
+      }
+
+      body.pink-mode .age-language {
+        border-color: rgba(var(--accent-rgb), 0.4);
+        background: rgba(36, 8, 20, 0.9);
+        box-shadow: 0 16px 30px rgba(var(--accent-rgb), 0.24);
+      }
+
+      body.pink-mode .age-language .language-button {
+        border-color: rgba(var(--accent-rgb), 0.5);
+        background: rgba(255, 95, 174, 0.18);
+        color: #fff1f7;
+        box-shadow: 0 10px 18px rgba(255, 80, 160, 0.2);
+      }
+
+      body.pink-mode .age-language .language-button[aria-pressed="true"] {
+        border-color: rgba(var(--accent-rgb), 0.7);
+        background: rgba(255, 95, 174, 0.32);
+        box-shadow: 0 12px 22px rgba(255, 80, 160, 0.3);
+      }
+
+      body.pink-mode .age-marquee {
+        background: linear-gradient(
+          90deg,
+          rgba(var(--accent-rgb), 0.18),
+          rgba(var(--accent-rgb), 0.32),
+          rgba(var(--accent-rgb), 0.18)
+        );
+      }
+
+      body.pink-mode .age-marquee-track {
+        color: #ff8ccb;
+        filter: drop-shadow(0 0 18px rgba(255, 95, 174, 0.7));
       }
 
       body.christmas-mode {
-        --bg: #0e1a24;
-        --fg: #e8f6ff;
-        --accent: #b2f1ff;
-        --accent-rgb: 178, 241, 255;
-        --muted: #b2f1ff;
-        background: radial-gradient(circle at 20% 10%, rgba(178, 241, 255, 0.25), transparent 38%),
-          radial-gradient(circle at 80% 6%, rgba(255, 120, 120, 0.15), transparent 45%), #0b1822;
+        --bg: #0b1520;
+        --fg: #eef9ff;
+        --accent: #c7f2ff;
+        --accent-rgb: 199, 242, 255;
+        --muted: #c7f2ff;
+        background: radial-gradient(circle at 20% 10%, rgba(199, 242, 255, 0.28), transparent 38%),
+          radial-gradient(circle at 80% 6%, rgba(255, 210, 210, 0.12), transparent 45%), #0a141c;
         color: var(--fg);
       }
 
@@ -452,6 +519,64 @@
         display: block;
       }
 
+      .touring-card {
+        margin: clamp(18px, 5vw, 30px) auto 0;
+        width: min(520px, 100%);
+        padding: clamp(18px, 5vw, 26px);
+        text-transform: uppercase;
+        letter-spacing: 1.6px;
+        color: rgba(248, 255, 248, 0.82);
+        background: rgba(0, 20, 12, 0.68);
+        border: 1px solid rgba(var(--accent-rgb), 0.32);
+        box-shadow: 0 24px 40px rgba(var(--accent-rgb), 0.18);
+        display: grid;
+        gap: 12px;
+      }
+
+      .touring-title {
+        margin: 0;
+        font-size: 0.9rem;
+        letter-spacing: 3px;
+        color: var(--muted);
+      }
+
+      .touring-list {
+        display: grid;
+        gap: 10px;
+        font-size: 0.88rem;
+      }
+
+      .touring-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed rgba(var(--accent-rgb), 0.2);
+      }
+
+      .touring-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .touring-city {
+        text-align: left;
+      }
+
+      .touring-date {
+        text-align: right;
+        color: rgba(248, 255, 248, 0.85);
+      }
+
+      .touring-row.is-unavailable {
+        color: rgba(255, 120, 120, 0.85);
+      }
+
+      .touring-row.is-unavailable .touring-date {
+        color: rgba(255, 180, 190, 0.85);
+      }
+
       @media (max-width: 430px) {
         .choices {
           flex-wrap: nowrap;
@@ -572,6 +697,28 @@
         display: block;
       }
 
+      #gate-exit {
+        position: fixed;
+        inset: 0;
+        background: #05080c;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 10000;
+        transition: opacity 0.18s ease;
+      }
+
+      #gate-exit[data-active="true"] {
+        opacity: 1;
+      }
+
+      body.age-exit main,
+      body.age-exit .yes-message,
+      body.age-exit .age-language,
+      body.age-exit .age-marquee {
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
       @media (max-width: 520px) {
         body {
           padding: clamp(16px, 6vw, 32px);
@@ -674,12 +821,20 @@
         const THEME_KEY = "hvh_theme_key";
         const body = document.body;
         if (!body) return;
-        const isHolidayWindow = () => {
+                const isHolidayWindow = () => {
           const now = new Date();
-          const month = now.getMonth(); // 0-based
+          const month = now.getMonth();
           const day = now.getDate();
           return month === 11 || (month === 0 && day <= 2);
         };
+
+        const isValentineWindow = () => {
+          const now = new Date();
+          const month = now.getMonth();
+          const day = now.getDate();
+          return month === 1 && day <= 16;
+        };
+
         const applyTheme = (key) => {
           body.classList.remove("pink-mode", "christmas-mode");
           if (key === "pink") body.classList.add("pink-mode");
@@ -696,6 +851,8 @@
           applyTheme(saved);
         } else if (isHolidayWindow()) {
           applyTheme("christmas");
+        } else if (isValentineWindow()) {
+          applyTheme("pink");
         }
         window.hvhApplyTheme = (key) => {
           applyTheme(key);
@@ -810,6 +967,7 @@
       (function setupMarquee() {
         const track = document.getElementById("age-marquee-track");
         if (!track) return;
+        const scheduleList = document.getElementById("touring-list");
 
         const CITY_KEY = "hvh_current_city";
         const now = new Date();
@@ -828,7 +986,8 @@
           dec: 11,
         };
 
-        const buildDate = (year, monthIndex, day) => new Date(year, monthIndex, day, 12, 0, 0);
+        const startOfDay = (year, monthIndex, day) => new Date(year, monthIndex, day, 0, 0, 0, 0);
+        const endOfDay = (year, monthIndex, day) => new Date(year, monthIndex, day, 23, 59, 59, 999);
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
         const parseIsoDate = (raw, end = false) => {
@@ -838,9 +997,7 @@
           const year = Number(match[1]);
           const monthIndex = Number(match[2]) - 1;
           const day = Number(match[3]);
-          return end
-            ? new Date(year, monthIndex, day, 23, 59, 59, 999)
-            : new Date(year, monthIndex, day, 0, 0, 0, 0);
+          return end ? endOfDay(year, monthIndex, day) : startOfDay(year, monthIndex, day);
         };
 
         const formatIsoRange = (startIso, endIso) => {
@@ -866,8 +1023,8 @@
             const endDay = Number(untilMatch[2]);
             const year = now.getFullYear();
             return {
-              start: buildDate(year, monthIndex, 1),
-              end: buildDate(year, monthIndex, endDay),
+              start: startOfDay(year, monthIndex, 1),
+              end: endOfDay(year, monthIndex, endDay),
             };
           }
 
@@ -888,8 +1045,8 @@
             }
 
             return {
-              start: buildDate(startYear, startMonth, startDay),
-              end: buildDate(endYear, endMonth, endDay),
+              start: startOfDay(startYear, startMonth, startDay),
+              end: endOfDay(endYear, endMonth, endDay),
             };
           }
 
@@ -899,8 +1056,10 @@
             const monthIndex = monthMap[singleMatch[2]];
             if (typeof monthIndex !== "number") return null;
             const year = now.getFullYear();
-            const start = buildDate(year, monthIndex, day);
-            return { start, end: start };
+            return {
+              start: startOfDay(year, monthIndex, day),
+              end: endOfDay(year, monthIndex, day),
+            };
           }
 
           return null;
@@ -921,14 +1080,51 @@
 
         const setMarquee = (city, unavailable = false) => {
           const cityLabel = formatCity(city) || "Unavailable";
+          const bannerLabel = cityLabel || "Unavailable";
           const textEn = unavailable
             ? "CURRENTLY UNAVAILABLE"
-            : `CURRENTLY IN ${cityLabel.toUpperCase()}`;
+            : `CURRENTLY IN ${bannerLabel.toUpperCase()}`;
           const textFr = unavailable
             ? "ACTUELLEMENT INDISPONIBLE"
-            : `ACTUELLEMENT A ${cityLabel.toUpperCase()}`;
+            : `ACTUELLEMENT A ${bannerLabel.toUpperCase()}`;
           const message = `ATTENTION! ${textEn} ATTENTION! ${textFr}`;
           track.textContent = `${message} \u2022 ${message} \u2022 ${message}`;
+        };
+
+        const setScheduleMessage = (message) => {
+          if (!scheduleList) return;
+          scheduleList.innerHTML = "";
+          const row = document.createElement("div");
+          row.className = "touring-row touring-empty";
+          row.textContent = message;
+          scheduleList.appendChild(row);
+        };
+
+        const renderSchedule = (schedule) => {
+          if (!scheduleList) return;
+          scheduleList.innerHTML = "";
+          if (!Array.isArray(schedule) || !schedule.length) {
+            setScheduleMessage("Touring schedule updating.");
+            return;
+          }
+          schedule.forEach((stop) => {
+            const row = document.createElement("div");
+            row.className = "touring-row";
+            const city = formatCity(stop.city) || "Unavailable";
+            const unavailable = isUnavailable(stop.city);
+            if (unavailable) {
+              row.classList.add("is-unavailable");
+            }
+            const cityEl = document.createElement("span");
+            cityEl.className = "touring-city";
+            cityEl.textContent = city;
+            const dateEl = document.createElement("span");
+            dateEl.className = "touring-date";
+            dateEl.textContent = stop.date || "";
+            row.appendChild(cityEl);
+            row.appendChild(dateEl);
+            scheduleList.appendChild(row);
+          });
         };
 
         const normalizeSchedule = (rawSchedule) => {
@@ -962,8 +1158,10 @@
         const applySchedule = (schedule) => {
           if (!Array.isArray(schedule) || !schedule.length) {
             setMarquee("", true);
+            renderSchedule([]);
             return;
           }
+          renderSchedule(schedule);
           let activeCity = null;
           schedule.forEach((stop) => {
             const range =
@@ -1003,6 +1201,7 @@
         };
 
         setMarquee("", true);
+        renderSchedule([]);
 
         fetch("booking/api/site-content.php", { cache: "no-store" })
           .then((response) => {
@@ -1026,6 +1225,7 @@
               })
               .catch(() => {
                 setMarquee("", true);
+                setScheduleMessage("Touring schedule unavailable.");
               });
           });
       })();
@@ -1034,11 +1234,18 @@
       (function enableThemeTriggers() {
         const buffer = [];
         const triggers = [
-          { match: "pink", action: () => window.hvhApplyTheme?.("pink") },
-          { match: "xmas", action: () => window.hvhApplyTheme?.("christmas") },
-          { match: "christmas", action: () => window.hvhApplyTheme?.("christmas") },
-          { match: "noel", action: () => window.hvhApplyTheme?.("christmas") },
-          { match: "green", action: () => window.hvhApplyTheme?.("default") },
+          { match: "matrixneon", action: () => setMode("green") },
+          { match: "matrix", action: () => setMode("green") },
+          { match: "neon", action: () => setMode("green") },
+          { match: "sexyvalentine", action: () => setMode("pink") },
+          { match: "valentine", action: () => setMode("pink") },
+          { match: "heart", action: () => setMode("pink") },
+          { match: "love", action: () => setMode("pink") },
+          { match: "sexy", action: () => setMode("pink") },
+          { match: "green", action: () => setMode("green") },
+          { match: "xmas", action: () => setMode("christmas") },
+          { match: "christmas", action: () => setMode("christmas") },
+          { match: "noel", action: () => setMode("christmas") },
         ];
         const maxLength = Math.max(...triggers.map((t) => t.match.length));
 
@@ -1107,65 +1314,41 @@
       </div>
       <p class="yes-message">
         <span>MINIMUM TRIBUTE IS $400 CANADIAN DOLLARS FOR 30 MINUTES.</span>
+        <span>DEPOSIT IS 20% OF THE TOTAL RATE.</span>
         <span>RATHER JUST PLAY? TAP NO FOR THE FREE GAMES I FUNDED FOR YOU. ;)</span>
       </p>
     </main>
-    <div
-      id="subscription-modal"
-      class="subscription-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-hidden="true"
-      aria-labelledby="subscription-title"
-      tabindex="-1"
-    >
-      <div class="subscription-card">
-        <p id="subscription-title" class="subscription-title">
-          subscribe to stay informed about my next visit to your city?
-        </p>
-        <div id="choices" class="choices" aria-hidden="true">
-          <span class="bracket">[</span>
-          <a id="yes" class="choice" href="#">yes</a>
-          <span class="bracket">/</span>
-          <a id="no" class="choice" href="#">no</a>
-          <span class="bracket">]</span>
-        </div>
-      </div>
-    </div>
     <div id="fx" aria-hidden="true"></div>
     <div id="gate-matrix" aria-hidden="true">
       <canvas id="gate-matrix-canvas"></canvas>
     </div>
-
-    <div id="cookie-banner" class="cookie-banner" aria-live="polite" role="dialog" aria-modal="true" aria-hidden="true">
-      <p>We use cookies for analytics and to keep the neon smooth. Accept to allow Google Analytics tracking.</p>
-      <div class="cookie-actions">
-        <button type="button" data-cookie-action="accept">accept</button>
-        <button type="button" data-cookie-action="reject">no thanks</button>
-      </div>
-    </div>
+    <div id="gate-exit" aria-hidden="true"></div>
 
     <script>
       const NEXT_URL = "inside.html";
       const NO_URL = "https://papertoilet.com/";
       const EVIL_LAUGH_MS = 3000;
       const ACCESS_KEY = "hvh_age_gate_verified";
-      const MODAL_DELAY_MS = 60000;
-      const subscriptionModal = document.getElementById("subscription-modal");
+      const ACCESS_COOKIE = "hvh_age_gate_verified";
+      const ACCESS_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 2;
       const inlineChoices = document.getElementById("inline-choices");
       const inlineYes = document.getElementById("inline-yes");
       const inlineNo = document.getElementById("inline-no");
-      const modalChoices = document.getElementById("choices");
-      const modalYes = document.getElementById("yes");
-      const modalNo = document.getElementById("no");
-      let modalTimerId = null;
+
+      const readCookie = (name) => {
+        const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+        return match ? decodeURIComponent(match[1]) : "";
+      };
 
       const hasAccess = (() => {
         try {
-          return window.localStorage.getItem(ACCESS_KEY) === "true";
+          if (window.localStorage.getItem(ACCESS_KEY) === "true") {
+            return true;
+          }
         } catch (_error) {
-          return false;
+          // fall through to cookie check
         }
+        return readCookie(ACCESS_COOKIE) === "true";
       })();
 
       if (hasAccess) {
@@ -1178,7 +1361,80 @@
         } catch (_error) {
           /* localStorage unavailable */
         }
+        try {
+          const parts = [
+            `${ACCESS_COOKIE}=true`,
+            `max-age=${ACCESS_COOKIE_MAX_AGE}`,
+            "path=/",
+            "SameSite=Lax",
+          ];
+          if (window.location && window.location.protocol === "https:") {
+            parts.push("Secure");
+          }
+          document.cookie = parts.join("; ");
+        } catch (_error) {
+          /* cookie unavailable */
+        }
       };
+
+      const SITE_UNLOCK_STORAGE_KEY = "hvh_site_unlock_paid_until";
+      const SITE_UNLOCK_COOKIE = "hvh_site_unlock_paid_until";
+      const SITE_UNLOCK_MAX_AGE = 60 * 60 * 24 * 365;
+
+      const grantSiteUnlock = () => {
+        const until = Date.now() + SITE_UNLOCK_MAX_AGE * 1000;
+        try {
+          window.localStorage.setItem(SITE_UNLOCK_STORAGE_KEY, String(until));
+        } catch (_error) {}
+        try {
+          const parts = [
+            `${SITE_UNLOCK_COOKIE}=${encodeURIComponent(String(until))}`,
+            `max-age=${SITE_UNLOCK_MAX_AGE}`,
+            "path=/",
+            "SameSite=Lax",
+          ];
+          if (window.location && window.location.protocol === "https:") {
+            parts.push("Secure");
+          }
+          document.cookie = parts.join("; ");
+        } catch (_error) {}
+      };
+
+      const consumeSiteUnlockCheckout = () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("site_unlock_success") !== "1") return;
+
+        const sessionId = (params.get("session_id") || "").trim();
+        if (!sessionId) return;
+
+        document.documentElement.style.visibility = "hidden";
+        fetch(`/booking/api/stripe/verify-session.php?session_id=${encodeURIComponent(sessionId)}`, {
+          cache: "no-store",
+        })
+          .then((response) => (response.ok ? response.json() : Promise.reject(new Error("verify_failed"))))
+          .then((data) => {
+            const paid = !!data?.paid;
+            const purchaseType = String(data?.purchase_type || "").toLowerCase();
+            if (!data?.ok || !paid || purchaseType !== "site_unlock") {
+              throw new Error("invalid_unlock");
+            }
+            grantSiteUnlock();
+            grantAccess();
+            params.delete("site_unlock_success");
+            params.delete("checkout_success");
+            params.delete("purchase_type");
+            params.delete("session_id");
+            const query = params.toString();
+            const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+            window.history.replaceState({}, "", nextUrl);
+            window.location.replace(NEXT_URL);
+          })
+          .catch(() => {
+            document.documentElement.style.visibility = "";
+          });
+      };
+
+      consumeSiteUnlockCheckout();
 
       const setChoicesVisibility = (element, visible) => {
         if (!element) return;
@@ -1195,38 +1451,6 @@
         setChoicesVisibility(inlineChoices, true);
       };
 
-      const showSubscriptionModal = () => {
-        if (!subscriptionModal) return;
-        subscriptionModal.classList.add("visible");
-        subscriptionModal.setAttribute("aria-hidden", "false");
-        setChoicesVisibility(modalChoices, true);
-        window.requestAnimationFrame(() => {
-          (modalYes || subscriptionModal).focus();
-        });
-      };
-
-      const scheduleSubscriptionModal = () => {
-        if (!subscriptionModal) return;
-        if (modalTimerId !== null) {
-          window.clearTimeout(modalTimerId);
-        }
-        modalTimerId = window.setTimeout(() => {
-          modalTimerId = null;
-          showSubscriptionModal();
-        }, MODAL_DELAY_MS);
-      };
-
-      const hideSubscriptionModal = () => {
-        if (modalTimerId !== null) {
-          window.clearTimeout(modalTimerId);
-          modalTimerId = null;
-        }
-        if (!subscriptionModal) return;
-        subscriptionModal.classList.remove("visible");
-        subscriptionModal.setAttribute("aria-hidden", "true");
-        setChoicesVisibility(modalChoices, false);
-      };
-
       const typeWriter = (content, target, speed = 75) => {
         target.textContent = "";
         let index = 0;
@@ -1234,7 +1458,6 @@
         const tick = () => {
           if (index >= content.length) {
             showInlineChoices();
-            scheduleSubscriptionModal();
             return;
           }
 
@@ -1280,18 +1503,26 @@
 
       const handleNo = (event) => {
         event.preventDefault();
-        hideSubscriptionModal();
         window.location.href = NO_URL;
+      };
+
+      const gateExit = document.getElementById("gate-exit");
+
+      const showExitOverlay = () => {
+        if (!gateExit) return;
+        gateExit.setAttribute("aria-hidden", "false");
+        gateExit.dataset.active = "true";
       };
 
       const runMatrixSequence = async () => {
         playEvilLaugh(EVIL_LAUGH_MS);
 
         const matrixModule = window.hvhPhoneMatrix;
-        const duration =
+        const baseDuration =
           matrixModule && typeof matrixModule.RAIN_DURATION === "number"
             ? matrixModule.RAIN_DURATION
             : 3000;
+        const duration = Math.max(1200, baseDuration - 1000);
 
         const gatePromise = runGateMatrix(duration);
         const fallback = new Promise((resolve) => {
@@ -1318,22 +1549,19 @@
 
       const handleYes = async (event) => {
         event.preventDefault();
-        hideSubscriptionModal();
+        document.body.classList.add("age-exit");
         try {
           await runMatrixSequence();
         } catch (_error) {
           await runGateMatrix().catch(() => {});
         }
-        grantAccess();
-        window.location.replace(NEXT_URL);
+        showExitOverlay();
+        window.setTimeout(() => {
+          grantAccess();
+          window.location.replace(NEXT_URL);
+        }, 120);
       };
 
-      if (modalNo) {
-        modalNo.addEventListener("click", handleNo);
-      }
-      if (modalYes) {
-        modalYes.addEventListener("click", handleYes);
-      }
       if (inlineNo) {
         inlineNo.addEventListener("click", handleNo);
       }
@@ -1353,10 +1581,10 @@
       window.addEventListener("keydown", (event) => {
         switch (event.key.toLowerCase()) {
           case "y":
-            triggerChoice(inlineYes, modalYes);
+            triggerChoice(inlineYes);
             break;
           case "n":
-            triggerChoice(inlineNo, modalNo);
+            triggerChoice(inlineNo);
             break;
           case "enter":
             if (document.activeElement?.classList.contains("choice")) {
@@ -1380,16 +1608,16 @@
         const body = document.body;
         if (body?.classList.contains("pink-mode")) {
           return {
-            bg: "rgba(255, 236, 248, 0.16)",
-            glyph: "#ff3bbd",
-            accent: "#ffe6f3",
+            bg: "rgba(36, 8, 20, 0.28)",
+            glyph: "#ff5fae",
+            accent: "#ffd1e6",
           };
         }
         if (body?.classList.contains("christmas-mode")) {
           return {
-            bg: "rgba(14, 26, 36, 0.2)",
-            glyph: "#b2f1ff",
-            accent: "#e8f6ff",
+            bg: "rgba(10, 20, 28, 0.26)",
+            glyph: "#c7f2ff",
+            accent: "#f2fbff",
           };
         }
         return {
@@ -1487,79 +1715,24 @@
         gateOverlay.setAttribute("aria-hidden", "true");
       };
 
-  const runGateMatrix = (duration = 2600) => {
-    gateOverlay.dataset.active = "true";
-    gateOverlay.setAttribute("aria-hidden", "false");
-    return drawGateMatrix(duration)
-      .catch(() => {})
-      .finally(() => cleanupGateMatrix());
-  };
+      const runGateMatrix = (duration = 2000) => {
+        gateOverlay.dataset.active = "true";
+        gateOverlay.setAttribute("aria-hidden", "false");
+        return drawGateMatrix(duration)
+          .catch(() => {})
+          .finally(() => cleanupGateMatrix());
+      };
 </script>
     <script>
       (function () {
-        const COOKIE_KEY = "hvh_cookie_choice_v2";
-        const banner = document.getElementById("cookie-banner");
-        const acceptBtn = banner?.querySelector('[data-cookie-action="accept"]');
-        const rejectBtn = banner?.querySelector('[data-cookie-action="reject"]');
-        const TRACKING_ID = "G-D5ZVVS819V";
-
-        function loadGoogleAnalytics() {
-          if (window._hvhGaLoaded) return;
-          window._hvhGaLoaded = true;
-          window.dataLayer = window.dataLayer || [];
-          window.gtag =
-            window.gtag ||
-            function gtag() {
-              window.dataLayer.push(arguments);
-            };
-          const script = document.createElement("script");
-          script.async = true;
-          script.src = `https://www.googletagmanager.com/gtag/js?id=${TRACKING_ID}`;
-          document.head.appendChild(script);
-          window.gtag("js", new Date());
-          window.gtag("config", TRACKING_ID);
-        }
-
-        function hideBanner() {
-          if (!banner) return;
-          banner.classList.remove("show");
-          banner.setAttribute("aria-hidden", "true");
-        }
-
-        const stored = (() => {
-          try {
-            return window.localStorage.getItem(COOKIE_KEY);
-          } catch (error) {
-            return null;
-          }
-        })();
-
-        if (stored === "accepted") {
-          loadGoogleAnalytics();
-        } else if (banner) {
-          banner.classList.add("show");
-          banner.setAttribute("aria-hidden", "false");
-        }
-
-        acceptBtn?.addEventListener("click", () => {
-          try {
-            window.localStorage.setItem(COOKIE_KEY, "accepted");
-          } catch (error) {}
-          loadGoogleAnalytics();
-          hideBanner();
-        });
-
-        rejectBtn?.addEventListener("click", () => {
-          try {
-            window.localStorage.setItem(COOKIE_KEY, "rejected");
-          } catch (error) {}
-          hideBanner();
+        if (!("serviceWorker" in navigator)) return;
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/service-worker.js").catch(function () {});
         });
       })();
     </script>
   </body>
 </html>
-
 
 
 

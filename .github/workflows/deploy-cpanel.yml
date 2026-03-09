@@ -9,6 +9,8 @@ on:
       - "booking/**"
       - "*.html"
       - "*.webp"
+      - "manifest.webmanifest"
+      - "service-worker.js"
       - "anti-protect.js"
       - "!tmp_*.html"
       - ".htaccess"
@@ -36,6 +38,12 @@ jobs:
           fi
           if [ -f "eastertheme.webp" ]; then
             cp eastertheme.webp deploy-root/eastertheme.webp
+          fi
+          if [ -f "manifest.webmanifest" ]; then
+            cp manifest.webmanifest deploy-root/manifest.webmanifest
+          fi
+          if [ -f "service-worker.js" ]; then
+            cp service-worker.js deploy-root/service-worker.js
           fi
           if [ -f "anti-protect.js" ]; then
             cp anti-protect.js deploy-root/anti-protect.js

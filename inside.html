@@ -6021,6 +6021,23 @@
           const element = document.getElementById(id);
           return element ? element.value.trim() : "";
         };
+        const parseIsoDateLocal = (value) => {
+          const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+          if (!match) return null;
+          const year = Number(match[1]);
+          const monthIndex = Number(match[2]) - 1;
+          const day = Number(match[3]);
+          if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || !Number.isFinite(day)) {
+            return null;
+          }
+          return new Date(year, monthIndex, day, 0, 0, 0, 0);
+        };
+        const formatIsoDateLocal = (value) => {
+          const year = value.getFullYear();
+          const month = String(value.getMonth() + 1).padStart(2, "0");
+          const day = String(value.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
 
         form.addEventListener("submit", (event) => {
           event.preventDefault();
@@ -6031,10 +6048,10 @@
           if (dateInput) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const isoToday = today.toISOString().split("T")[0];
+            const isoToday = formatIsoDateLocal(today);
             dateInput.min = isoToday;
-            const chosen = new Date(dateInput.value);
-            if (isNaN(chosen.getTime()) || chosen < today) {
+            const chosen = parseIsoDateLocal(dateInput.value);
+            if (!chosen || Number.isNaN(chosen.getTime()) || chosen < today) {
               setStatus(translate("booking.status.time"), "error");
               dateInput.focus();
               return;

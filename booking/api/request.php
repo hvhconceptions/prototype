@@ -536,42 +536,64 @@ if ($hours > 0) {
     if ($preferredDate !== '' && $preferredTime !== '') {
         try {
             $tourZone = new DateTimeZone($tourTz !== '' ? $tourTz : DEFAULT_TOUR_TZ);
-            $dateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', $preferredDate . ' ' . $preferredTime, $tourZone);
-            if ($dateTime !== false) {
-                $tourTime = $dateTime;
-                $tourDateKey = $tourTime->format('Y-m-d');
-                $startMinutes = ((int) $tourTime->format('H')) * 60 + (int) $tourTime->format('i');
-                $durationMinutes = (int) round($hours * 60);
-                $endMinutes = $startMinutes + $durationMinutes;
-                $windowStart = max(0, $startMinutes - $bufferMinutes);
-                $windowEnd = min(1440, $endMinutes + $bufferMinutes);
-                foreach ($blockedSlots as $entry) {
-                    if (!is_array($entry)) {
-                        continue;
-                    }
-                    if (!is_confirmed_booking_block_entry($entry)) {
-                        continue;
-                    }
-                    $entryCity = normalize_city_name((string) ($entry['city'] ?? ''));
-                    $requestCityKey = normalize_city_name($requestedCity);
-                    if ($entryCity !== '' && $requestCityKey !== '' && $entryCity !== $requestCityKey) {
-                        continue;
-                    }
-                    if (($entry['date'] ?? '') !== $tourDateKey) {
-                        continue;
-                    }
-                    $start = (string) ($entry['start'] ?? '');
-                    $end = (string) ($entry['end'] ?? '');
-                    if (!preg_match('/^\d{1,2}:\d{2}$/', $start) || !preg_match('/^\d{1,2}:\d{2}$/', $end)) {
-                        continue;
-                    }
-                    [$sHour, $sMin] = array_map('intval', explode(':', $start));
-                    [$eHour, $eMin] = array_map('intval', explode(':', $end));
-                    $blockStart = $sHour * 60 + $sMin;
-                    $blockEnd = $eHour * 60 + $eMin;
-                    if ($windowStart < $blockEnd && $windowEnd > $blockStart) {
-                        json_response(['error' => 'Selected time is unavailable'], 409);
-                    }
+            $tourTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', $preferredDate . ' ' . $preferredTime, $tourZone);
+            if ($tourTime === false) {
+                throw new RuntimeException('invalid_tour_time');
+            }
+
+            $durationMinutes = (int) round($hours * 60);
+            $windowStartAt = $tourTime->modify('-' . $bufferMinutes . ' minutes');
+            $windowEndAt = $tourTime->modify('+' . ($durationMinutes + $bufferMinutes) . ' minutes');
+            $requestCityKey = normalize_city_name($requestedCity);
+
+            foreach ($blockedSlots as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                if (!is_confirmed_booking_block_entry($entry)) {
+                    continue;
+                }
+                $entryCity = normalize_city_name((string) ($entry['city'] ?? ''));
+                if ($entryCity !== '' && $requestCityKey !== '' && $entryCity !== $requestCityKey) {
+                    continue;
+                }
+
+                $entryDate = trim((string) ($entry['date'] ?? ''));
+                $start = (string) ($entry['start'] ?? '');
+                $end = (string) ($entry['end'] ?? '');
+                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $entryDate)) {
+                    continue;
+                }
+                if (!preg_match('/^\d{1,2}:\d{2}$/', $start) || !preg_match('/^\d{1,2}:\d{2}$/', $end)) {
+                    continue;
+                }
+
+                [$sHour, $sMin] = array_map('intval', explode(':', $start));
+                [$eHour, $eMin] = array_map('intval', explode(':', $end));
+                if ($sHour < 0 || $sHour > 23 || $eHour < 0 || $eHour > 23 || $sMin < 0 || $sMin > 59 || $eMin < 0 || $eMin > 59) {
+                    continue;
+                }
+
+                $blockStartAt = DateTimeImmutable::createFromFormat(
+                    'Y-m-d H:i',
+                    $entryDate . ' ' . sprintf('%02d:%02d', $sHour, $sMin),
+                    $tourZone
+                );
+                $blockEndAt = DateTimeImmutable::createFromFormat(
+                    'Y-m-d H:i',
+                    $entryDate . ' ' . sprintf('%02d:%02d', $eHour, $eMin),
+                    $tourZone
+                );
+                if ($blockStartAt === false || $blockEndAt === false) {
+                    continue;
+                }
+                // Some entries cross midnight (e.g. 23:30 -> 00:00). Normalize end to next day.
+                if ($blockEndAt <= $blockStartAt) {
+                    $blockEndAt = $blockEndAt->modify('+1 day');
+                }
+
+                if ($windowStartAt < $blockEndAt && $windowEndAt > $blockStartAt) {
+                    json_response(['error' => 'Selected time is unavailable'], 409);
                 }
             }
         } catch (Exception $error) {

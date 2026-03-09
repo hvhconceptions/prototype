@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HVH App Download</title>
+    <meta
+      name="description"
+      content="Install the HVH app on Android or iPhone to stay synced with travel updates."
+    />
+    <style>
+      :root {
+        --bg: #060a12;
+        --panel: #0b1526;
+        --line: rgba(0, 255, 153, 0.32);
+        --text: #d9fff1;
+        --muted: #87b7aa;
+        --accent: #00ff99;
+        --accent-2: #00d0ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 20% -10%, rgba(0, 208, 255, 0.22), transparent 42%),
+          radial-gradient(circle at 86% 4%, rgba(0, 255, 153, 0.2), transparent 40%),
+          var(--bg);
+        color: var(--text);
+        font: 16px/1.55 "Lucida Console", "Courier New", monospace;
+        letter-spacing: 0.02em;
+      }
+
+      .shell {
+        width: min(980px, 94vw);
+        margin: 28px auto 48px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(11, 21, 38, 0.96), rgba(5, 10, 18, 0.97));
+        box-shadow: 0 0 0 1px rgba(0, 255, 153, 0.08), 0 28px 56px rgba(0, 0, 0, 0.45);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(14, 32, 52, 0.95), rgba(11, 21, 38, 0.95));
+        text-transform: uppercase;
+        font-size: 13px;
+      }
+
+      .badge {
+        color: #00160d;
+        background: var(--accent);
+        border: 1px solid rgba(0, 255, 153, 0.7);
+        padding: 2px 8px;
+        font-weight: 700;
+      }
+
+      .content {
+        padding: 22px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .identity {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        background: rgba(5, 15, 22, 0.8);
+      }
+
+      .identity img {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(0, 255, 153, 0.45);
+      }
+
+      .identity .name {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+      }
+
+      .identity .meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .terminal {
+        border: 1px solid var(--line);
+        background: #020811;
+        padding: 12px 14px;
+        color: #b4ffd7;
+        font-size: 0.95rem;
+      }
+
+      .terminal p {
+        margin: 0.42rem 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(8, 20, 33, 0.92), rgba(4, 11, 20, 0.92));
+        padding: 14px;
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        color: var(--accent-2);
+        font-size: 1.02rem;
+        text-transform: uppercase;
+      }
+
+      .card p {
+        margin: 0 0 10px;
+        color: #c8e7dd;
+      }
+
+      .steps {
+        margin: 0;
+        padding-left: 18px;
+        color: #c8e7dd;
+      }
+
+      .steps li {
+        margin: 0 0 7px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid rgba(0, 255, 153, 0.6);
+        background: linear-gradient(180deg, #003526, #00261d);
+        color: #d4ffe8;
+        font: inherit;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 9px 13px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .btn:hover,
+      .btn:focus-visible {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(0, 255, 153, 0.2);
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .status {
+        margin-top: 8px;
+        color: #d4ffe8;
+        min-height: 1.2em;
+      }
+
+      .footerline {
+        margin-top: 4px;
+        border-top: 1px dashed rgba(0, 255, 153, 0.28);
+        padding-top: 10px;
+        color: #9fd0c2;
+        font-size: 0.86rem;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="topbar">
+        <span>HVH APP LOADER</span>
+        <span class="badge">BOMBACLOUD BUILD</span>
+      </div>
+
+      <section class="content">
+        <div class="identity">
+          <img src="/BOMBACLOUD_NEW.png" alt="Bombacloud HVH app logo" />
+          <div>
+            <p class="name">HVH</p>
+            <p class="meta">BombaCloud logo + live website sync</p>
+          </div>
+        </div>
+
+        <div class="terminal" aria-label="Purpose">
+          <p>> purpose: better locate me + instant upcoming travel updates</p>
+          <p>> sync mode: live with website data</p>
+          <p>> platforms: Android + iPhone</p>
+        </div>
+
+        <div class="grid">
+          <section class="card" aria-labelledby="android-title">
+            <h2 id="android-title">Android version</h2>
+            <p>Install HVH as an app from Chrome.</p>
+            <ol class="steps">
+              <li>Tap <strong>Install Android App</strong> below.</li>
+              <li>If prompt does not appear: Chrome menu -> <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+              <li>Open app icon named <strong>HVH</strong>.</li>
+            </ol>
+            <div class="actions">
+              <button class="btn" id="android-install" type="button">Install Android App</button>
+              <a class="btn" href="/inside.html" target="_blank" rel="noopener noreferrer">Open HVH</a>
+            </div>
+            <p class="status" id="android-status"></p>
+          </section>
+
+          <section class="card" aria-labelledby="iphone-title">
+            <h2 id="iphone-title">iPhone version</h2>
+            <p>Install HVH as an app from Safari.</p>
+            <ol class="steps">
+              <li>Open this page in <strong>Safari</strong> (not Chrome).</li>
+              <li>Tap <strong>Share</strong> -> <strong>Add to Home Screen</strong>.</li>
+              <li>Name it <strong>HVH</strong>, then tap <strong>Add</strong>.</li>
+            </ol>
+            <p class="note">iPhone does not install APK files. This creates the iPhone app icon using the same live HVH app.</p>
+            <div class="actions">
+              <a class="btn" href="/inside.html" target="_blank" rel="noopener noreferrer">Open HVH</a>
+            </div>
+          </section>
+        </div>
+
+        <p class="footerline">
+          Both app icons load the same live source as heidivanhorny.com, so updates on your website stay in sync.
+        </p>
+      </section>
+    </main>
+
+    <script>
+      (function setupInstaller() {
+        let deferredPrompt = null;
+        const button = document.getElementById("android-install");
+        const status = document.getElementById("android-status");
+
+        window.addEventListener("beforeinstallprompt", function (event) {
+          event.preventDefault();
+          deferredPrompt = event;
+          if (status) {
+            status.textContent = "Install prompt ready.";
+          }
+        });
+
+        if (!button) return;
+
+        button.addEventListener("click", async function () {
+          if (!deferredPrompt) {
+            if (status) {
+              status.textContent = "If no popup appears, use Chrome menu > Install app.";
+            }
+            return;
+          }
+          deferredPrompt.prompt();
+          const choice = await deferredPrompt.userChoice;
+          if (status) {
+            status.textContent =
+              choice && choice.outcome === "accepted"
+                ? "HVH install accepted."
+                : "Install cancelled.";
+          }
+          deferredPrompt = null;
+        });
+      })();
+    </script>
+  </body>
+</html>

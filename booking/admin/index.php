@@ -22,10 +22,48 @@ const ADMIN_RATE_LIMIT_WINDOW = 900;
 const ADMIN_RATE_LIMIT_BLOCK = 1800;
 const ADMIN_RATE_LIMIT_FILE = DATA_DIR . '/admin_rate_limit.json';
 const ADMIN_EMPLOYEE_FILE = DATA_DIR . '/admin_employees.json';
+const EMPLOYEE_DEFAULT_PERMISSIONS = ['schedule', 'chat'];
+const EMPLOYEE_ALLOWED_PERMISSIONS = ['schedule', 'clients', 'touring', 'services', 'photos', 'account', 'chat'];
 
 function normalize_admin_username(string $value): string
 {
     return strtolower(trim($value));
+}
+
+function normalize_admin_permissions($value): array
+{
+    $raw = [];
+    if (is_array($value)) {
+        $raw = $value;
+    } elseif (is_string($value) && $value !== '') {
+        $raw = explode(',', $value);
+    }
+    $allowed = array_flip(EMPLOYEE_ALLOWED_PERMISSIONS);
+    $clean = [];
+    foreach ($raw as $entry) {
+        $permission = strtolower(trim((string) $entry));
+        if ($permission === '' || !isset($allowed[$permission])) {
+            continue;
+        }
+        if (!in_array($permission, $clean, true)) {
+            $clean[] = $permission;
+        }
+    }
+    if (!$clean) {
+        return EMPLOYEE_DEFAULT_PERMISSIONS;
+    }
+    if (!in_array('chat', $clean, true)) {
+        $clean[] = 'chat';
+    }
+    return $clean;
+}
+
+function admin_has_permission(array $permissions, string $permission): bool
+{
+    if (in_array('*', $permissions, true)) {
+        return true;
+    }
+    return in_array(strtolower(trim($permission)), $permissions, true);
 }
 
 function read_admin_employees(): array
@@ -45,9 +83,11 @@ function read_admin_employees(): array
         if ($username === '' || $hash === '') {
             continue;
         }
+        $permissions = normalize_admin_permissions($entry['permissions'] ?? []);
         $clean[] = [
             'username' => $username,
             'password_hash' => $hash,
+            'permissions' => $permissions,
         ];
     }
     return $clean;
@@ -191,7 +231,7 @@ function require_admin_ui(): array
     }
     if ($isEmployerAuth) {
         clear_admin_rate_record($state, $ip);
-        return ['username' => $user, 'is_employer' => true];
+        return ['username' => $user, 'is_employer' => true, 'permissions' => ['*']];
     }
 
     $employees = read_admin_employees();
@@ -206,7 +246,11 @@ function require_admin_ui(): array
         }
         if (password_verify($pass, $employeeHash)) {
             clear_admin_rate_record($state, $ip);
-            return ['username' => $user, 'is_employer' => false];
+            return [
+                'username' => $user,
+                'is_employer' => false,
+                'permissions' => normalize_admin_permissions($employee['permissions'] ?? []),
+            ];
         }
     }
 
@@ -217,6 +261,9 @@ function require_admin_ui(): array
 $adminSession = require_admin_ui();
 $currentAdminUser = (string) ($adminSession['username'] ?? '');
 $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
+$currentAdminPermissions = $currentAdminIsEmployer
+    ? ['*']
+    : normalize_admin_permissions($adminSession['permissions'] ?? []);
 ?>
 <!doctype html>
 <html lang="en">
@@ -618,6 +665,54 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
 
       .menu-list-row input {
         min-width: 0;
+      }
+
+      .chat-thread {
+        display: grid;
+        gap: 8px;
+        max-height: 360px;
+        overflow: auto;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+      }
+
+      .chat-item {
+        display: grid;
+        gap: 3px;
+        justify-items: start;
+      }
+
+      .chat-item.mine {
+        justify-items: end;
+      }
+
+      .chat-meta {
+        font-size: 0.72rem;
+        color: #7a1c45;
+        letter-spacing: 0.04em;
+      }
+
+      .chat-bubble {
+        max-width: min(100%, 360px);
+        padding: 9px 11px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: #fff7fc;
+        color: #2a0d1a;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .chat-item.mine .chat-bubble {
+        background: #ffe5f3;
+        border-color: rgba(255, 0, 110, 0.32);
+      }
+
+      #adminChatInput {
+        min-height: 84px;
+        resize: vertical;
       }
 
       .menu-row-actions {
@@ -2081,17 +2176,18 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       </div>
 
       <div id="adminMenuSectionList" class="menu-section-list">
-        <button class="menu-section-btn" type="button" data-menu-open="account">Account center</button>
-        <button class="menu-section-btn" type="button" data-menu-open="schedule">Schedule</button>
-        <button class="menu-section-btn" type="button" data-menu-open="touring">Touring</button>
-        <button class="menu-section-btn" type="button" data-menu-open="services">Services</button>
-        <button class="menu-section-btn" type="button" data-menu-open="photos">Photos</button>
+        <button class="menu-section-btn" type="button" data-menu-open="account" data-required-permission="account">Account center</button>
+        <button class="menu-section-btn" type="button" data-menu-open="schedule" data-required-permission="schedule">Schedule</button>
+        <button class="menu-section-btn" type="button" data-menu-open="touring" data-required-permission="touring">Touring</button>
+        <button class="menu-section-btn" type="button" data-menu-open="services" data-required-permission="services">Services</button>
+        <button class="menu-section-btn" type="button" data-menu-open="photos" data-required-permission="photos">Photos</button>
+        <button class="menu-section-btn" type="button" data-menu-open="chat" data-required-permission="chat">Chat</button>
         <?php if ($currentAdminIsEmployer): ?>
         <button class="menu-section-btn" type="button" data-menu-open="employees">Employees</button>
         <?php endif; ?>
       </div>
 
-      <section class="menu-group hidden" data-menu-page="account" data-menu-title="Account center">
+      <section class="menu-group hidden" data-menu-page="account" data-menu-title="Account center" data-required-permission="account">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Account center</h3>
@@ -2167,7 +2263,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="schedule" data-menu-title="Schedule">
+      <section class="menu-group hidden" data-menu-page="schedule" data-menu-title="Schedule" data-required-permission="schedule">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Schedule</h3>
@@ -2212,7 +2308,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="touring" data-menu-title="Touring">
+      <section class="menu-group hidden" data-menu-page="touring" data-menu-title="Touring" data-required-permission="touring">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Touring</h3>
@@ -2263,7 +2359,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="services" data-menu-title="Services">
+      <section class="menu-group hidden" data-menu-page="services" data-menu-title="Services" data-required-permission="services">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Services</h3>
@@ -2293,7 +2389,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         </div>
       </section>
 
-      <section class="menu-group hidden" data-menu-page="photos" data-menu-title="Photos">
+      <section class="menu-group hidden" data-menu-page="photos" data-menu-title="Photos" data-required-permission="photos">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Photos</h3>
@@ -2322,13 +2418,31 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           <span class="status" id="photoStatus"></span>
         </div>
       </section>
+
+      <section class="menu-group hidden" data-menu-page="chat" data-menu-title="Chat" data-required-permission="chat">
+        <div class="menu-page-head">
+          <button class="btn ghost" type="button" data-menu-back>Back</button>
+          <h3>Chat</h3>
+        </div>
+        <p class="hint">Internal admin chat for schedule coordination.</p>
+        <div id="adminChatMessages" class="chat-thread"></div>
+        <div class="field">
+          <label for="adminChatInput">Message</label>
+          <textarea id="adminChatInput" placeholder="Type a message"></textarea>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="adminChatRefreshBtn" type="button">Refresh chat</button>
+          <button class="btn" id="adminChatSendBtn" type="button">Send</button>
+          <span class="status" id="adminChatStatus"></span>
+        </div>
+      </section>
       <?php if ($currentAdminIsEmployer): ?>
       <section class="menu-group hidden" data-menu-page="employees" data-menu-title="Employees">
         <div class="menu-page-head">
           <button class="btn ghost" type="button" data-menu-back>Back</button>
           <h3>Employees</h3>
         </div>
-        <p class="hint">Only employer can add/remove employee logins.</p>
+        <p class="hint">Only employer can add/remove employee logins. Default access is schedule + chat.</p>
         <div class="menu-inline-grid">
           <div class="field">
             <label for="employeeUsername">Employee username</label>
@@ -2337,6 +2451,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           <div class="field">
             <label for="employeePassword">Employee password</label>
             <input id="employeePassword" type="password" placeholder="Minimum 8 characters" />
+          </div>
+          <div class="field">
+            <label><input id="employeeScheduleOnly" type="checkbox" checked /> Schedule + chat only</label>
           </div>
         </div>
         <div class="row">
@@ -2607,6 +2724,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const ADMIN_KEY = <?php echo json_encode(ADMIN_API_KEY); ?>;
       const CURRENT_ADMIN_USER = <?php echo json_encode($currentAdminUser); ?>;
       const CURRENT_ADMIN_IS_EMPLOYER = <?php echo $currentAdminIsEmployer ? 'true' : 'false'; ?>;
+      const CURRENT_ADMIN_PERMISSIONS = <?php echo json_encode(array_values($currentAdminPermissions)); ?>;
       const DEFAULT_TIMEZONE = "America/Toronto";
       const TIMEZONES = [
         "America/Toronto",
@@ -2739,9 +2857,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const accountCenterStatus = document.getElementById("accountCenterStatus");
       const employeeUsernameInput = document.getElementById("employeeUsername");
       const employeePasswordInput = document.getElementById("employeePassword");
+      const employeeScheduleOnlyInput = document.getElementById("employeeScheduleOnly");
       const addEmployeeBtn = document.getElementById("addEmployeeBtn");
       const employeeStatus = document.getElementById("employeeStatus");
       const employeeList = document.getElementById("employeeList");
+      const adminChatMessages = document.getElementById("adminChatMessages");
+      const adminChatInput = document.getElementById("adminChatInput");
+      const adminChatSendBtn = document.getElementById("adminChatSendBtn");
+      const adminChatRefreshBtn = document.getElementById("adminChatRefreshBtn");
+      const adminChatStatus = document.getElementById("adminChatStatus");
       const menuWorkAllDay = document.getElementById("menuWorkAllDay");
       const menuWorkStart = document.getElementById("menuWorkStart");
       const menuWorkEnd = document.getElementById("menuWorkEnd");
@@ -2781,6 +2905,19 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const NOTIFICATIONS_READ_LOCAL_KEY = "hvh_admin_read_notifications";
       const SUPPORTED_LANGUAGES = ["en", "fr"];
       const DEFAULT_ACCENT_COLOR = "#ff006e";
+      const hasAdminPermission = (permission) => {
+        const key = String(permission || "").trim().toLowerCase();
+        if (!key) return true;
+        if (CURRENT_ADMIN_IS_EMPLOYER) return true;
+        return CURRENT_ADMIN_PERMISSIONS.includes("*") || CURRENT_ADMIN_PERMISSIONS.includes(key);
+      };
+      const ADMIN_PANEL_KEYS = ["schedule", "clients"];
+      const ALLOWED_ADMIN_PANELS = ADMIN_PANEL_KEYS.filter((panel) => hasAdminPermission(panel));
+      const DEFAULT_ADMIN_PANEL = ALLOWED_ADMIN_PANELS.includes("schedule")
+        ? "schedule"
+        : ALLOWED_ADMIN_PANELS[0] || "schedule";
+      const CAN_ACCESS_CLIENTS_PANEL = ALLOWED_ADMIN_PANELS.includes("clients");
+      const EMPLOYEE_FULL_PERMISSIONS = ["schedule", "clients", "touring", "services", "photos", "account", "chat"];
       let currentLanguage = "en";
       const I18N = {
         en: {
@@ -3199,13 +3336,18 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         if (el) el.textContent = text;
       };
       const setAdminPanel = (panel, persist = true) => {
-        const allowed = ["schedule", "clients"];
-        const safePanel = allowed.includes(panel) ? panel : "schedule";
+        const safePanel = ALLOWED_ADMIN_PANELS.includes(panel) ? panel : DEFAULT_ADMIN_PANEL;
         panelButtons.forEach((button) => {
-          button.setAttribute("aria-pressed", button.dataset.adminPanel === safePanel ? "true" : "false");
+          const key = String(button.dataset.adminPanel || "").toLowerCase();
+          const allowed = ALLOWED_ADMIN_PANELS.includes(key);
+          button.hidden = !allowed;
+          button.disabled = !allowed;
+          button.setAttribute("aria-pressed", allowed && key === safePanel ? "true" : "false");
         });
         panelSections.forEach((section) => {
-          section.classList.toggle("admin-panel-hidden", section.dataset.adminPanelGroup !== safePanel);
+          const key = String(section.dataset.adminPanelGroup || "").toLowerCase();
+          const allowed = ALLOWED_ADMIN_PANELS.includes(key);
+          section.classList.toggle("admin-panel-hidden", !allowed || key !== safePanel);
         });
         if (persist) {
           try {
@@ -3216,11 +3358,11 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const getStoredAdminPanel = () => {
         try {
           const stored = window.localStorage.getItem(PANEL_STORAGE_KEY);
-          if (stored === "schedule" || stored === "clients") {
+          if (stored && ALLOWED_ADMIN_PANELS.includes(stored)) {
             return stored;
           }
         } catch (_error) {}
-        return "schedule";
+        return DEFAULT_ADMIN_PANEL;
       };
       const DAY_OPTIONS = [
         { value: 0, label: "Sun" },
@@ -3281,12 +3423,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         adminMenuDrawer.classList.remove("open");
         adminMenuDrawer.setAttribute("aria-hidden", "true");
         adminMenuBackdrop.hidden = true;
+        stopAdminChatPolling();
         showAdminMenuHome();
       };
 
       const showAdminMenuHome = () => {
+        stopAdminChatPolling();
         if (adminMenuSectionList) {
-          adminMenuSectionList.classList.remove("hidden");
+          const hasVisible = Array.from(adminMenuOpenButtons).some((button) => !button.hidden);
+          adminMenuSectionList.classList.toggle("hidden", !hasVisible);
         }
         adminMenuPages.forEach((section) => section.classList.add("hidden"));
         if (adminMenuTitle) {
@@ -3297,12 +3442,19 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const showAdminMenuPage = (pageKey) => {
         const key = String(pageKey || "").trim().toLowerCase();
         if (!key) return;
+        const opener = Array.from(adminMenuOpenButtons).find(
+          (button) => String(button.getAttribute("data-menu-open") || "").trim().toLowerCase() === key
+        );
+        if (opener && (opener.hidden || opener.disabled)) {
+          return;
+        }
         if (adminMenuSectionList) {
           adminMenuSectionList.classList.add("hidden");
         }
         let selectedTitle = "Admin menu";
         adminMenuPages.forEach((section) => {
-          const isMatch = String(section.getAttribute("data-menu-page") || "").toLowerCase() === key;
+          const isAllowed = section.getAttribute("data-menu-enabled") !== "false";
+          const isMatch = isAllowed && String(section.getAttribute("data-menu-page") || "").toLowerCase() === key;
           section.classList.toggle("hidden", !isMatch);
           if (isMatch) {
             selectedTitle = String(section.getAttribute("data-menu-title") || selectedTitle);
@@ -3310,6 +3462,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         });
         if (adminMenuTitle) {
           adminMenuTitle.textContent = selectedTitle;
+        }
+        if (key === "chat" && hasAdminPermission("chat")) {
+          loadAdminChat(true);
+          startAdminChatPolling();
+        } else {
+          stopAdminChatPolling();
         }
       };
 
@@ -3878,7 +4036,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         renderTourPartners(tourPartners);
         renderGallery(readGalleryFromUI().length ? readGalleryFromUI() : []);
         renderCityScheduleWizard();
-        await loadRequests();
+        if (CAN_ACCESS_CLIENTS_PANEL) {
+          await loadRequests();
+        }
       };
 
       languageButtons.forEach((button) => {
@@ -4062,6 +4222,147 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         return { "X-Admin-Key": key };
       };
 
+      const applyAdminMenuPermissions = () => {
+        adminMenuOpenButtons.forEach((button) => {
+          const required = String(button.getAttribute("data-required-permission") || "").trim().toLowerCase();
+          const allowed = hasAdminPermission(required);
+          button.hidden = !allowed;
+          button.disabled = !allowed;
+        });
+        adminMenuPages.forEach((section) => {
+          const required = String(section.getAttribute("data-required-permission") || "").trim().toLowerCase();
+          const allowed = hasAdminPermission(required);
+          section.setAttribute("data-menu-enabled", allowed ? "true" : "false");
+          if (!allowed) {
+            section.classList.add("hidden");
+          }
+        });
+        if (notifToggleBtn) {
+          notifToggleBtn.hidden = !CAN_ACCESS_CLIENTS_PANEL;
+        }
+      };
+
+      let adminChatItems = [];
+      let adminChatPollTimer = null;
+
+      const formatEmployeePermissions = (permissions) => {
+        const normalized = Array.isArray(permissions)
+          ? permissions.map((item) => String(item || "").trim().toLowerCase()).filter(Boolean)
+          : [];
+        if (!normalized.length) return "Schedule + chat";
+        if (normalized.includes("clients")) return "Full access";
+        return "Schedule + chat";
+      };
+
+      const formatChatTimestamp = (value) => {
+        const stamp = String(value || "").trim();
+        if (!stamp) return "";
+        const parsed = new Date(stamp);
+        if (Number.isNaN(parsed.getTime())) return stamp;
+        return parsed.toLocaleString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      };
+
+      const renderAdminChat = (messages) => {
+        if (!adminChatMessages) return;
+        const rows = Array.isArray(messages) ? messages : [];
+        adminChatMessages.innerHTML = "";
+        if (!rows.length) {
+          adminChatMessages.innerHTML = '<p class="hint">No messages yet.</p>';
+          return;
+        }
+        rows.forEach((entry) => {
+          const user = String(entry?.user || "admin").trim() || "admin";
+          const message = String(entry?.message || "").trim();
+          if (!message) return;
+          const item = document.createElement("div");
+          const mine = user.toLowerCase() === String(CURRENT_ADMIN_USER || "").toLowerCase();
+          item.className = `chat-item${mine ? " mine" : ""}`;
+          const meta = document.createElement("div");
+          meta.className = "chat-meta";
+          meta.textContent = `${user} - ${formatChatTimestamp(entry?.created_at)}`;
+          const bubble = document.createElement("div");
+          bubble.className = "chat-bubble";
+          bubble.textContent = message;
+          item.appendChild(meta);
+          item.appendChild(bubble);
+          adminChatMessages.appendChild(item);
+        });
+        adminChatMessages.scrollTop = adminChatMessages.scrollHeight;
+      };
+
+      const loadAdminChat = async (silent = false) => {
+        if (!hasAdminPermission("chat") || !adminChatMessages) return;
+        if (!silent && adminChatStatus) {
+          adminChatStatus.textContent = "";
+        }
+        try {
+          const response = await fetch("../api/admin/chat.php", {
+            headers: { ...headersWithKey() },
+            cache: "no-store",
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          adminChatItems = Array.isArray(result.messages) ? result.messages : [];
+          renderAdminChat(adminChatItems);
+        } catch (error) {
+          if (!silent && adminChatStatus) {
+            adminChatStatus.textContent = `Failed to load chat${error?.message ? ` (${error.message})` : ""}.`;
+          }
+        }
+      };
+
+      const sendAdminChatMessage = async () => {
+        if (!hasAdminPermission("chat") || !adminChatInput || !adminChatStatus) return;
+        const message = String(adminChatInput.value || "").trim();
+        adminChatStatus.textContent = "";
+        if (!message) {
+          adminChatStatus.textContent = "Write a message first.";
+          return;
+        }
+        try {
+          const response = await fetch("../api/admin/chat.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headersWithKey(),
+            },
+            body: JSON.stringify({ message }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.error || `HTTP ${response.status}`);
+          }
+          adminChatInput.value = "";
+          adminChatItems = Array.isArray(result.messages) ? result.messages : [];
+          renderAdminChat(adminChatItems);
+          adminChatStatus.textContent = "Sent.";
+        } catch (error) {
+          adminChatStatus.textContent = `Failed to send${error?.message ? ` (${error.message})` : ""}.`;
+        }
+      };
+
+      const stopAdminChatPolling = () => {
+        if (adminChatPollTimer) {
+          window.clearInterval(adminChatPollTimer);
+          adminChatPollTimer = null;
+        }
+      };
+
+      const startAdminChatPolling = () => {
+        stopAdminChatPolling();
+        adminChatPollTimer = window.setInterval(() => {
+          loadAdminChat(true);
+        }, 15000);
+      };
+
       const renderEmployeeList = (employees) => {
         if (!employeeList) return;
         const rows = Array.isArray(employees) ? employees : [];
@@ -4073,10 +4374,12 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         rows.forEach((entry) => {
           const username = String(entry?.username || "").trim();
           if (!username) return;
+          const permissionLabel = formatEmployeePermissions(entry?.permissions);
           const row = document.createElement("div");
-          row.className = "menu-list-row";
+          row.className = "menu-list-row has-third";
           row.innerHTML = `
             <input type="text" value="${username}" readonly />
+            <input type="text" value="${permissionLabel}" readonly />
             <input type="text" value="${String(entry?.created_at || "").trim()}" readonly />
             <button class="btn ghost" type="button">Remove</button>
           `;
@@ -4112,6 +4415,8 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         if (!CURRENT_ADMIN_IS_EMPLOYER || !employeeUsernameInput || !employeePasswordInput || !employeeStatus) return;
         const username = String(employeeUsernameInput.value || "").trim().toLowerCase();
         const password = String(employeePasswordInput.value || "");
+        const scheduleOnly = employeeScheduleOnlyInput ? !!employeeScheduleOnlyInput.checked : true;
+        const permissions = scheduleOnly ? ["schedule", "chat"] : EMPLOYEE_FULL_PERMISSIONS;
         employeeStatus.textContent = "";
         if (!/^[a-z0-9._-]{3,40}$/i.test(username)) {
           employeeStatus.textContent = "Use 3-40 chars: letters, numbers, dot, dash, underscore.";
@@ -4128,7 +4433,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
               "Content-Type": "application/json",
               ...headersWithKey(),
             },
-            body: JSON.stringify({ action: "add", username, password }),
+            body: JSON.stringify({ action: "add", username, password, permissions }),
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok || !result.ok) {
@@ -4136,6 +4441,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           }
           employeePasswordInput.value = "";
           employeeUsernameInput.value = "";
+          if (employeeScheduleOnlyInput) {
+            employeeScheduleOnlyInput.checked = true;
+          }
           employeeStatus.textContent = "Employee saved.";
           renderEmployeeList(result.employees || []);
         } catch (error) {
@@ -7066,6 +7374,15 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       };
 
       const loadRequests = async () => {
+        if (!CAN_ACCESS_CLIENTS_PANEL) {
+          requestsStatus.textContent = "";
+          requestsList.innerHTML = '<p class="hint">Client requests are not enabled for this login.</p>';
+          latestRequests = [];
+          requestSlots = [];
+          maybeSlots = [];
+          renderCalendarView();
+          return;
+        }
         const requestToken = ++loadRequestsToken;
         requestsStatus.textContent = "";
         requestsList.innerHTML = "";
@@ -7394,6 +7711,10 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       };
 
       const sendUpcomingConfirmations = async () => {
+        if (!CAN_ACCESS_CLIENTS_PANEL) {
+          requestsStatus.textContent = "Not allowed for this login.";
+          return;
+        }
         const key = getKey();
         if (!key) {
           requestsStatus.textContent = t("admin_key_required");
@@ -7793,6 +8114,22 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           }
         });
       }
+      if (adminChatSendBtn) {
+        adminChatSendBtn.addEventListener("click", sendAdminChatMessage);
+      }
+      if (adminChatRefreshBtn) {
+        adminChatRefreshBtn.addEventListener("click", () => {
+          loadAdminChat(false);
+        });
+      }
+      if (adminChatInput) {
+        adminChatInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendAdminChatMessage();
+          }
+        });
+      }
       if (photoDisplayModeSelect) {
         photoDisplayModeSelect.addEventListener("change", updatePhotoModeUi);
       }
@@ -7804,19 +8141,24 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           setBlockedListVisible(isHidden);
         });
       }
-      refreshBtn.addEventListener("click", loadRequests);
+      if (refreshBtn) {
+        refreshBtn.addEventListener("click", loadRequests);
+      }
       if (sendUpcomingConfirmationsBtn) {
         sendUpcomingConfirmationsBtn.addEventListener("click", sendUpcomingConfirmations);
       }
-      statusFilter.addEventListener("change", () => {
-        syncStatusFilterTabs();
-        loadRequests();
-      });
+      if (statusFilter) {
+        statusFilter.addEventListener("change", () => {
+          syncStatusFilterTabs();
+          loadRequests();
+        });
+      }
       // Keep requests stable while reviewing/editing. Use Refresh button when needed.
 
       const initialLanguage = getStoredLanguage() || detectBrowserLanguage();
       currentLanguage = initialLanguage;
       document.documentElement.setAttribute("lang", currentLanguage);
+      applyAdminMenuPermissions();
       setAdminPanel(getStoredAdminPanel(), false);
       createDayChoices(menuWorkDays);
       createDayChoices(menuBreakDays);
@@ -7840,7 +8182,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       loadAvailability();
       loadTourSchedule();
       loadGallery();
-      loadRequests();
+      if (CAN_ACCESS_CLIENTS_PANEL) {
+        loadRequests();
+      }
       loadEmployees();
       applyLanguage(initialLanguage, true);
     </script>

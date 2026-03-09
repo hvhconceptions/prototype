@@ -9,7 +9,6 @@ on:
       - "booking/**"
       - "*.html"
       - "*.webp"
-      - "*.mobileconfig"
       - "manifest.webmanifest"
       - "service-worker.js"
       - "anti-protect.js"
@@ -29,7 +28,7 @@ jobs:
       - name: Prepare root deploy bundle
         run: |
           mkdir -p deploy-root
-          for file in index.html inside.html premium.html eyecandy.html rates-menu.html spoil-me.html game-over.html touring.html photos.html iphone_install_card.html 404.html; do
+          for file in index.html inside.html premium.html eyecandy.html rates-menu.html spoil-me.html game-over.html touring.html photos.html 404.html; do
             if [ -f "$file" ]; then
               cp "$file" "deploy-root/$file"
             fi
@@ -45,9 +44,6 @@ jobs:
           fi
           if [ -f "service-worker.js" ]; then
             cp service-worker.js deploy-root/service-worker.js
-          fi
-          if [ -f "booking_admin_iphone.mobileconfig" ]; then
-            cp booking_admin_iphone.mobileconfig deploy-root/booking_admin_iphone.mobileconfig
           fi
           if [ -f "anti-protect.js" ]; then
             cp anti-protect.js deploy-root/anti-protect.js

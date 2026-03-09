@@ -8,9 +8,6 @@ on:
     paths:
       - "booking/**"
       - "*.html"
-      - "*.webp"
-      - "manifest.webmanifest"
-      - "service-worker.js"
       - "anti-protect.js"
       - "!tmp_*.html"
       - ".htaccess"
@@ -28,22 +25,13 @@ jobs:
       - name: Prepare root deploy bundle
         run: |
           mkdir -p deploy-root
-          for file in index.html inside.html premium.html eyecandy.html rates-menu.html spoil-me.html game-over.html touring.html photos.html access-revoked.html 404.html; do
+          for file in index.html inside.html premium.html eyecandy.html rates-menu.html spoil-me.html game-over.html touring.html photos.html 404.html; do
             if [ -f "$file" ]; then
               cp "$file" "deploy-root/$file"
             fi
           done
           if [ -f "BOMBACLOUD_NEW.png" ]; then
             cp BOMBACLOUD_NEW.png deploy-root/BOMBACLOUD_NEW.png
-          fi
-          if [ -f "eastertheme.webp" ]; then
-            cp eastertheme.webp deploy-root/eastertheme.webp
-          fi
-          if [ -f "manifest.webmanifest" ]; then
-            cp manifest.webmanifest deploy-root/manifest.webmanifest
-          fi
-          if [ -f "service-worker.js" ]; then
-            cp service-worker.js deploy-root/service-worker.js
           fi
           if [ -f "anti-protect.js" ]; then
             cp anti-protect.js deploy-root/anti-protect.js

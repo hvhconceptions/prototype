@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -250,77 +250,6 @@
         border-color: rgba(191, 233, 255, 0.3);
         background: rgba(8, 18, 26, 0.86);
         color: rgba(234, 246, 255, 0.86);
-      }
-
-      body.easter-mode {
-        --bg: #fff7fc;
-        --fg: #2f2a3a;
-        --accent: #8d57ff;
-        --accent-rgb: 141, 87, 255;
-        background:
-          radial-gradient(circle at 18% 12%, rgba(255, 202, 230, 0.5), transparent 36%),
-          radial-gradient(circle at 82% 14%, rgba(187, 232, 255, 0.46), transparent 40%),
-          linear-gradient(145deg, #fffafd 0%, #eef7ff 52%, #fffef2 100%);
-        color: var(--fg);
-      }
-
-      body.easter-mode .section-panel {
-        border-color: rgba(141, 87, 255, 0.26);
-        background: linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(241, 249, 255, 0.9));
-        box-shadow: 0 20px 36px rgba(141, 87, 255, 0.12);
-      }
-
-      body.easter-mode .section-header h2 {
-        color: #7e47ef;
-        text-shadow: 0 0 20px rgba(141, 87, 255, 0.28);
-      }
-
-      body.easter-mode .section-intro,
-      body.easter-mode .rate-meta,
-      body.easter-mode .section-footer,
-      body.easter-mode .rates-currency-note,
-      body.easter-mode .rates-currency-select,
-      body.easter-mode .acronym-definition,
-      body.easter-mode .acronym-reference {
-        color: rgba(58, 46, 92, 0.84);
-      }
-
-      body.easter-mode .rate-entry {
-        border-color: rgba(141, 87, 255, 0.25);
-        background: rgba(255, 255, 255, 0.88);
-      }
-
-      body.easter-mode .rate-entry::before,
-      body.easter-mode .rate-entry::after {
-        color: rgba(141, 87, 255, 0.24);
-      }
-
-      body.easter-mode .rate-line .spacer {
-        border-bottom: 1px dotted rgba(141, 87, 255, 0.34);
-      }
-
-      body.easter-mode .currency-badge,
-      body.easter-mode .rate-card,
-      body.easter-mode .no-term,
-      body.easter-mode .acronym-panel,
-      body.easter-mode .acronym-card,
-      body.easter-mode .acronym-paywall {
-        border-color: rgba(141, 87, 255, 0.26);
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 16px 28px rgba(141, 87, 255, 0.1);
-      }
-
-      body.easter-mode .currency-badge,
-      body.easter-mode .no-term,
-      body.easter-mode .acronym-term,
-      body.easter-mode .rate-price {
-        color: #6a39d0;
-      }
-
-      body.easter-mode .rates-currency-select select {
-        background: rgba(255, 255, 255, 0.96);
-        border-color: rgba(141, 87, 255, 0.42);
-        color: #3b2a6f;
       }
 
       .currency-badges {
@@ -973,7 +902,7 @@
             <span class="rate-amount" data-rate-amount="500">CA$500</span>
           </div>
           <p class="rate-meta">
-            pse = gfe + cim, ff, dt, dato (on me only), bdsm (submissive), painless rough, fetishes, role playing
+            pse = gfe + cim, ff, dt, spit, dato (on me only), bdsm (submissive), slapping, fetishes, role playing
           </p>
         </div>
 
@@ -1275,13 +1204,11 @@
         const THEME_STORAGE_KEY = "hvh_theme_key";
 
         const applyTheme = (theme) => {
-          body.classList.remove("pink-mode", "christmas-mode", "easter-mode");
+          body.classList.remove("pink-mode", "christmas-mode");
           if (theme === "pink") {
             body.classList.add("pink-mode");
           } else if (theme === "christmas") {
             body.classList.add("christmas-mode");
-          } else if (theme === "easter") {
-            body.classList.add("easter-mode");
           }
         };
 
@@ -1301,35 +1228,6 @@
           return month === 11 || (month === 0 && day <= 2);
         };
 
-        const getEasterDate = (year) => {
-          const a = year % 19;
-          const b = Math.floor(year / 100);
-          const c = year % 100;
-          const d = Math.floor(b / 4);
-          const e = b % 4;
-          const f = Math.floor((b + 8) / 25);
-          const g = Math.floor((b - f + 1) / 3);
-          const h = (19 * a + b - d - g + 15) % 30;
-          const i = Math.floor(c / 4);
-          const k = c % 4;
-          const l = (32 + 2 * e + 2 * i - h - k) % 7;
-          const m = Math.floor((a + 11 * h + 22 * l) / 451);
-          const month = Math.floor((h + l - 7 * m + 114) / 31);
-          const day = ((h + l - 7 * m + 114) % 31) + 1;
-          return new Date(year, month - 1, day, 0, 0, 0, 0);
-        };
-
-        const isEasterWindow = () => {
-          const now = new Date();
-          now.setHours(0, 0, 0, 0);
-          const easter = getEasterDate(now.getFullYear());
-          const start = new Date(easter);
-          start.setDate(start.getDate() - 5);
-          const end = new Date(easter);
-          end.setDate(end.getDate() + 1);
-          return now >= start && now <= end;
-        };
-
         const storedTheme = (() => {
           try {
             return window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -1342,12 +1240,9 @@
         if (
           normalizedStoredTheme === "pink" ||
           normalizedStoredTheme === "christmas" ||
-          normalizedStoredTheme === "easter" ||
           normalizedStoredTheme === "default"
         ) {
           applyTheme(normalizedStoredTheme);
-        } else if (isEasterWindow()) {
-          applyTheme("easter");
         } else if (isHolidayWindow()) {
           applyTheme("christmas");
         } else if (isValentineWindow()) {
@@ -1466,13 +1361,11 @@
           if (!payload || typeof payload !== "object") return;
           if (payload.type === "hvh:theme") {
             const theme = payload.theme === "green" ? "default" : payload.theme;
-            document.body.classList.remove("pink-mode", "christmas-mode", "easter-mode");
+            document.body.classList.remove("pink-mode", "christmas-mode");
             if (theme === "pink") {
               document.body.classList.add("pink-mode");
             } else if (theme === "christmas") {
               document.body.classList.add("christmas-mode");
-            } else if (theme === "easter") {
-              document.body.classList.add("easter-mode");
             }
             sendRatesHeight();
             return;

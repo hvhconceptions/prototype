@@ -1,14 +1,10 @@
 DirectoryIndex index.html index.php
 ErrorDocument 404 /404.html
-ErrorDocument 410 /access-revoked.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^admin/?$ /booking/admin/ [R=302,L,NC]
   RewriteRule ^admin/index\.php$ /booking/admin/ [R=302,L,NC]
-  RewriteRule ^booking_admin_iphone\.mobileconfig$ - [G,L,NC]
-  RewriteRule ^iphone_install_card\.html$ - [G,L,NC]
-  RewriteRule ^iphone_pwa_invite_email\.txt$ - [G,L,NC]
   RewriteCond %{HTTP:CF-IPCountry} ^MA$ [NC,OR]
   RewriteCond %{ENV:GEOIP_COUNTRY_CODE} ^MA$ [NC,OR]
   RewriteCond %{ENV:MM_COUNTRY_CODE} ^MA$ [NC]

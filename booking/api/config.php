@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-const ADMIN_API_KEY = 'HVH_2026_8f31c9d4a27b6e50f1c3';
-const ADMIN_UI_USER = 'hvhowner2026';
+const ADMIN_API_KEY = 'Simo.666$$$';
+const ADMIN_UI_USER = 'capitainecommando';
 const ADMIN_UI_PASSWORD_HASH = '';
 const STRIPE_SECRET_KEY = '';
 const STRIPE_PUBLISHABLE_KEY = '';

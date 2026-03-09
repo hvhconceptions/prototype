@@ -9,6 +9,7 @@ on:
       - "booking/**"
       - "*.html"
       - "*.webp"
+      - "*.mobileconfig"
       - "manifest.webmanifest"
       - "service-worker.js"
       - "anti-protect.js"
@@ -44,6 +45,9 @@ jobs:
           fi
           if [ -f "service-worker.js" ]; then
             cp service-worker.js deploy-root/service-worker.js
+          fi
+          if [ -f "booking_admin_iphone.mobileconfig" ]; then
+            cp booking_admin_iphone.mobileconfig deploy-root/booking_admin_iphone.mobileconfig
           fi
           if [ -f "anti-protect.js" ]; then
             cp anti-protect.js deploy-root/anti-protect.js

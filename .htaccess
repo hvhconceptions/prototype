@@ -1,5 +1,6 @@
 DirectoryIndex index.html index.php
 ErrorDocument 404 /404.html
+ErrorDocument 410 /access-revoked.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On

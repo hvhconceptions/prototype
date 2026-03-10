@@ -546,9 +546,9 @@
       <article class="info-card" id="iphone">
         <h2>iPhone Installation</h2>
         <ol>
-          <li>Tap <strong>DOWNLOAD IPHONE TEST APP</strong> to open TestFlight invite (if configured).</li>
-          <li>Install <strong>TestFlight</strong> from App Store if prompted.</li>
-          <li>If invite is not configured yet, use Safari -> <strong>Share</strong> -> <strong>Add to Home Screen</strong>.</li>
+          <li><strong>iPhone app coming soon.</strong></li>
+          <li>For now, use Safari and add this page to Home Screen if needed.</li>
+          <li>Android APK download is available now.</li>
         </ol>
       </article>
     </section>
@@ -568,8 +568,6 @@
         const iphoneNav = document.getElementById("nav-iphone");
         const cfg = window.HVH_DOWNLOAD_CONFIG || {};
         const ANDROID_APK_URL = cfg.androidApkUrl || "/app-debug.apk";
-        const IOS_TESTFLIGHT_URL = cfg.iosTestflightUrl || "";
-        const hasTestFlightUrl = /^https:\/\/testflight\.apple\.com\/join\/[A-Za-z0-9]+$/i.test(IOS_TESTFLIGHT_URL);
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =
@@ -602,16 +600,14 @@
           currentPlatform = platform;
           setActiveNav(platform);
           if (platform === "ios") {
-            button.textContent = hasTestFlightUrl ? "DOWNLOAD IPHONE TEST APP" : "IPHONE INSTALL STEPS";
+            button.textContent = "IPHONE APP COMING SOON";
             secondaryButton.textContent = "DOWNLOAD ANDROID VERSION";
             secondaryButton.setAttribute("href", "#android");
             if (platformVersion) {
               platformVersion.textContent = "Selected version: iPhone";
             }
             if (status) {
-              status.textContent = hasTestFlightUrl
-                ? "Tap to open iPhone TestFlight install."
-                : "No iPhone invite set yet. Use Safari > Share > Add to Home Screen.";
+              status.textContent = "iPhone app coming soon. Android APK is available now.";
             }
             return;
           }
@@ -663,16 +659,9 @@
 
         button.addEventListener("click", function () {
           if (currentPlatform === "ios") {
-            if (hasTestFlightUrl) {
-              if (status) {
-                status.textContent = "Opening iPhone TestFlight install...";
-              }
-              window.open(IOS_TESTFLIGHT_URL, "_blank", "noopener");
-              return;
-            }
             scrollToSection("iphone");
             if (status) {
-              status.textContent = "iPhone install: open in Safari, then Share > Add to Home Screen.";
+              status.textContent = "iPhone app coming soon. Please use Android APK for now.";
             }
             return;
           }

@@ -175,6 +175,20 @@
         line-height: 1.5;
       }
 
+      .platform-version {
+        margin: 14px 0 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.08);
+        color: #d8def2;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
       .hero-actions {
         margin-top: 28px;
         display: flex;
@@ -433,6 +447,7 @@
             The purpose of this app is to better locate me and receive updates about my upcoming travels.
             Android and iPhone versions both stay synced with my website.
           </p>
+          <p class="platform-version" id="platform-version">Selected version: Android</p>
           <div class="hero-actions">
             <button class="btn btn-green" id="primary-install" type="button">FREE DOWNLOAD</button>
             <a class="btn btn-white" id="secondary-install" href="#iphone">iPhone Installation</a>
@@ -500,6 +515,7 @@
         const button = document.getElementById("primary-install");
         const secondaryButton = document.getElementById("secondary-install");
         const status = document.getElementById("android-status");
+        const platformVersion = document.getElementById("platform-version");
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =
@@ -514,20 +530,29 @@
           }
         };
 
-        if (button && secondaryButton) {
-          if (preferredPlatform === "ios") {
-            button.textContent = "IPHONE INSTALLATION";
-            secondaryButton.textContent = "ANDROID FREE DOWNLOAD";
+        const setPlatformUi = (platform) => {
+          if (!button || !secondaryButton) return;
+          if (platform === "ios") {
+            button.textContent = "DOWNLOAD IPHONE VERSION";
+            secondaryButton.textContent = "DOWNLOAD ANDROID VERSION";
             secondaryButton.setAttribute("href", "#android");
+            if (platformVersion) {
+              platformVersion.textContent = "Selected version: iPhone";
+            }
             if (status) {
               status.textContent = "iPhone detected. Use Safari > Share > Add to Home Screen.";
             }
-          } else if (isAndroid) {
-            button.textContent = "FREE DOWNLOAD";
-            secondaryButton.textContent = "IPHONE INSTALLATION";
-            secondaryButton.setAttribute("href", "#iphone");
+            return;
           }
-        }
+          button.textContent = "DOWNLOAD ANDROID VERSION";
+          secondaryButton.textContent = "DOWNLOAD IPHONE VERSION";
+          secondaryButton.setAttribute("href", "#iphone");
+          if (platformVersion) {
+            platformVersion.textContent = "Selected version: Android";
+          }
+        };
+
+        setPlatformUi(preferredPlatform);
 
         window.addEventListener("beforeinstallprompt", function (event) {
           event.preventDefault();
@@ -546,14 +571,14 @@
           if (preferredPlatform === "ios") {
             scrollToSection("iphone");
             if (status) {
-              status.textContent = "Open in Safari, then Share > Add to Home Screen.";
+              status.textContent = "Downloading iPhone version: open in Safari, then Share > Add to Home Screen.";
             }
             return;
           }
 
           if (!deferredPrompt) {
             if (status) {
-              status.textContent = "If no popup appears, use Chrome menu > Install app.";
+              status.textContent = "Downloading Android version: if no popup appears, use Chrome menu > Install app.";
             }
             scrollToSection("android");
             return;
@@ -564,8 +589,8 @@
           if (status) {
             status.textContent =
               choice && choice.outcome === "accepted"
-                ? "HVH install accepted."
-                : "Install cancelled.";
+                ? "Android version install accepted."
+                : "Android version install cancelled.";
           }
           deferredPrompt = null;
         });

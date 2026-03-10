@@ -537,8 +537,8 @@
       <article class="info-card" id="android">
         <h2>Android Installation</h2>
         <ol>
-          <li>Tap <strong>FREE DOWNLOAD</strong>.</li>
-          <li>If popup does not show: Chrome menu -> <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+          <li>Tap <strong>DOWNLOAD ANDROID APK</strong>.</li>
+          <li>Allow installation from browser/downloads if Android asks.</li>
           <li>Open the installed icon named <strong>HVH</strong>.</li>
         </ol>
       </article>
@@ -546,9 +546,9 @@
       <article class="info-card" id="iphone">
         <h2>iPhone Installation</h2>
         <ol>
-          <li>Open this page in <strong>Safari</strong>.</li>
-          <li>Tap <strong>Share</strong> -> <strong>Add to Home Screen</strong>.</li>
-          <li>Name it <strong>HVH</strong>, then tap <strong>Add</strong>.</li>
+          <li>Tap <strong>INSTALL IPHONE VERSION</strong> to open the TestFlight invite when configured.</li>
+          <li>If no TestFlight link is set yet: open this page in <strong>Safari</strong>.</li>
+          <li>Tap <strong>Share</strong> -> <strong>Add to Home Screen</strong>, then name it <strong>HVH</strong>.</li>
         </ol>
       </article>
     </section>
@@ -566,11 +566,13 @@
         const androidNav = document.getElementById("nav-android");
         const iphoneNav = document.getElementById("nav-iphone");
         const ANDROID_APK_URL = "/BombaCLOUD-debug.apk";
+        const IOS_TESTFLIGHT_URL = "";
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =
           /iPhone|iPad|iPod/i.test(ua) ||
           (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        const hasTestFlightUrl = /^https:\/\/testflight\.apple\.com\/join\/.+/i.test(IOS_TESTFLIGHT_URL);
         const preferredPlatform = isIOS ? "ios" : "android";
         const PLATFORM_STORAGE_KEY = "hvh_download_platform";
         let currentPlatform = preferredPlatform;
@@ -598,14 +600,16 @@
           currentPlatform = platform;
           setActiveNav(platform);
           if (platform === "ios") {
-            button.textContent = "IPHONE INSTALL STEPS";
+            button.textContent = "INSTALL IPHONE VERSION";
             secondaryButton.textContent = "DOWNLOAD ANDROID VERSION";
             secondaryButton.setAttribute("href", "#android");
             if (platformVersion) {
               platformVersion.textContent = "Selected version: iPhone";
             }
             if (status) {
-              status.textContent = "iPhone detected. Use Safari > Share > Add to Home Screen.";
+              status.textContent = hasTestFlightUrl
+                ? "Tap to open TestFlight install."
+                : "TestFlight link not set yet. Use Safari > Share > Add to Home Screen.";
             }
             return;
           }
@@ -657,9 +661,16 @@
 
         button.addEventListener("click", function () {
           if (currentPlatform === "ios") {
+            if (hasTestFlightUrl) {
+              if (status) {
+                status.textContent = "Opening iPhone TestFlight install...";
+              }
+              window.open(IOS_TESTFLIGHT_URL, "_blank", "noopener");
+              return;
+            }
             scrollToSection("iphone");
             if (status) {
-              status.textContent = "Downloading iPhone version: open in Safari, then Share > Add to Home Screen.";
+              status.textContent = "No iPhone TestFlight link set yet. Use Safari > Share > Add to Home Screen.";
             }
             return;
           }

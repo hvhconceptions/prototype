@@ -19,22 +19,26 @@ import java.util.Locale
 
 class PushMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
-        if (message.data.isNotEmpty()) {
-            storeClient(message.data)
-        }
+        try {
+            if (message.data.isNotEmpty()) {
+                storeClient(message.data)
+            }
 
-        val title = message.notification?.title ?: "New booking"
-        val body = message.notification?.body ?: "Open the admin panel to review."
-        val status = message.data["status"]?.trim()?.lowercase(Locale.US).orEmpty()
-        val shouldCountUnread = status == "pending"
-        val unreadCount = fetchPendingCount() ?: if (shouldCountUnread) {
-            NotificationState.incrementUnread(this)
-        } else {
-            NotificationState.getUnread(this)
+            val title = message.notification?.title ?: "New booking"
+            val body = message.notification?.body ?: "Open the admin panel to review."
+            val status = message.data["status"]?.trim()?.lowercase(Locale.US).orEmpty()
+            val shouldCountUnread = status == "pending"
+            val unreadCount = fetchPendingCount() ?: if (shouldCountUnread) {
+                NotificationState.incrementUnread(this)
+            } else {
+                NotificationState.getUnread(this)
+            }
+            NotificationState.setUnread(this, unreadCount)
+            val overviewLines = getOverviewLines()
+            showNotification(title, body, unreadCount, overviewLines, shouldCountUnread)
+        } catch (_: Throwable) {
+            // Guard the app process from unexpected push payload/runtime crashes.
         }
-        NotificationState.setUnread(this, unreadCount)
-        val overviewLines = getOverviewLines()
-        showNotification(title, body, unreadCount, overviewLines, shouldCountUnread)
     }
 
     override fun onNewToken(token: String) {

@@ -263,6 +263,20 @@ function append_calendar_links_lines(string &$body, array $calendarLinks): void
     $body .= "\n";
 }
 
+function notify_customer_email_failure(array $request, string $statusLabel): void
+{
+    if (!function_exists('send_admin_email')) {
+        return;
+    }
+    $notice = "Customer status email failed\n\n";
+    $notice .= "Status: " . $statusLabel . "\n";
+    $notice .= "Request id: " . (string) ($request['id'] ?? '') . "\n";
+    $notice .= "Name: " . (string) ($request['name'] ?? '') . "\n";
+    $notice .= "Email: " . (string) ($request['email'] ?? '') . "\n";
+    $notice .= "Preferred: " . (string) ($request['preferred_date'] ?? '') . " " . (string) ($request['preferred_time'] ?? '') . "\n";
+    send_admin_email($notice, 'Email delivery failure');
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['error' => 'Method not allowed'], 405);
 }
@@ -336,8 +350,11 @@ foreach ($requests as $index => &$request) {
                 $body .= "Reason: " . $reason . "\n";
             }
             $body .= "\nThanks for understanding.\n";
-            send_payment_email($requestEmail, $body, 'Booking update');
-            $request['declined_email_sent_at'] = gmdate('c');
+            if (send_payment_email($requestEmail, $body, 'Booking update')) {
+                $request['declined_email_sent_at'] = gmdate('c');
+            } else {
+                notify_customer_email_failure($request, 'declined');
+            }
         }
         $declinedRequests = array_values(array_filter($declinedRequests, function ($item) use ($id): bool {
             return is_array($item) && (($item['id'] ?? '') !== $id);
@@ -365,6 +382,8 @@ foreach ($requests as $index => &$request) {
             $body .= "\nIf this seems incorrect, reply to this email.\n";
             if (send_payment_email($requestEmail, $body, 'Booking update')) {
                 $request['blacklisted_email_sent_at'] = gmdate('c');
+            } else {
+                notify_customer_email_failure($request, 'blacklisted');
             }
         }
         add_blacklist_entry([
@@ -392,8 +411,11 @@ foreach ($requests as $index => &$request) {
                 $body .= "Reason: " . $reason . "\n";
             }
             $body .= "\nIf you want to book again, you can send a new request.\n";
-            send_payment_email($requestEmail, $body, 'Booking update');
-            $request['cancelled_email_sent_at'] = gmdate('c');
+            if (send_payment_email($requestEmail, $body, 'Booking update')) {
+                $request['cancelled_email_sent_at'] = gmdate('c');
+            } else {
+                notify_customer_email_failure($request, 'cancelled');
+            }
         }
         $found = true;
         break;
@@ -419,6 +441,8 @@ foreach ($requests as $index => &$request) {
             $body .= "\nI will confirm as soon as possible.\n";
             if (send_payment_email($requestEmail, $body, 'Booking update')) {
                 $request['maybe_email_sent_at'] = gmdate('c');
+            } else {
+                notify_customer_email_failure($request, 'maybe');
             }
         }
         if (($request['maybe_admin_notified_at'] ?? '') === '') {
@@ -468,6 +492,8 @@ foreach ($requests as $index => &$request) {
             $body .= "\nOnce payment is in, the time is locked.\n";
             if (send_payment_email($requestEmail, $body)) {
                 $request['accepted_email_sent_at'] = gmdate('c');
+            } else {
+                notify_customer_email_failure($request, 'accepted');
             }
         }
         if (($request['accepted_admin_notified_at'] ?? '') === '') {
@@ -509,6 +535,8 @@ foreach ($requests as $index => &$request) {
             $body .= "See you soon.\n";
             if (send_payment_email($requestEmail, $body, 'Payment received')) {
                 $request['paid_email_sent_at'] = gmdate('c');
+            } else {
+                notify_customer_email_failure($request, 'paid');
             }
         }
         if (($request['paid_admin_notified_at'] ?? '') === '') {

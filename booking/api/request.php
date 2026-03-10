@@ -665,8 +665,16 @@ if ($requestEmail !== '') {
         }
     }
     $body .= "If you have any questions, contact me at " . $contactPhone . " through SMS or WHATSAPP.\n";
-    if (function_exists('send_payment_email') && send_payment_email($requestEmail, $body)) {
-        $paymentEmailSentAt = gmdate('c');
+    if (function_exists('send_payment_email')) {
+        if (send_payment_email($requestEmail, $body)) {
+            $paymentEmailSentAt = gmdate('c');
+        } elseif (function_exists('send_admin_email')) {
+            $adminNotice = "Customer confirmation email failed\n\n";
+            $adminNotice .= "Request email: " . $requestEmail . "\n";
+            $adminNotice .= "Name: " . trim((string) $payload['name']) . "\n";
+            $adminNotice .= "Preferred: " . ($payload['preferred_date'] ?? '') . " " . ($payload['preferred_time'] ?? '') . "\n";
+            send_admin_email($adminNotice, 'Email delivery failure');
+        }
     }
 }
 

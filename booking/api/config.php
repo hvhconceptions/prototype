@@ -37,6 +37,7 @@ const ADMIN_NOTIFY_EMAIL = 'pornstar.heidi@gmail.com';
 const CONTACT_SMS_WHATSAPP = '+1 (514) 607-6253';
 
 const DATA_DIR = __DIR__ . '/../data';
+const EMAIL_LOG_FILE = DATA_DIR . '/email_delivery.log';
 const SITE_CONTENT_FILE = DATA_DIR . '/site_content.json';
 const GALLERY_FILE = DATA_DIR . '/gallery.json';
 const BLACKLIST_FILE = DATA_DIR . '/blacklist.json';
@@ -797,6 +798,48 @@ function build_email_html(string $subject, string $plainBody): string
 </html>';
 }
 
+function log_email_delivery(string $type, string $to, string $subjectLine, bool $ok, string $detail = ''): void
+{
+    ensure_data_dir();
+    $line = [
+        gmdate('c'),
+        strtoupper($type),
+        $ok ? 'OK' : 'FAIL',
+        'to=' . trim($to),
+        'subject=' . trim($subjectLine),
+    ];
+    if ($detail !== '') {
+        $line[] = 'detail=' . trim($detail);
+    }
+    @file_put_contents(EMAIL_LOG_FILE, implode(' | ', $line) . "\n", FILE_APPEND | LOCK_EX);
+}
+
+function send_mail_with_headers(string $to, string $subjectLine, string $message, array $headers): bool
+{
+    $headerText = implode("\r\n", $headers);
+    $from = trim((string) EMAIL_FROM);
+    $extraParams = '';
+    if ($from !== '' && filter_var($from, FILTER_VALIDATE_EMAIL)) {
+        $extraParams = '-f' . $from;
+    }
+
+    $mailWarning = '';
+    set_error_handler(static function (int $_severity, string $errstr) use (&$mailWarning): bool {
+        $mailWarning = $errstr;
+        return true;
+    });
+    try {
+        $sent = $extraParams !== ''
+            ? @mail($to, $subjectLine, $message, $headerText, $extraParams)
+            : @mail($to, $subjectLine, $message, $headerText);
+    } finally {
+        restore_error_handler();
+    }
+
+    log_email_delivery('mail', $to, $subjectLine, $sent, $mailWarning);
+    return $sent;
+}
+
 function send_multipart_email(string $to, string $subjectLine, string $plainBody): bool
 {
     if ($to === '') {
@@ -831,7 +874,7 @@ function send_multipart_email(string $to, string $subjectLine, string $plainBody
     $message .= $htmlBody . "\r\n\r\n";
     $message .= '--' . $boundary . "--";
 
-    return mail($to, $subjectLine, $message, implode("\r\n", $headers));
+    return send_mail_with_headers($to, $subjectLine, $message, $headers);
 }
 
 function send_plain_email(string $to, string $subjectLine, string $plainBody): bool
@@ -847,7 +890,7 @@ function send_plain_email(string $to, string $subjectLine, string $plainBody): b
         $headers[] = 'Reply-To: ' . EMAIL_REPLY_TO;
     }
     $headers[] = 'Content-Type: text/plain; charset=UTF-8';
-    return mail($to, $subjectLine, $plainBody, implode("\r\n", $headers));
+    return send_mail_with_headers($to, $subjectLine, $plainBody, $headers);
 }
 
 function append_customer_contact_footer(string $body): string
@@ -866,32 +909,42 @@ function append_customer_contact_footer(string $body): string
 function send_payment_email(string $to, string $body, ?string $subject = null): bool
 {
     if (!EMAIL_ENABLED) {
+        log_email_delivery('customer', $to, (string) ($subject ?: EMAIL_SUBJECT), false, 'EMAIL_ENABLED=false');
         return false;
     }
     if ($to === '') {
+        log_email_delivery('customer', $to, (string) ($subject ?: EMAIL_SUBJECT), false, 'empty recipient');
         return false;
     }
     $subjectLine = $subject ?: EMAIL_SUBJECT;
     $customerBody = append_customer_contact_footer($body);
     if (send_multipart_email($to, $subjectLine, $customerBody)) {
+        log_email_delivery('customer', $to, $subjectLine, true, 'multipart');
         return true;
     }
-    return send_plain_email($to, $subjectLine, $customerBody);
+    $plainSent = send_plain_email($to, $subjectLine, $customerBody);
+    log_email_delivery('customer', $to, $subjectLine, $plainSent, $plainSent ? 'plain_fallback' : 'plain_fallback_failed');
+    return $plainSent;
 }
 
 function send_admin_email(string $body, ?string $subject = null): bool
 {
     if (!EMAIL_ENABLED) {
+        log_email_delivery('admin', ADMIN_NOTIFY_EMAIL, (string) ($subject ?: 'New booking request'), false, 'EMAIL_ENABLED=false');
         return false;
     }
     if (ADMIN_NOTIFY_EMAIL === '') {
+        log_email_delivery('admin', ADMIN_NOTIFY_EMAIL, (string) ($subject ?: 'New booking request'), false, 'ADMIN_NOTIFY_EMAIL empty');
         return false;
     }
     $subjectLine = $subject ?: 'New booking request';
     if (send_multipart_email(ADMIN_NOTIFY_EMAIL, $subjectLine, $body)) {
+        log_email_delivery('admin', ADMIN_NOTIFY_EMAIL, $subjectLine, true, 'multipart');
         return true;
     }
-    return send_plain_email(ADMIN_NOTIFY_EMAIL, $subjectLine, $body);
+    $plainSent = send_plain_email(ADMIN_NOTIFY_EMAIL, $subjectLine, $body);
+    log_email_delivery('admin', ADMIN_NOTIFY_EMAIL, $subjectLine, $plainSent, $plainSent ? 'plain_fallback' : 'plain_fallback_failed');
+    return $plainSent;
 }
 
 function read_push_tokens(): array

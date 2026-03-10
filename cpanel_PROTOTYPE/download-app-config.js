@@ -1,3 +1,3 @@
 window.HVH_DOWNLOAD_CONFIG = {
-  androidApkUrl: "/app-debug.apk"
+  androidApkUrl: "https://raw.githubusercontent.com/hvhconceptions/prototype/main/app-debug.apk"
 };

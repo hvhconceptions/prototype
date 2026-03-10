@@ -497,7 +497,7 @@
           </p>
           <p class="platform-version" id="platform-version">Selected version: Android</p>
           <div class="hero-actions">
-            <button class="btn btn-green" id="primary-install" type="button">FREE DOWNLOAD</button>
+            <button class="btn btn-green" id="primary-install" type="button">DOWNLOAD ANDROID APK</button>
             <a class="btn btn-white" id="secondary-install" href="#iphone">iPhone Installation</a>
           </div>
           <p class="status" id="android-status"></p>
@@ -559,13 +559,13 @@
 
     <script>
       (function setupInstaller() {
-        let deferredPrompt = null;
         const button = document.getElementById("primary-install");
         const secondaryButton = document.getElementById("secondary-install");
         const status = document.getElementById("android-status");
         const platformVersion = document.getElementById("platform-version");
         const androidNav = document.getElementById("nav-android");
         const iphoneNav = document.getElementById("nav-iphone");
+        const ANDROID_APK_URL = "/BombaCLOUD-debug.apk";
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =
@@ -598,7 +598,7 @@
           currentPlatform = platform;
           setActiveNav(platform);
           if (platform === "ios") {
-            button.textContent = "DOWNLOAD IPHONE VERSION";
+            button.textContent = "IPHONE INSTALL STEPS";
             secondaryButton.textContent = "DOWNLOAD ANDROID VERSION";
             secondaryButton.setAttribute("href", "#android");
             if (platformVersion) {
@@ -609,11 +609,14 @@
             }
             return;
           }
-          button.textContent = "DOWNLOAD ANDROID VERSION";
+          button.textContent = "DOWNLOAD ANDROID APK";
           secondaryButton.textContent = "DOWNLOAD IPHONE VERSION";
           secondaryButton.setAttribute("href", "#iphone");
           if (platformVersion) {
             platformVersion.textContent = "Selected version: Android";
+          }
+          if (status) {
+            status.textContent = "Tap the button to download Android APK now.";
           }
         };
 
@@ -650,20 +653,9 @@
           });
         }
 
-        window.addEventListener("beforeinstallprompt", function (event) {
-          event.preventDefault();
-          deferredPrompt = event;
-          if (status) {
-            status.textContent =
-              currentPlatform === "ios"
-                ? "Android install prompt ready if opened on Android."
-                : "Install prompt ready.";
-          }
-        });
-
         if (!button) return;
 
-        button.addEventListener("click", async function () {
+        button.addEventListener("click", function () {
           if (currentPlatform === "ios") {
             scrollToSection("iphone");
             if (status) {
@@ -672,23 +664,10 @@
             return;
           }
 
-          if (!deferredPrompt) {
-            if (status) {
-              status.textContent = "Downloading Android version: if no popup appears, use Chrome menu > Install app.";
-            }
-            scrollToSection("android");
-            return;
-          }
-
-          deferredPrompt.prompt();
-          const choice = await deferredPrompt.userChoice;
           if (status) {
-            status.textContent =
-              choice && choice.outcome === "accepted"
-                ? "Android version install accepted."
-                : "Android version install cancelled.";
+            status.textContent = "Downloading Android APK now...";
           }
-          deferredPrompt = null;
+          window.location.href = ANDROID_APK_URL;
         });
       })();
     </script>

@@ -137,6 +137,8 @@
         display: inline-flex;
         align-items: center;
         gap: 7px;
+        padding: 6px 10px;
+        border-radius: 999px;
       }
 
       .platform-icon {
@@ -156,6 +158,15 @@
       .menu a:focus-visible {
         color: var(--brand-green-dark);
         outline: none;
+      }
+
+      .menu-link-platform.active {
+        color: #fff;
+        background: var(--brand-green-dark);
+      }
+
+      .menu-link-platform.active .platform-icon {
+        color: #fff;
       }
 
       .hero {
@@ -452,7 +463,7 @@
         </a>
         <div class="menu" role="navigation" aria-label="Download page nav">
           <a href="#download">Download</a>
-          <a class="menu-link-platform" href="#android">
+          <a class="menu-link-platform" id="nav-android" href="#android">
             <span class="platform-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8.5 4.5 7 2.5M15.5 4.5 17 2.5M8 8h8a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/>
@@ -463,7 +474,7 @@
             </span>
             Android
           </a>
-          <a class="menu-link-platform" href="#iphone">
+          <a class="menu-link-platform" id="nav-iphone" href="#iphone">
             <span class="platform-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="7" y="2.5" width="10" height="19" rx="2.2"/>
@@ -553,12 +564,16 @@
         const secondaryButton = document.getElementById("secondary-install");
         const status = document.getElementById("android-status");
         const platformVersion = document.getElementById("platform-version");
+        const androidNav = document.getElementById("nav-android");
+        const iphoneNav = document.getElementById("nav-iphone");
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =
           /iPhone|iPad|iPod/i.test(ua) ||
           (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
         const preferredPlatform = isIOS ? "ios" : "android";
+        const PLATFORM_STORAGE_KEY = "hvh_download_platform";
+        let currentPlatform = preferredPlatform;
 
         const scrollToSection = (id) => {
           const section = document.getElementById(id);
@@ -567,8 +582,21 @@
           }
         };
 
+        const setActiveNav = (platform) => {
+          if (androidNav) {
+            androidNav.classList.toggle("active", platform === "android");
+            androidNav.setAttribute("aria-current", platform === "android" ? "page" : "false");
+          }
+          if (iphoneNav) {
+            iphoneNav.classList.toggle("active", platform === "ios");
+            iphoneNav.setAttribute("aria-current", platform === "ios" ? "page" : "false");
+          }
+        };
+
         const setPlatformUi = (platform) => {
           if (!button || !secondaryButton) return;
+          currentPlatform = platform;
+          setActiveNav(platform);
           if (platform === "ios") {
             button.textContent = "DOWNLOAD IPHONE VERSION";
             secondaryButton.textContent = "DOWNLOAD ANDROID VERSION";
@@ -589,14 +617,45 @@
           }
         };
 
-        setPlatformUi(preferredPlatform);
+        try {
+          const savedPlatform = window.localStorage.getItem(PLATFORM_STORAGE_KEY);
+          if (savedPlatform === "android" || savedPlatform === "ios") {
+            setPlatformUi(savedPlatform);
+          } else {
+            setPlatformUi(preferredPlatform);
+          }
+        } catch (_error) {
+          setPlatformUi(preferredPlatform);
+        }
+
+        if (androidNav) {
+          androidNav.addEventListener("click", function (event) {
+            event.preventDefault();
+            setPlatformUi("android");
+            scrollToSection("android");
+            try {
+              window.localStorage.setItem(PLATFORM_STORAGE_KEY, "android");
+            } catch (_error) {}
+          });
+        }
+
+        if (iphoneNav) {
+          iphoneNav.addEventListener("click", function (event) {
+            event.preventDefault();
+            setPlatformUi("ios");
+            scrollToSection("iphone");
+            try {
+              window.localStorage.setItem(PLATFORM_STORAGE_KEY, "ios");
+            } catch (_error) {}
+          });
+        }
 
         window.addEventListener("beforeinstallprompt", function (event) {
           event.preventDefault();
           deferredPrompt = event;
           if (status) {
             status.textContent =
-              preferredPlatform === "ios"
+              currentPlatform === "ios"
                 ? "Android install prompt ready if opened on Android."
                 : "Install prompt ready.";
           }
@@ -605,7 +664,7 @@
         if (!button) return;
 
         button.addEventListener("click", async function () {
-          if (preferredPlatform === "ios") {
+          if (currentPlatform === "ios") {
             scrollToSection("iphone");
             if (status) {
               status.textContent = "Downloading iPhone version: open in Safari, then Share > Add to Home Screen.";

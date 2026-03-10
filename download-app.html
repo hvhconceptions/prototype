@@ -567,7 +567,7 @@
         const androidNav = document.getElementById("nav-android");
         const iphoneNav = document.getElementById("nav-iphone");
         const cfg = window.HVH_DOWNLOAD_CONFIG || {};
-        const ANDROID_APK_URL = cfg.androidApkUrl || "/app-debug.apk";
+        const ANDROID_APK_URL = cfg.androidApkUrl || "https://raw.githubusercontent.com/hvhconceptions/prototype/main/app-debug.apk";
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =

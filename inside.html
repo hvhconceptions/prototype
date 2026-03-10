@@ -7393,7 +7393,7 @@
         };
 
         const queueGatePreview = () => {
-          setMode("easter");
+          setMode("green");
           closeGatePreview();
           armGatePreview();
         };
@@ -7443,12 +7443,7 @@
           { match: "xmas", action: () => setMode("christmas") },
           { match: "christmas", action: () => setMode("christmas") },
           { match: "noel", action: () => setMode("christmas") },
-          { match: "easter", action: () => setMode("easter") },
-          { match: "paques", action: () => setMode("easter") },
-          { match: "jesus", action: () => setMode("easter") },
-          { match: "bunny", action: () => setMode("easter") },
           { match: "agegate", action: () => queueGatePreview() },
-          { match: "eastergate", action: () => queueGatePreview() },
           { match: "gatepreview", action: () => queueGatePreview() },
           { match: "previewgate", action: () => queueGatePreview() },
         ];
@@ -7481,35 +7476,6 @@
           return month === 1 && day <= 16;
         };
 
-        const getEasterDate = (year) => {
-          const a = year % 19;
-          const b = Math.floor(year / 100);
-          const c = year % 100;
-          const d = Math.floor(b / 4);
-          const e = b % 4;
-          const f = Math.floor((b + 8) / 25);
-          const g = Math.floor((b - f + 1) / 3);
-          const h = (19 * a + b - d - g + 15) % 30;
-          const i = Math.floor(c / 4);
-          const k = c % 4;
-          const l = (32 + 2 * e + 2 * i - h - k) % 7;
-          const m = Math.floor((a + 11 * h + 22 * l) / 451);
-          const month = Math.floor((h + l - 7 * m + 114) / 31);
-          const day = ((h + l - 7 * m + 114) % 31) + 1;
-          return new Date(year, month - 1, day, 0, 0, 0, 0);
-        };
-
-        const isEasterWindow = () => {
-          const now = new Date();
-          now.setHours(0, 0, 0, 0);
-          const easter = getEasterDate(now.getFullYear());
-          const start = new Date(easter);
-          start.setDate(start.getDate() - 5);
-          const end = new Date(easter);
-          end.setDate(end.getDate() + 1);
-          return now >= start && now <= end;
-        };
-
         const persistTheme = (value) => {
           try {
             window.localStorage.setItem(THEME_STORAGE_KEY, value);
@@ -7538,7 +7504,6 @@
         const getCurrentThemeKey = () => {
           if (body.classList.contains("pink-mode")) return "pink";
           if (body.classList.contains("christmas-mode")) return "christmas";
-          if (body.classList.contains("easter-mode")) return "easter";
           return "default";
         };
 
@@ -7560,9 +7525,6 @@
           } else if (mode === "christmas") {
             body.classList.add("christmas-mode");
             themeKey = "christmas";
-          } else if (mode === "easter") {
-            body.classList.add("easter-mode");
-            themeKey = "easter";
           }
 
           applyMatrixTheme(themeKey);
@@ -7583,13 +7545,10 @@
         if (
           storedTheme === "pink" ||
           storedTheme === "christmas" ||
-          storedTheme === "easter" ||
           storedTheme === "default" ||
           storedTheme === "green"
         ) {
           setMode(storedTheme, { persist: false });
-        } else if (isEasterWindow()) {
-          setMode("easter", { persist: false });
         } else if (isHolidayWindow()) {
           setMode("christmas", { persist: false });
         } else if (isValentineWindow()) {
@@ -7601,7 +7560,7 @@
           const forcePreview = url.searchParams.get("gatePreview");
           const hash = normalizeTriggerText(url.hash || "");
           if (forcePreview === "1" || hash.includes("gatepreview")) {
-            setMode("easter", { persist: false });
+            setMode("green", { persist: false });
             openGatePreview();
             disarmGatePreview();
           }

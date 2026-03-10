@@ -3,6 +3,8 @@ ErrorDocument 404 /404.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteRule ^download-apk\.php$ - [G,L,NC]
+  RewriteRule \.(?:apk|aab|ipa)$ - [G,L,NC]
   RewriteRule ^admin/?$ /booking/admin/ [R=302,L,NC]
   RewriteRule ^admin/index\.php$ /booking/admin/ [R=302,L,NC]
   RewriteCond %{HTTP:CF-IPCountry} ^MA$ [NC,OR]

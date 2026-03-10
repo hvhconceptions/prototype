@@ -1,0 +1,1 @@
+# Proguard rules are intentionally minimal for the website wrapper app.

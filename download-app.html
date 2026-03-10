@@ -497,11 +497,12 @@
         <div>
           <h1>Install <span>HVH</span> Web App</h1>
           <p>
-            This is the website app only. It is always synced with heidivanhorny.com and updated in real time.
+            Download the customer HVH app as an Android APK. It is a direct website wrapper and stays synced with
+            heidivanhorny.com in real time.
           </p>
           <p class="platform-version" id="platform-version">Selected version: Android</p>
           <div class="hero-actions">
-            <button class="btn btn-green" id="primary-install" type="button">INSTALL WEBSITE APP</button>
+            <a class="btn btn-green" id="primary-install" href="/downloads/HVH-Website.apk?v=20260310a" download="HVH-Website.apk">FREE ANDROID DOWNLOAD (.APK)</a>
             <a class="btn btn-white" id="secondary-install" href="#iphone">iPhone Steps</a>
           </div>
           <p class="status" id="android-status"></p>
@@ -541,14 +542,15 @@
       <article class="info-card" id="android">
         <h2>Android Installation</h2>
         <ol>
-          <li>Tap <strong>INSTALL WEBSITE APP</strong>.</li>
-          <li>If no popup appears, open browser menu then tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+          <li>Tap <strong>FREE ANDROID DOWNLOAD (.APK)</strong>.</li>
+          <li>Open the downloaded file and allow install from this source if Android asks.</li>
+          <li>If install is blocked, enable <strong>Allow from this source</strong> for your browser, then install again.</li>
           <li>Open the installed icon named <strong>HVH</strong>.</li>
         </ol>
       </article>
 
       <article class="info-card" id="iphone">
-        <h2>iPhone Installation</h2>
+        <h2>iPhone Installation (Web App)</h2>
         <ol>
           <li>Open this page in <strong>Safari</strong>.</li>
           <li>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong>.</li>
@@ -558,7 +560,7 @@
     </section>
 
     <p class="sync-note">
-      Website app install only. No separate downloadable admin APK is provided on this page.
+      Android APK on this page is customer HVH website app only. No admin panel is included.
     </p>
 
     <script>
@@ -567,7 +569,7 @@
       }
 
       (function setupInstaller() {
-        let deferredPrompt = null;
+        const ANDROID_APK_URL = "/downloads/HVH-Website.apk?v=20260310a";
         const button = document.getElementById("primary-install");
         const secondaryButton = document.getElementById("secondary-install");
         const status = document.getElementById("android-status");
@@ -607,24 +609,28 @@
           setActiveNav(platform);
           if (platform === "ios") {
             button.textContent = "SHOW IPHONE STEPS";
+            button.setAttribute("href", "#iphone");
+            button.removeAttribute("download");
             secondaryButton.textContent = "SHOW ANDROID STEPS";
             secondaryButton.setAttribute("href", "#android");
             if (platformVersion) {
               platformVersion.textContent = "Selected version: iPhone";
             }
             if (status) {
-              status.textContent = "iPhone: use Safari > Share > Add to Home Screen.";
+              status.textContent = "iPhone: install the HVH web app with Safari > Share > Add to Home Screen.";
             }
             return;
           }
-          button.textContent = "INSTALL WEBSITE APP";
+          button.textContent = "FREE ANDROID DOWNLOAD (.APK)";
+          button.setAttribute("href", ANDROID_APK_URL);
+          button.setAttribute("download", "HVH-Website.apk");
           secondaryButton.textContent = "SHOW IPHONE STEPS";
           secondaryButton.setAttribute("href", "#iphone");
           if (platformVersion) {
             platformVersion.textContent = "Selected version: Android";
           }
           if (status) {
-            status.textContent = "Android: tap to install website app.";
+            status.textContent = "Android: tap FREE ANDROID DOWNLOAD to install the HVH website app.";
           }
         };
 
@@ -666,34 +672,19 @@
           });
         }
 
-        window.addEventListener("beforeinstallprompt", function (event) {
-          event.preventDefault();
-          deferredPrompt = event;
-          if (status && (currentPlatform === "android" || isAndroid)) {
-            status.textContent = "Install prompt ready. Tap INSTALL WEBSITE APP.";
-          }
-        });
-
         if (!button) return;
 
-        button.addEventListener("click", function () {
+        button.addEventListener("click", function (event) {
           if (currentPlatform === "ios" || isIOS) {
+            event.preventDefault();
             scrollToSection("iphone");
             if (status) {
               status.textContent = "iPhone: open in Safari, then Share > Add to Home Screen.";
             }
             return;
           }
-
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt = null;
-            return;
-          }
-
-          scrollToSection("android");
           if (status) {
-            status.textContent = "Use browser menu > Install app or Add to Home screen.";
+            status.textContent = "Downloading Android HVH app (APK)...";
           }
         });
       })();

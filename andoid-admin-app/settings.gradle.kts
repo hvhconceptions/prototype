@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AndroidAdminApp"
 include(":app")
+include(":hvhwebapp")

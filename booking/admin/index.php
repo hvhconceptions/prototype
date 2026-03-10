@@ -2573,6 +2573,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         <div class="row requests-toolbar">
           <button class="btn secondary" id="refreshRequests">Refresh</button>
           <button class="btn ghost" id="sendUpcomingConfirmations" type="button">Send upcoming emails</button>
+          <button class="btn ghost" id="viewEmailFailures" type="button">Email failures</button>
           <a class="btn ghost" href="customers.php" id="customersDirectoryBtn">Customer directory</a>
           <div class="status-filter-tabs" id="statusFilterTabs" role="tablist" aria-label="Request status filters">
             <button type="button" class="status-filter-tab" data-status-tab="all" aria-pressed="true">All</button>
@@ -2683,6 +2684,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       const scheduleCalendarStatus = document.getElementById("scheduleCalendarStatus");
       const refreshBtn = document.getElementById("refreshRequests");
       const sendUpcomingConfirmationsBtn = document.getElementById("sendUpcomingConfirmations");
+      const viewEmailFailuresBtn = document.getElementById("viewEmailFailures");
       const statusFilter = document.getElementById("statusFilter");
       const statusFilterTabs = document.getElementById("statusFilterTabs");
       const statusFilterTabButtons = statusFilterTabs
@@ -2836,9 +2838,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           preview: "Preview",
           refresh: "Refresh",
           send_upcoming_confirmations: "Send upcoming emails",
+          view_email_failures: "Email failures",
           upcoming_confirmations_sent: "Upcoming emails sent: {count}.",
           upcoming_confirmations_none: "No upcoming maybe/accepted/paid bookings to email.",
           failed_send_upcoming_confirmations: "Failed to send upcoming emails.",
+          email_failures_loaded: "Recent email failures loaded: {count}.",
+          email_failures_none: "No recent email failures found.",
+          failed_load_email_failures: "Failed to load email failures.",
           all: "All",
           pending: "Pending",
           maybe: "Maybe",
@@ -3026,9 +3032,13 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           preview: "Apercu",
           refresh: "Actualiser",
           send_upcoming_confirmations: "Envoyer emails a venir",
+          view_email_failures: "Erreurs email",
           upcoming_confirmations_sent: "Emails a venir envoyes : {count}.",
           upcoming_confirmations_none: "Aucune reservation a venir (peut-etre/acceptee/payee) a envoyer.",
           failed_send_upcoming_confirmations: "Echec envoi des emails a venir.",
+          email_failures_loaded: "Erreurs email recentes chargees : {count}.",
+          email_failures_none: "Aucune erreur email recente.",
+          failed_load_email_failures: "Echec chargement erreurs email.",
           all: "Tous",
           pending: "En attente",
           maybe: "Peut-etre",
@@ -3833,6 +3843,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         setTextById("requestsSectionTitle", t("requests_title"));
         setTextById("refreshRequests", t("refresh"));
         setTextById("sendUpcomingConfirmations", t("send_upcoming_confirmations"));
+        setTextById("viewEmailFailures", t("view_email_failures"));
         setTextById("legendBlockedLabel", t("legend_blocked"));
         setTextById("legendBookingLabel", t("legend_booking"));
         setTextById("legendOutcallLabel", t("legend_outcall"));
@@ -7430,6 +7441,48 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         }
       };
 
+      const viewEmailFailures = async () => {
+        const key = getKey();
+        if (!key) {
+          requestsStatus.textContent = t("admin_key_required");
+          return;
+        }
+        requestsStatus.textContent = "";
+        if (viewEmailFailuresBtn) {
+          viewEmailFailuresBtn.disabled = true;
+        }
+        try {
+          const response = await fetch("../api/admin/email-failures.php?limit=25", {
+            headers: { "X-Admin-Key": key },
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || "email_failures");
+          }
+          const failures = Array.isArray(result.failures) ? result.failures : [];
+          if (!failures.length) {
+            requestsStatus.textContent = t("email_failures_none");
+            return;
+          }
+          const lines = failures.map((entry) => {
+            const timestamp = String(entry?.timestamp || "").trim();
+            const type = String(entry?.type || "").trim().toUpperCase();
+            const to = String(entry?.to || "").trim();
+            const subject = String(entry?.subject || "").trim();
+            const detail = String(entry?.detail || "").trim();
+            return `[${timestamp}] ${type} to=${to} subject=${subject}${detail ? ` detail=${detail}` : ""}`;
+          });
+          requestsStatus.textContent = t("email_failures_loaded", { count: failures.length });
+          window.alert(lines.join("\n"));
+        } catch (_error) {
+          requestsStatus.textContent = t("failed_load_email_failures");
+        } finally {
+          if (viewEmailFailuresBtn) {
+            viewEmailFailuresBtn.disabled = false;
+          }
+        }
+      };
+
       saveAvailabilityBtn.addEventListener("click", saveAvailability);
       if (calendarToday) {
         calendarToday.addEventListener("click", () => {
@@ -7807,6 +7860,9 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
       refreshBtn.addEventListener("click", loadRequests);
       if (sendUpcomingConfirmationsBtn) {
         sendUpcomingConfirmationsBtn.addEventListener("click", sendUpcomingConfirmations);
+      }
+      if (viewEmailFailuresBtn) {
+        viewEmailFailuresBtn.addEventListener("click", viewEmailFailures);
       }
       statusFilter.addEventListener("change", () => {
         syncStatusFilterTabs();

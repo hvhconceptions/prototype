@@ -4,6 +4,7 @@ ErrorDocument 404 /404.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^download-apk\.php$ - [G,L,NC]
+  RewriteRule ^downloads/HVH-Website\.apk$ - [L,NC]
   RewriteRule \.(?:apk|aab|ipa)$ - [G,L,NC]
   RewriteRule ^admin/?$ /booking/admin/ [R=302,L,NC]
   RewriteRule ^admin/index\.php$ /booking/admin/ [R=302,L,NC]

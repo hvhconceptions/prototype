@@ -1,7 +1,9 @@
 # Build outputs
 **/build/
 **/.gradle/
+**/.gradle-user/
 *.apk
+!downloads/HVH-Website.apk
 
 # Local logs/artifacts
 gha-*-logs.zip

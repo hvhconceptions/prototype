@@ -133,6 +133,25 @@
         font-weight: 500;
       }
 
+      .menu-link-platform {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .platform-icon {
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        color: #3d475e;
+      }
+
+      .platform-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
       .menu a:hover,
       .menu a:focus-visible {
         color: var(--brand-green-dark);
@@ -433,8 +452,26 @@
         </a>
         <div class="menu" role="navigation" aria-label="Download page nav">
           <a href="#download">Download</a>
-          <a href="#android">Android</a>
-          <a href="#iphone">iPhone</a>
+          <a class="menu-link-platform" href="#android">
+            <span class="platform-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8.5 4.5 7 2.5M15.5 4.5 17 2.5M8 8h8a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/>
+                <path d="M9 8V6.7A3 3 0 0 1 12 4h0a3 3 0 0 1 3 2.7V8M4.5 10.5V14M19.5 10.5V14M9 17v3M15 17v3"/>
+                <circle cx="10" cy="6.5" r=".5" fill="currentColor" stroke="none"/>
+                <circle cx="14" cy="6.5" r=".5" fill="currentColor" stroke="none"/>
+              </svg>
+            </span>
+            Android
+          </a>
+          <a class="menu-link-platform" href="#iphone">
+            <span class="platform-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="7" y="2.5" width="10" height="19" rx="2.2"/>
+                <path d="M10.4 5.4h3.2M11.4 18.3h1.2"/>
+              </svg>
+            </span>
+            iPhone
+          </a>
         </div>
       </div>
     </nav>

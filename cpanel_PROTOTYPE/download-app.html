@@ -623,11 +623,16 @@
         };
 
         try {
-          const savedPlatform = window.localStorage.getItem(PLATFORM_STORAGE_KEY);
-          if (savedPlatform === "android" || savedPlatform === "ios") {
-            setPlatformUi(savedPlatform);
+          // On Android, always default to Android download mode to avoid confusing saved iPhone state.
+          if (isAndroid) {
+            setPlatformUi("android");
           } else {
-            setPlatformUi(preferredPlatform);
+            const savedPlatform = window.localStorage.getItem(PLATFORM_STORAGE_KEY);
+            if (savedPlatform === "android" || savedPlatform === "ios") {
+              setPlatformUi(savedPlatform);
+            } else {
+              setPlatformUi(preferredPlatform);
+            }
           }
         } catch (_error) {
           setPlatformUi(preferredPlatform);

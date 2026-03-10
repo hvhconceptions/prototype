@@ -490,15 +490,14 @@
     <section class="hero" id="download">
       <div class="hero-inner">
         <div>
-          <h1>Download <span>HVH</span> App</h1>
+          <h1>Install <span>HVH</span> App</h1>
           <p>
-            The purpose of this app is to better locate me and receive updates about my upcoming travels.
-            Android and iPhone versions both stay synced with my website.
+            This app is the website app experience: always synced with heidivanhorny.com and updated in real time.
           </p>
           <p class="platform-version" id="platform-version">Selected version: Android</p>
           <div class="hero-actions">
-            <button class="btn btn-green" id="primary-install" type="button">DOWNLOAD ANDROID APK</button>
-            <a class="btn btn-white" id="secondary-install" href="#iphone">iPhone Installation</a>
+            <button class="btn btn-green" id="primary-install" type="button">INSTALL WEBSITE APP</button>
+            <a class="btn btn-white" id="secondary-install" href="#iphone">iPhone Steps</a>
           </div>
           <p class="status" id="android-status"></p>
         </div>
@@ -537,8 +536,8 @@
       <article class="info-card" id="android">
         <h2>Android Installation</h2>
         <ol>
-          <li>Tap <strong>DOWNLOAD ANDROID APK</strong>.</li>
-          <li>Allow installation from browser/downloads if Android asks.</li>
+          <li>Tap <strong>INSTALL WEBSITE APP</strong>.</li>
+          <li>If no popup appears, open browser menu then tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
           <li>Open the installed icon named <strong>HVH</strong>.</li>
         </ol>
       </article>
@@ -546,9 +545,9 @@
       <article class="info-card" id="iphone">
         <h2>iPhone Installation</h2>
         <ol>
-          <li><strong>iPhone app coming soon.</strong></li>
-          <li>For now, use Safari and add this page to Home Screen if needed.</li>
-          <li>Android APK download is available now.</li>
+          <li>Open this page in <strong>Safari</strong>.</li>
+          <li>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong>.</li>
+          <li>Open the installed icon named <strong>HVH</strong>.</li>
         </ol>
       </article>
     </section>
@@ -557,17 +556,15 @@
       Both apps are kept in sync with the website because they load the same live content source.
     </p>
 
-    <script src="/download-app-config.js"></script>
     <script>
       (function setupInstaller() {
+        let deferredPrompt = null;
         const button = document.getElementById("primary-install");
         const secondaryButton = document.getElementById("secondary-install");
         const status = document.getElementById("android-status");
         const platformVersion = document.getElementById("platform-version");
         const androidNav = document.getElementById("nav-android");
         const iphoneNav = document.getElementById("nav-iphone");
-        const cfg = window.HVH_DOWNLOAD_CONFIG || {};
-        const ANDROID_APK_URL = cfg.androidApkUrl || "https://raw.githubusercontent.com/hvhconceptions/prototype/main/app-debug.apk";
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =
@@ -600,25 +597,25 @@
           currentPlatform = platform;
           setActiveNav(platform);
           if (platform === "ios") {
-            button.textContent = "IPHONE APP COMING SOON";
-            secondaryButton.textContent = "DOWNLOAD ANDROID VERSION";
+            button.textContent = "SHOW IPHONE STEPS";
+            secondaryButton.textContent = "SHOW ANDROID STEPS";
             secondaryButton.setAttribute("href", "#android");
             if (platformVersion) {
               platformVersion.textContent = "Selected version: iPhone";
             }
             if (status) {
-              status.textContent = "iPhone app coming soon. Android APK is available now.";
+              status.textContent = "iPhone: use Safari > Share > Add to Home Screen.";
             }
             return;
           }
-          button.textContent = "DOWNLOAD ANDROID APK";
-          secondaryButton.textContent = "DOWNLOAD IPHONE VERSION";
+          button.textContent = "INSTALL WEBSITE APP";
+          secondaryButton.textContent = "SHOW IPHONE STEPS";
           secondaryButton.setAttribute("href", "#iphone");
           if (platformVersion) {
             platformVersion.textContent = "Selected version: Android";
           }
           if (status) {
-            status.textContent = "Tap the button to download Android APK now.";
+            status.textContent = "Android: tap to install website app.";
           }
         };
 
@@ -660,21 +657,35 @@
           });
         }
 
+        window.addEventListener("beforeinstallprompt", function (event) {
+          event.preventDefault();
+          deferredPrompt = event;
+          if (status && (currentPlatform === "android" || isAndroid)) {
+            status.textContent = "Install prompt ready. Tap INSTALL WEBSITE APP.";
+          }
+        });
+
         if (!button) return;
 
         button.addEventListener("click", function () {
-          if (currentPlatform === "ios") {
+          if (currentPlatform === "ios" || isIOS) {
             scrollToSection("iphone");
             if (status) {
-              status.textContent = "iPhone app coming soon. Please use Android APK for now.";
+              status.textContent = "iPhone: open in Safari, then Share > Add to Home Screen.";
             }
             return;
           }
 
-          if (status) {
-            status.textContent = "Downloading Android APK now...";
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+            return;
           }
-          window.location.href = ANDROID_APK_URL;
+
+          scrollToSection("android");
+          if (status) {
+            status.textContent = "Use browser menu > Install app or Add to Home screen.";
+          }
         });
       })();
     </script>

@@ -546,9 +546,9 @@
       <article class="info-card" id="iphone">
         <h2>iPhone Installation</h2>
         <ol>
-          <li>Open this page in <strong>Safari</strong>.</li>
-          <li>Tap <strong>Share</strong> -> <strong>Add to Home Screen</strong>.</li>
-          <li>Name it <strong>HVH</strong>, then tap <strong>Add</strong>.</li>
+          <li>Tap <strong>DOWNLOAD IPHONE TEST APP</strong> to open TestFlight invite (if configured).</li>
+          <li>Install <strong>TestFlight</strong> from App Store if prompted.</li>
+          <li>If invite is not configured yet, use Safari -> <strong>Share</strong> -> <strong>Add to Home Screen</strong>.</li>
         </ol>
       </article>
     </section>
@@ -557,6 +557,7 @@
       Both apps are kept in sync with the website because they load the same live content source.
     </p>
 
+    <script src="/download-app-config.js"></script>
     <script>
       (function setupInstaller() {
         const button = document.getElementById("primary-install");
@@ -565,7 +566,10 @@
         const platformVersion = document.getElementById("platform-version");
         const androidNav = document.getElementById("nav-android");
         const iphoneNav = document.getElementById("nav-iphone");
-        const ANDROID_APK_URL = "/app-debug.apk";
+        const cfg = window.HVH_DOWNLOAD_CONFIG || {};
+        const ANDROID_APK_URL = cfg.androidApkUrl || "/app-debug.apk";
+        const IOS_TESTFLIGHT_URL = cfg.iosTestflightUrl || "";
+        const hasTestFlightUrl = /^https:\/\/testflight\.apple\.com\/join\/[A-Za-z0-9]+$/i.test(IOS_TESTFLIGHT_URL);
         const ua = navigator.userAgent || "";
         const isAndroid = /Android/i.test(ua);
         const isIOS =
@@ -598,14 +602,16 @@
           currentPlatform = platform;
           setActiveNav(platform);
           if (platform === "ios") {
-            button.textContent = "IPHONE INSTALL STEPS";
+            button.textContent = hasTestFlightUrl ? "DOWNLOAD IPHONE TEST APP" : "IPHONE INSTALL STEPS";
             secondaryButton.textContent = "DOWNLOAD ANDROID VERSION";
             secondaryButton.setAttribute("href", "#android");
             if (platformVersion) {
               platformVersion.textContent = "Selected version: iPhone";
             }
             if (status) {
-              status.textContent = "Use Safari > Share > Add to Home Screen.";
+              status.textContent = hasTestFlightUrl
+                ? "Tap to open iPhone TestFlight install."
+                : "No iPhone invite set yet. Use Safari > Share > Add to Home Screen.";
             }
             return;
           }
@@ -657,6 +663,13 @@
 
         button.addEventListener("click", function () {
           if (currentPlatform === "ios") {
+            if (hasTestFlightUrl) {
+              if (status) {
+                status.textContent = "Opening iPhone TestFlight install...";
+              }
+              window.open(IOS_TESTFLIGHT_URL, "_blank", "noopener");
+              return;
+            }
             scrollToSection("iphone");
             if (status) {
               status.textContent = "iPhone install: open in Safari, then Share > Add to Home Screen.";

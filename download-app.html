@@ -434,8 +434,8 @@
             Android and iPhone versions both stay synced with my website.
           </p>
           <div class="hero-actions">
-            <button class="btn btn-green" id="android-install" type="button">FREE DOWNLOAD</button>
-            <a class="btn btn-white" href="#iphone">iPhone Installation</a>
+            <button class="btn btn-green" id="primary-install" type="button">FREE DOWNLOAD</button>
+            <a class="btn btn-white" id="secondary-install" href="#iphone">iPhone Installation</a>
           </div>
           <p class="status" id="android-status"></p>
         </div>
@@ -497,24 +497,65 @@
     <script>
       (function setupInstaller() {
         let deferredPrompt = null;
-        const button = document.getElementById("android-install");
+        const button = document.getElementById("primary-install");
+        const secondaryButton = document.getElementById("secondary-install");
         const status = document.getElementById("android-status");
+        const ua = navigator.userAgent || "";
+        const isAndroid = /Android/i.test(ua);
+        const isIOS =
+          /iPhone|iPad|iPod/i.test(ua) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        const preferredPlatform = isIOS ? "ios" : "android";
+
+        const scrollToSection = (id) => {
+          const section = document.getElementById(id);
+          if (section) {
+            section.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        };
+
+        if (button && secondaryButton) {
+          if (preferredPlatform === "ios") {
+            button.textContent = "IPHONE INSTALLATION";
+            secondaryButton.textContent = "ANDROID FREE DOWNLOAD";
+            secondaryButton.setAttribute("href", "#android");
+            if (status) {
+              status.textContent = "iPhone detected. Use Safari > Share > Add to Home Screen.";
+            }
+          } else if (isAndroid) {
+            button.textContent = "FREE DOWNLOAD";
+            secondaryButton.textContent = "IPHONE INSTALLATION";
+            secondaryButton.setAttribute("href", "#iphone");
+          }
+        }
 
         window.addEventListener("beforeinstallprompt", function (event) {
           event.preventDefault();
           deferredPrompt = event;
           if (status) {
-            status.textContent = "Install prompt ready.";
+            status.textContent =
+              preferredPlatform === "ios"
+                ? "Android install prompt ready if opened on Android."
+                : "Install prompt ready.";
           }
         });
 
         if (!button) return;
 
         button.addEventListener("click", async function () {
+          if (preferredPlatform === "ios") {
+            scrollToSection("iphone");
+            if (status) {
+              status.textContent = "Open in Safari, then Share > Add to Home Screen.";
+            }
+            return;
+          }
+
           if (!deferredPrompt) {
             if (status) {
               status.textContent = "If no popup appears, use Chrome menu > Install app.";
             }
+            scrollToSection("android");
             return;
           }
 

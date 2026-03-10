@@ -3,20 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HVH App Download</title>
+    <title>Download HVH App</title>
     <meta
       name="description"
-      content="Install the HVH app on Android or iPhone to stay synced with travel updates."
+      content="Download the HVH app to better locate upcoming travels and receive live updates synced with the website."
     />
     <style>
       :root {
-        --bg: #060a12;
-        --panel: #0b1526;
-        --line: rgba(0, 255, 153, 0.32);
-        --text: #d9fff1;
-        --muted: #87b7aa;
-        --accent: #00ff99;
-        --accent-2: #00d0ff;
+        --ink: #11131a;
+        --bg: #f2f4f8;
+        --hero-top: #2b2f4b;
+        --hero-bottom: #1f2237;
+        --brand-green: #74bf44;
+        --brand-green-dark: #58a92d;
+        --muted: #8f95a8;
+        --line: #dfe3eb;
       }
 
       * {
@@ -25,238 +26,473 @@
 
       body {
         margin: 0;
-        min-height: 100vh;
-        background:
-          radial-gradient(circle at 20% -10%, rgba(0, 208, 255, 0.22), transparent 42%),
-          radial-gradient(circle at 86% 4%, rgba(0, 255, 153, 0.2), transparent 40%),
-          var(--bg);
-        color: var(--text);
-        font: 16px/1.55 "Lucida Console", "Courier New", monospace;
-        letter-spacing: 0.02em;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       }
 
-      .shell {
-        width: min(980px, 94vw);
-        margin: 28px auto 48px;
-        border: 1px solid var(--line);
-        background: linear-gradient(180deg, rgba(11, 21, 38, 0.96), rgba(5, 10, 18, 0.97));
-        box-shadow: 0 0 0 1px rgba(0, 255, 153, 0.08), 0 28px 56px rgba(0, 0, 0, 0.45);
+      a {
+        color: inherit;
+        text-decoration: none;
       }
 
-      .topbar {
+      .promo {
+        background: #1a1c2f;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .promo-inner {
+        width: min(1240px, 96vw);
+        margin: 0 auto;
+        min-height: 78px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--line);
-        background: linear-gradient(180deg, rgba(14, 32, 52, 0.95), rgba(11, 21, 38, 0.95));
-        text-transform: uppercase;
-        font-size: 13px;
-      }
-
-      .badge {
-        color: #00160d;
-        background: var(--accent);
-        border: 1px solid rgba(0, 255, 153, 0.7);
-        padding: 2px 8px;
-        font-weight: 700;
-      }
-
-      .content {
-        padding: 22px;
-        display: grid;
         gap: 18px;
       }
 
-      .identity {
+      .promo-copy {
         display: flex;
         align-items: center;
         gap: 14px;
-        padding: 14px;
-        border: 1px solid var(--line);
-        background: rgba(5, 15, 22, 0.8);
+        flex-wrap: wrap;
       }
 
-      .identity img {
-        width: 58px;
-        height: 58px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid rgba(0, 255, 153, 0.45);
-      }
-
-      .identity .name {
-        margin: 0;
-        font-size: 1.2rem;
+      .promo-new {
+        color: var(--brand-green);
         font-weight: 700;
-        letter-spacing: 0.08em;
-        color: var(--accent);
+        font-size: 2rem;
       }
 
-      .identity .meta {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.9rem;
+      .promo-text {
+        font-size: clamp(1rem, 2.1vw, 1.02rem);
+        letter-spacing: 0.01em;
       }
 
-      .terminal {
-        border: 1px solid var(--line);
-        background: #020811;
-        padding: 12px 14px;
-        color: #b4ffd7;
+      .promo-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 180px;
+        padding: 11px 18px;
+        border-radius: 11px;
+        background: var(--brand-green);
+        color: #fff;
+        font-weight: 700;
         font-size: 0.95rem;
+        text-transform: uppercase;
       }
 
-      .terminal p {
-        margin: 0.42rem 0;
+      .promo-cta:hover,
+      .promo-cta:focus-visible {
+        outline: none;
+        background: var(--brand-green-dark);
       }
 
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .topnav {
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topnav-inner {
+        width: min(1240px, 96vw);
+        margin: 0 auto;
+        min-height: 82px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         gap: 14px;
       }
 
-      .card {
-        border: 1px solid var(--line);
-        background: linear-gradient(180deg, rgba(8, 20, 33, 0.92), rgba(4, 11, 20, 0.92));
-        padding: 14px;
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
       }
 
-      .card h2 {
-        margin: 0 0 8px;
-        color: var(--accent-2);
-        font-size: 1.02rem;
-        text-transform: uppercase;
+      .brand img {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
       }
 
-      .card p {
-        margin: 0 0 10px;
-        color: #c8e7dd;
+      .brand strong {
+        font-size: 2rem;
+        line-height: 1;
+        color: var(--brand-green);
+        letter-spacing: 0.01em;
       }
 
-      .steps {
+      .menu {
+        display: flex;
+        align-items: center;
+        gap: clamp(16px, 3vw, 38px);
+        font-size: 1rem;
+        font-weight: 500;
+      }
+
+      .menu a:hover,
+      .menu a:focus-visible {
+        color: var(--brand-green-dark);
+        outline: none;
+      }
+
+      .hero {
+        background: radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.05), transparent 35%),
+          linear-gradient(135deg, var(--hero-top), var(--hero-bottom));
+        color: #fff;
+      }
+
+      .hero-inner {
+        width: min(1240px, 96vw);
+        margin: 0 auto;
+        padding: clamp(42px, 7vw, 72px) 0;
+        display: grid;
+        gap: 30px;
+        grid-template-columns: minmax(0, 1fr) minmax(340px, 540px);
+        align-items: center;
+      }
+
+      .hero h1 {
         margin: 0;
-        padding-left: 18px;
-        color: #c8e7dd;
+        font-size: clamp(2rem, 5.2vw, 4.3rem);
+        line-height: 1.03;
+        font-weight: 700;
+        letter-spacing: -0.01em;
       }
 
-      .steps li {
-        margin: 0 0 7px;
+      .hero h1 span {
+        font-weight: 800;
       }
 
-      .actions {
+      .hero p {
+        margin: 18px 0 0;
+        max-width: 700px;
+        color: #e2e6f3;
+        font-size: clamp(1.06rem, 2.2vw, 1.16rem);
+        line-height: 1.5;
+      }
+
+      .hero-actions {
+        margin-top: 28px;
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 12px;
+        gap: 12px;
       }
 
       .btn {
-        appearance: none;
-        border: 1px solid rgba(0, 255, 153, 0.6);
-        background: linear-gradient(180deg, #003526, #00261d);
-        color: #d4ffe8;
-        font: inherit;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 9px 13px;
-        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        padding: 15px 28px;
+        border: 0;
+        font-size: 1.06rem;
+        font-weight: 700;
         cursor: pointer;
       }
 
-      .btn:hover,
-      .btn:focus-visible {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(0, 255, 153, 0.2);
+      .btn-green {
+        background: var(--brand-green);
+        color: #fff;
+        min-width: 290px;
       }
 
-      .note {
-        color: var(--muted);
-        font-size: 0.88rem;
+      .btn-green:hover,
+      .btn-green:focus-visible {
+        background: var(--brand-green-dark);
+        outline: none;
+      }
+
+      .btn-white {
+        background: #fff;
+        color: #1f2437;
+        border: 1px solid #d5daeb;
+      }
+
+      .btn-white:hover,
+      .btn-white:focus-visible {
+        outline: none;
+        background: #f0f3fb;
       }
 
       .status {
-        margin-top: 8px;
-        color: #d4ffe8;
+        margin-top: 10px;
         min-height: 1.2em;
+        color: #b6f0a0;
+        font-weight: 600;
       }
 
-      .footerline {
-        margin-top: 4px;
-        border-top: 1px dashed rgba(0, 255, 153, 0.28);
-        padding-top: 10px;
-        color: #9fd0c2;
-        font-size: 0.86rem;
+      .hero-art {
+        position: relative;
+      }
+
+      .new-badge {
+        position: absolute;
+        right: -16px;
+        top: -20px;
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: #1e9df7;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: rotate(18deg);
+        box-shadow: 0 14px 32px rgba(12, 31, 88, 0.55);
+      }
+
+      .app-window {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 30px 56px rgba(5, 8, 24, 0.58);
+        background: #101420;
+      }
+
+      .app-window-head {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        color: #d5d8e6;
+        font-size: 0.88rem;
+        background: #1b2233;
+      }
+
+      .app-window-dots {
+        display: inline-flex;
+        gap: 6px;
+      }
+
+      .app-window-dots span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4b546b;
+      }
+
+      .app-window-body {
+        min-height: 320px;
+        padding: 18px;
+        background: linear-gradient(160deg, #0f1322, #151a2d 60%, #0f1220);
+      }
+
+      .mock-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .mock-top img {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+      }
+
+      .mock-top strong {
+        font-size: 1.06rem;
+      }
+
+      .mock-card {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 12px;
+        color: #dce2f2;
+        background: rgba(255, 255, 255, 0.02);
+        margin-bottom: 10px;
+      }
+
+      .mock-card h3 {
+        margin: 0 0 6px;
+        color: #fff;
+        font-size: 0.98rem;
+      }
+
+      .mock-card p {
+        margin: 0;
+        color: #b2b8cc;
+        font-size: 0.9rem;
+      }
+
+      .info {
+        width: min(1240px, 96vw);
+        margin: 24px auto 44px;
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .info-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px;
+      }
+
+      .info-card h2 {
+        margin: 0 0 8px;
+        font-size: 1.18rem;
+      }
+
+      .info-card ol {
+        margin: 0;
+        padding-left: 20px;
+        color: #2c3244;
+      }
+
+      .info-card li {
+        margin: 0 0 7px;
+      }
+
+      .sync-note {
+        width: min(1240px, 96vw);
+        margin: 0 auto 56px;
+        padding: 16px 18px;
+        border-radius: 10px;
+        border: 1px solid #d8deea;
+        background: #fff;
+        color: #2d3448;
+        font-size: 0.98rem;
+      }
+
+      @media (max-width: 980px) {
+        .hero-inner {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-art {
+          order: 2;
+        }
       }
 
       @media (max-width: 760px) {
-        .grid {
+        .promo-inner,
+        .topnav-inner {
+          min-height: auto;
+          padding: 10px 0;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .menu {
+          width: 100%;
+          justify-content: space-between;
+          gap: 10px;
+          font-size: 0.92rem;
+        }
+
+        .btn-green {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .info {
           grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
-    <main class="shell">
-      <div class="topbar">
-        <span>HVH APP LOADER</span>
-        <span class="badge">BOMBACLOUD BUILD</span>
+    <header class="promo">
+      <div class="promo-inner">
+        <div class="promo-copy">
+          <span class="promo-new">NEW!</span>
+          <span class="promo-text">HVH app live sync. Better locate my upcoming travels with real-time updates.</span>
+        </div>
+        <a class="promo-cta" href="#download">Get Started</a>
       </div>
+    </header>
 
-      <section class="content">
-        <div class="identity">
-          <img src="/BOMBACLOUD_NEW.png" alt="Bombacloud HVH app logo" />
-          <div>
-            <p class="name">HVH</p>
-            <p class="meta">BombaCloud logo + live website sync</p>
+    <nav class="topnav">
+      <div class="topnav-inner">
+        <a class="brand" href="/inside.html">
+          <img src="/BOMBACLOUD_NEW.png" alt="HVH app logo" />
+          <strong>HVH</strong>
+        </a>
+        <div class="menu" role="navigation" aria-label="Download page nav">
+          <a href="#download">Download</a>
+          <a href="#android">Android</a>
+          <a href="#iphone">iPhone</a>
+        </div>
+      </div>
+    </nav>
+
+    <section class="hero" id="download">
+      <div class="hero-inner">
+        <div>
+          <h1>Download <span>HVH</span> App</h1>
+          <p>
+            The purpose of this app is to better locate me and receive updates about my upcoming travels.
+            Android and iPhone versions both stay synced with my website.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-green" id="android-install" type="button">FREE DOWNLOAD</button>
+            <a class="btn btn-white" href="#iphone">iPhone Installation</a>
+          </div>
+          <p class="status" id="android-status"></p>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="new-badge">New!</div>
+          <div class="app-window">
+            <div class="app-window-head">
+              <span>HVH APP</span>
+              <span class="app-window-dots"><span></span><span></span><span></span></span>
+            </div>
+            <div class="app-window-body">
+              <div class="mock-top">
+                <img src="/BOMBACLOUD_NEW.png" alt="" />
+                <strong>HVH</strong>
+              </div>
+              <div class="mock-card">
+                <h3>Live Touring Updates</h3>
+                <p>Same data source as heidivanhorny.com for instant itinerary refresh.</p>
+              </div>
+              <div class="mock-card">
+                <h3>Fast Access</h3>
+                <p>Open schedule, rates, and contact actions in one app icon.</p>
+              </div>
+              <div class="mock-card">
+                <h3>Branding</h3>
+                <p>BombaCloud logo with app name shown as HVH.</p>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="terminal" aria-label="Purpose">
-          <p>> purpose: better locate me + instant upcoming travel updates</p>
-          <p>> sync mode: live with website data</p>
-          <p>> platforms: Android + iPhone</p>
-        </div>
+    <section class="info">
+      <article class="info-card" id="android">
+        <h2>Android Installation</h2>
+        <ol>
+          <li>Tap <strong>FREE DOWNLOAD</strong>.</li>
+          <li>If popup does not show: Chrome menu -> <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+          <li>Open the installed icon named <strong>HVH</strong>.</li>
+        </ol>
+      </article>
 
-        <div class="grid">
-          <section class="card" aria-labelledby="android-title">
-            <h2 id="android-title">Android version</h2>
-            <p>Install HVH as an app from Chrome.</p>
-            <ol class="steps">
-              <li>Tap <strong>Install Android App</strong> below.</li>
-              <li>If prompt does not appear: Chrome menu -> <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
-              <li>Open app icon named <strong>HVH</strong>.</li>
-            </ol>
-            <div class="actions">
-              <button class="btn" id="android-install" type="button">Install Android App</button>
-              <a class="btn" href="/inside.html" target="_blank" rel="noopener noreferrer">Open HVH</a>
-            </div>
-            <p class="status" id="android-status"></p>
-          </section>
+      <article class="info-card" id="iphone">
+        <h2>iPhone Installation</h2>
+        <ol>
+          <li>Open this page in <strong>Safari</strong>.</li>
+          <li>Tap <strong>Share</strong> -> <strong>Add to Home Screen</strong>.</li>
+          <li>Name it <strong>HVH</strong>, then tap <strong>Add</strong>.</li>
+        </ol>
+      </article>
+    </section>
 
-          <section class="card" aria-labelledby="iphone-title">
-            <h2 id="iphone-title">iPhone version</h2>
-            <p>Install HVH as an app from Safari.</p>
-            <ol class="steps">
-              <li>Open this page in <strong>Safari</strong> (not Chrome).</li>
-              <li>Tap <strong>Share</strong> -> <strong>Add to Home Screen</strong>.</li>
-              <li>Name it <strong>HVH</strong>, then tap <strong>Add</strong>.</li>
-            </ol>
-            <p class="note">iPhone does not install APK files. This creates the iPhone app icon using the same live HVH app.</p>
-            <div class="actions">
-              <a class="btn" href="/inside.html" target="_blank" rel="noopener noreferrer">Open HVH</a>
-            </div>
-          </section>
-        </div>
-
-        <p class="footerline">
-          Both app icons load the same live source as heidivanhorny.com, so updates on your website stay in sync.
-        </p>
-      </section>
-    </main>
+    <p class="sync-note">
+      Both apps are kept in sync with the website because they load the same live content source.
+    </p>
 
     <script>
       (function setupInstaller() {
@@ -281,6 +517,7 @@
             }
             return;
           }
+
           deferredPrompt.prompt();
           const choice = await deferredPrompt.userChoice;
           if (status) {

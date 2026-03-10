@@ -3,6 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#120f1f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="HVH" />
+    <link rel="manifest" href="/manifest.json?v=20260310" />
+    <link rel="apple-touch-icon" href="/BOMBACLOUD_NEW.png?v=20260310" />
     <title>Install HVH Web App</title>
     <meta
       name="description"
@@ -557,6 +562,10 @@
     </p>
 
     <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/hvh-sw.js").catch(function () {});
+      }
+
       (function setupInstaller() {
         let deferredPrompt = null;
         const button = document.getElementById("primary-install");

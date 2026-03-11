@@ -555,6 +555,7 @@
           <li>Open this page in <strong>Safari</strong>.</li>
           <li>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong>.</li>
           <li>Open the installed icon named <strong>HVH</strong>.</li>
+          <li>No App Store needed. This installs the live website app.</li>
         </ol>
       </article>
     </section>
@@ -581,6 +582,7 @@
         const isIOS =
           /iPhone|iPad|iPod/i.test(ua) ||
           (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        const isSafari = /^((?!chrome|android|crios|fxios|edgios|opios).)*safari/i.test(ua);
         const preferredPlatform = isIOS ? "ios" : "android";
         const PLATFORM_STORAGE_KEY = "hvh_download_platform";
         let currentPlatform = preferredPlatform;
@@ -608,16 +610,18 @@
           currentPlatform = platform;
           setActiveNav(platform);
           if (platform === "ios") {
-            button.textContent = "SHOW IPHONE STEPS";
+            button.textContent = "INSTALL ON IPHONE (WEB APP)";
             button.setAttribute("href", "#iphone");
             button.removeAttribute("download");
             secondaryButton.textContent = "SHOW ANDROID STEPS";
             secondaryButton.setAttribute("href", "#android");
             if (platformVersion) {
-              platformVersion.textContent = "Selected version: iPhone";
+              platformVersion.textContent = "Selected version: iPhone web app";
             }
             if (status) {
-              status.textContent = "iPhone: install the HVH web app with Safari > Share > Add to Home Screen.";
+              status.textContent = isSafari
+                ? "iPhone: tap INSTALL ON IPHONE, then Share > Add to Home Screen."
+                : "iPhone: open this page in Safari to install the HVH web app.";
             }
             return;
           }
@@ -679,7 +683,9 @@
             event.preventDefault();
             scrollToSection("iphone");
             if (status) {
-              status.textContent = "iPhone: open in Safari, then Share > Add to Home Screen.";
+              status.textContent = isSafari
+                ? "Use Safari Share > Add to Home Screen to install HVH."
+                : "Please open this page in Safari, then use Share > Add to Home Screen.";
             }
             return;
           }

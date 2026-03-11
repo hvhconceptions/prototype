@@ -412,6 +412,47 @@
         font-size: 0.98rem;
       }
 
+      .self-test {
+        width: min(1240px, 96vw);
+        margin: 0 auto 18px;
+        background: #ffffff;
+        border: 1px solid #d8deea;
+        border-radius: 10px;
+        padding: 16px 18px;
+      }
+
+      .self-test h2 {
+        margin: 0 0 10px;
+        font-size: 1.08rem;
+      }
+
+      .self-test-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 16px;
+      }
+
+      .self-test-item {
+        border: 1px solid #e2e7f2;
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: #f9fbff;
+      }
+
+      .self-test-item strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #2c3448;
+        font-size: 0.88rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .self-test-item span {
+        color: #151c2d;
+        font-weight: 600;
+      }
+
       @media (max-width: 980px) {
         .hero-inner {
           grid-template-columns: 1fr;
@@ -444,6 +485,10 @@
         }
 
         .info {
+          grid-template-columns: 1fr;
+        }
+
+        .self-test-grid {
           grid-template-columns: 1fr;
         }
       }
@@ -560,6 +605,28 @@
       </article>
     </section>
 
+    <section class="self-test" id="self-test">
+      <h2>Self-Test</h2>
+      <div class="self-test-grid">
+        <div class="self-test-item">
+          <strong>Detected device</strong>
+          <span id="selftest-device">-</span>
+        </div>
+        <div class="self-test-item">
+          <strong>Detected browser</strong>
+          <span id="selftest-browser">-</span>
+        </div>
+        <div class="self-test-item">
+          <strong>Install mode</strong>
+          <span id="selftest-mode">-</span>
+        </div>
+        <div class="self-test-item">
+          <strong>iPhone install readiness</strong>
+          <span id="selftest-ios-ready">-</span>
+        </div>
+      </div>
+    </section>
+
     <p class="sync-note">
       Android APK on this page is customer HVH website app only. No admin panel is included.
     </p>
@@ -575,6 +642,10 @@
         const secondaryButton = document.getElementById("secondary-install");
         const status = document.getElementById("android-status");
         const platformVersion = document.getElementById("platform-version");
+        const selfTestDevice = document.getElementById("selftest-device");
+        const selfTestBrowser = document.getElementById("selftest-browser");
+        const selfTestMode = document.getElementById("selftest-mode");
+        const selfTestIosReady = document.getElementById("selftest-ios-ready");
         const androidNav = document.getElementById("nav-android");
         const iphoneNav = document.getElementById("nav-iphone");
         const ua = navigator.userAgent || "";
@@ -583,9 +654,52 @@
           /iPhone|iPad|iPod/i.test(ua) ||
           (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
         const isSafari = /^((?!chrome|android|crios|fxios|edgios|opios).)*safari/i.test(ua);
+        const isIPhone = /iPhone/i.test(ua);
+        const isIPad = /iPad/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
         const preferredPlatform = isIOS ? "ios" : "android";
         const PLATFORM_STORAGE_KEY = "hvh_download_platform";
         let currentPlatform = preferredPlatform;
+
+        const detectBrowserName = () => {
+          if (/Edg|EdgiOS/i.test(ua)) return "Edge";
+          if (/CriOS|Chrome/i.test(ua)) return "Chrome";
+          if (/FxiOS|Firefox/i.test(ua)) return "Firefox";
+          if (/OPiOS|Opera/i.test(ua)) return "Opera";
+          if (isSafari) return "Safari";
+          return "Other";
+        };
+
+        const detectDeviceName = () => {
+          if (isIPhone) return "iPhone";
+          if (isIPad) return "iPad";
+          if (isAndroid) return "Android";
+          return "Desktop / Other";
+        };
+
+        const updateSelfTest = () => {
+          if (selfTestDevice) {
+            selfTestDevice.textContent = detectDeviceName();
+          }
+          if (selfTestBrowser) {
+            selfTestBrowser.textContent = detectBrowserName();
+          }
+          if (selfTestMode) {
+            if (currentPlatform === "ios") {
+              selfTestMode.textContent = "iPhone web app (Add to Home Screen)";
+            } else {
+              selfTestMode.textContent = "Android APK download";
+            }
+          }
+          if (selfTestIosReady) {
+            if (isIOS && isSafari) {
+              selfTestIosReady.textContent = "Ready now (Safari on iPhone/iPad)";
+            } else if (isIOS && !isSafari) {
+              selfTestIosReady.textContent = "Open this page in Safari to install";
+            } else {
+              selfTestIosReady.textContent = "Needs an iPhone/iPad with Safari";
+            }
+          }
+        };
 
         const scrollToSection = (id) => {
           const section = document.getElementById(id);
@@ -623,6 +737,7 @@
                 ? "iPhone: tap INSTALL ON IPHONE, then Share > Add to Home Screen."
                 : "iPhone: open this page in Safari to install the HVH web app.";
             }
+            updateSelfTest();
             return;
           }
           button.textContent = "FREE ANDROID DOWNLOAD (.APK)";
@@ -636,6 +751,7 @@
           if (status) {
             status.textContent = "Android: tap FREE ANDROID DOWNLOAD to install the HVH website app.";
           }
+          updateSelfTest();
         };
 
         try {
@@ -693,6 +809,8 @@
             status.textContent = "Downloading Android HVH app (APK)...";
           }
         });
+
+        updateSelfTest();
       })();
     </script>
   </body>

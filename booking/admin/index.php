@@ -1464,6 +1464,22 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
         box-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
       }
 
+      .slot-maybe-label {
+        position: absolute;
+        left: 18px;
+        top: 13px;
+        right: 44px;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: rgba(76, 34, 139, 0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        pointer-events: none;
+      }
+
       .calendar-slot.slot-grouped {
         border-radius: 0;
       }
@@ -5128,17 +5144,29 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
             }
             if (maybeEntries.length) {
               slotButton.classList.add("maybe");
+              const acceptedCount = maybeEntries.filter(
+                (slot) => String(slot?.status || "").toLowerCase() === "accepted"
+              ).length;
+              const badgePrefix = acceptedCount > 0 && acceptedCount === maybeEntries.length ? "A" : "?";
               const maybeBadge = document.createElement("span");
               maybeBadge.className = "slot-maybe-count";
-              maybeBadge.textContent = maybeEntries.length > 1 ? `?${maybeEntries.length}` : "?";
+              maybeBadge.textContent = maybeEntries.length > 1 ? `${badgePrefix}${maybeEntries.length}` : badgePrefix;
               slotButton.appendChild(maybeBadge);
+              if (!entry) {
+                const maybeName = String(maybePrimary?.label || "").trim();
+                const shortName = maybeName ? maybeName.split(/\s+/)[0] : t("unknown");
+                const maybeLabel = document.createElement("span");
+                maybeLabel.className = "slot-maybe-label";
+                maybeLabel.textContent = shortName;
+                slotButton.appendChild(maybeLabel);
+              }
               const maybeNames = maybeEntries
                 .map((slot) => String(slot.label || "").trim())
                 .filter(Boolean)
                 .slice(0, 4)
                 .join(", ");
               const moreCount = maybeEntries.length > 4 ? ` +${maybeEntries.length - 4}` : "";
-              const maybeTitle = `Maybe: ${maybeNames || t("unknown")}${moreCount}`;
+              const maybeTitle = `Tentative: ${maybeNames || t("unknown")}${moreCount}`;
               slotButton.title = slotButton.title ? `${slotButton.title} | ${maybeTitle}` : maybeTitle;
             }
             slotButton.addEventListener("click", () => {
@@ -6944,7 +6972,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           const bookingId = String(item?.id || "").trim();
           if (bookingId && hiddenBookingIds.has(bookingId)) return;
           const { status, paymentStatus } = normalizeStatus(item);
-          const confirmed = status === "accepted" || paymentStatus === "paid";
+          const confirmed = paymentStatus === "paid";
           if (!confirmed) return;
           const date = String(item?.preferred_date || "").trim();
           const start = String(item?.preferred_time || "").trim();
@@ -6984,7 +7012,7 @@ $currentAdminIsEmployer = (bool) ($adminSession['is_employer'] ?? false);
           const requestId = String(item?.id || "").trim();
           if (requestId && hiddenBookingIds.has(requestId)) return;
           const { status, paymentStatus } = normalizeStatus(item);
-          const maybeLike = status === "maybe" || status === "pending";
+          const maybeLike = status === "maybe" || status === "pending" || status === "accepted";
           if (!maybeLike || paymentStatus === "paid") return;
           const date = String(item?.preferred_date || "").trim();
           const start = String(item?.preferred_time || "").trim();

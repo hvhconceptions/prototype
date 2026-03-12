@@ -2,61 +2,94 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
+  android:background="@drawable/bg_app_shell"
   android:orientation="vertical"
-  android:padding="16dp"
-  android:background="#fff8fc">
+  android:paddingStart="14dp"
+  android:paddingTop="12dp"
+  android:paddingEnd="14dp"
+  android:paddingBottom="12dp">
 
   <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/bg_header_panel"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingBottom="10dp">
+    android:paddingStart="14dp"
+    android:paddingTop="12dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="12dp">
 
-    <TextView
+    <LinearLayout
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="1"
-      android:text="Notifications"
-      android:textColor="#ff2d93"
-      android:textSize="22sp"
-      android:textStyle="bold" />
+      android:orientation="vertical">
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Client Feed"
+        android:textColor="@color/text_inverse"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="Clean list of requests and follow-ups"
+        android:textColor="#FFF0F8"
+        android:textSize="12sp" />
+    </LinearLayout>
 
     <TextView
       android:id="@+id/clearAllNotifications"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:background="#ff007f"
+      android:background="@drawable/bg_button_primary"
       android:paddingStart="12dp"
-      android:paddingTop="7dp"
+      android:paddingTop="8dp"
       android:paddingEnd="12dp"
-      android:paddingBottom="7dp"
-      android:text="Clear all"
-      android:textAllCaps="true"
-      android:textColor="#ffffff"
-      android:textSize="12sp" />
+      android:paddingBottom="8dp"
+      android:text="Clear"
+      android:textAllCaps="false"
+      android:textColor="@color/text_inverse"
+      android:textSize="12sp"
+      android:textStyle="bold" />
   </LinearLayout>
 
-  <TextView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingBottom="12dp"
-    android:text="New booking entries show up here."
-    android:textColor="#8a2a53"
-    android:textSize="13sp" />
-
-  <androidx.recyclerview.widget.RecyclerView
-    android:id="@+id/clientsList"
+  <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="0dp"
-    android:layout_weight="1" />
+    android:layout_marginTop="10dp"
+    android:layout_weight="1"
+    android:background="@drawable/bg_surface_card"
+    android:orientation="vertical"
+    android:padding="12dp">
 
-  <TextView
-    android:id="@+id/emptyClients"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="No notifications yet."
-    android:textColor="#7a1c45"
-    android:gravity="center"
-    android:padding="12dp" />
+    <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:paddingBottom="10dp"
+      android:text="New booking requests from web/app show here."
+      android:textColor="@color/text_secondary"
+      android:textSize="13sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+      android:id="@+id/clientsList"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1" />
+
+    <TextView
+      android:id="@+id/emptyClients"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:padding="10dp"
+      android:text="No notifications yet."
+      android:textColor="@color/text_secondary"
+      android:textSize="13sp" />
+  </LinearLayout>
 </LinearLayout>

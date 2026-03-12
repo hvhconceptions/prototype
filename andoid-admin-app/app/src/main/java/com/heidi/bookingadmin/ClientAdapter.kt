@@ -46,20 +46,20 @@ class ClientAdapter(
             nameView.text = item.name.ifBlank { "Unknown" }
             val where = item.city.ifBlank { "City not set" }
             val who = item.email.ifBlank { "No email" }
-            metaView.text = "$where - $who"
+            metaView.text = "City: $where\nEmail: $who"
             val whenText = DateUtils.getRelativeTimeSpanString(
                 item.createdAt,
                 System.currentTimeMillis(),
                 DateUtils.MINUTE_IN_MILLIS
             ).toString()
-            val contactLabel = if (item.contactOk) "Contact: YES" else "Contact: NO"
+            val contactLabel = if (item.contactOk) "Follow-up: YES" else "Follow-up: NO"
             val phoneText = item.phone.ifBlank { "No phone" }
-            contactView.text = "$phoneText - $contactLabel - $whenText"
-            saveContactView.text = "Save"
+            contactView.text = "Phone: $phoneText\n$contactLabel\nUpdated: $whenText"
+            saveContactView.text = "Save contact"
             saveContactView.setOnClickListener {
                 onSaveContact(item)
             }
-            deleteView.text = "Dismiss"
+            deleteView.text = "Remove"
             deleteView.setOnClickListener {
                 onDelete(item)
             }

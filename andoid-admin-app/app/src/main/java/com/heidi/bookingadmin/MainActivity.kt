@@ -25,6 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.res.ResourcesCompat
 import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONArray
 import org.json.JSONObject
@@ -89,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         setupSwipeRefresh()
         val restoredState = savedInstanceState?.let { webView.restoreState(it) != null } ?: false
         if (!restoredState) {
-            loadLastVisitedUrlOrDefault()
+            loadAdminUrl(forceFresh = false)
         }
         refreshUnreadBadge()
 
@@ -111,6 +112,7 @@ class MainActivity : AppCompatActivity() {
         settings.useWideViewPort = true
         settings.loadWithOverviewMode = true
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        settings.userAgentString = settings.userAgentString + " HVHApp/1.0"
 
         webView.clearCache(true)
         webView.webChromeClient = object : WebChromeClient() {
@@ -173,7 +175,7 @@ class MainActivity : AppCompatActivity() {
                 offlineMessage.visibility = View.GONE
                 webView.visibility = View.VISIBLE
                 swipeRefresh.isEnabled = !webView.canScrollVertically(-1)
-                persistLastVisitedUrl(url)
+                injectSoftModeStyles()
             }
         }
 
@@ -189,6 +191,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSwipeRefresh() {
+        swipeRefresh.setProgressBackgroundColorSchemeColor(
+            ResourcesCompat.getColor(resources, R.color.surface_card, theme)
+        )
+        swipeRefresh.setColorSchemeColors(
+            ResourcesCompat.getColor(resources, R.color.brand_primary, theme),
+            ResourcesCompat.getColor(resources, R.color.brand_secondary, theme)
+        )
         swipeRefresh.setOnRefreshListener {
             loadAdminUrl(forceFresh = true)
         }
@@ -209,6 +218,61 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(Intent.ACTION_VIEW, uri))
         } catch (_: Exception) {
         }
+    }
+
+    private fun injectSoftModeStyles() {
+        val css = """
+            (function () {
+              var styleId = 'hvh-app-soft-mode-style';
+              if (document.getElementById(styleId)) return;
+              var style = document.createElement('style');
+              style.id = styleId;
+              style.textContent = `
+                body {
+                  background: #fff8fc !important;
+                  color: #3d2740 !important;
+                }
+                .calendar-shell,
+                .schedule-shell,
+                .panel,
+                .card,
+                .request-card,
+                .status-panel,
+                .section-panel,
+                .menu-group,
+                .admin-shell,
+                .clients-shell,
+                .schedule-grid-wrap {
+                  background: #ffffff !important;
+                  border-color: #f3d5e6 !important;
+                  box-shadow: 0 8px 20px rgba(240, 111, 174, 0.08) !important;
+                }
+                button,
+                .button,
+                .status-action,
+                .status-filter-tab,
+                .menu-link,
+                .action-btn {
+                  border-radius: 12px !important;
+                  text-transform: none !important;
+                  letter-spacing: 0.02em !important;
+                }
+                .calendar-slot,
+                .calendar-cell {
+                  border-color: #f1d7e8 !important;
+                }
+                .calendar-slot.maybe {
+                  box-shadow: inset 0 0 0 1px rgba(240, 111, 174, 0.45) !important;
+                }
+                .slot-maybe-label {
+                  color: #9b4b7d !important;
+                  font-weight: 700 !important;
+                }
+              `;
+              document.head.appendChild(style);
+            })();
+        """.trimIndent()
+        webView.evaluateJavascript(css, null)
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -384,7 +448,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (webView.url.isNullOrBlank()) {
-            loadLastVisitedUrlOrDefault()
+            loadAdminUrl(forceFresh = false)
         }
         NotificationState.clearUnread(this)
         NotificationManagerCompat.from(this).cancel(PushMessagingService.BADGE_NOTIFICATION_ID)
@@ -394,7 +458,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        persistLastVisitedUrl(webView.url)
         super.onPause()
         stopPeriodicReminderSync()
     }
@@ -415,24 +478,6 @@ class MainActivity : AppCompatActivity() {
         val baseUrl = currentUrl ?: ADMIN_URL
         val targetUrl = if (forceFresh) appendCacheBust(baseUrl) else baseUrl
         webView.loadUrl(targetUrl)
-    }
-
-    private fun loadLastVisitedUrlOrDefault() {
-        val prefs = getSharedPreferences(APP_PREFS_NAME, MODE_PRIVATE)
-        val savedUrl = prefs.getString(KEY_LAST_ADMIN_URL, null)
-        if (!savedUrl.isNullOrBlank() && savedUrl.startsWith("http")) {
-            webView.loadUrl(savedUrl)
-        } else {
-            loadAdminUrl(forceFresh = false)
-        }
-    }
-
-    private fun persistLastVisitedUrl(url: String?) {
-        if (url.isNullOrBlank() || !url.startsWith("http")) return
-        getSharedPreferences(APP_PREFS_NAME, MODE_PRIVATE)
-            .edit()
-            .putString(KEY_LAST_ADMIN_URL, url)
-            .apply()
     }
 
     private fun appendCacheBust(url: String): String {
@@ -476,13 +521,12 @@ class MainActivity : AppCompatActivity() {
         private const val ADMIN_URL = "https://heidivanhorny.com/booking/admin/"
         private const val TOKEN_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/push-token.php"
         private const val REQUESTS_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/requests.php"
-        private const val ADMIN_API_KEY = "Simo.666$$$"
-        private const val ADMIN_USER = "capitainecommando"
-        private const val ADMIN_PASS = "Simo.666$$$"
+        private const val ADMIN_API_KEY = "HVH_2026_8f31c9d4a27b6e50f1c3"
+        private const val ADMIN_USER = "hvhowner2026"
+        private const val ADMIN_PASS = "HVH_2026_8f31c9d4a27b6e50f1c3"
         private const val REMINDER_SYNC_INTERVAL_MS = 60_000L
         private const val APP_PREFS_NAME = "booking_admin_app"
         private const val KEY_EXACT_ALARM_PROMPTED = "exact_alarm_prompted"
-        private const val KEY_LAST_ADMIN_URL = "last_admin_url"
     }
 
     private data class ReminderBooking(

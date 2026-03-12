@@ -35,9 +35,13 @@ const EMAIL_REPLY_TO = 'bookings@heidivanhorny.com';
 const EMAIL_SUBJECT = 'Booking Heidi Van Horny';
 const ADMIN_NOTIFY_EMAIL = 'pornstar.heidi@gmail.com';
 const CONTACT_SMS_WHATSAPP = '+1 (514) 607-6253';
+const CUSTOMER_SMS_ENABLED = false;
+const CUSTOMER_SMS_WEBHOOK_URL = '';
+const CUSTOMER_SMS_WEBHOOK_TOKEN = '';
 
 const DATA_DIR = __DIR__ . '/../data';
 const EMAIL_LOG_FILE = DATA_DIR . '/email_delivery.log';
+const SMS_LOG_FILE = DATA_DIR . '/sms_delivery.log';
 const SITE_CONTENT_FILE = DATA_DIR . '/site_content.json';
 const GALLERY_FILE = DATA_DIR . '/gallery.json';
 const BLACKLIST_FILE = DATA_DIR . '/blacklist.json';
@@ -238,7 +242,7 @@ function get_default_site_content(): array
                 ['hours' => 12.0, 'amount' => 3000],
             ],
             'pse' => [
-                ['hours' => 0.5, 'amount' => 800],
+                ['hours' => 0.5, 'amount' => 500],
                 ['hours' => 1.0, 'amount' => 800],
                 ['hours' => 1.5, 'amount' => 1100],
                 ['hours' => 2.0, 'amount' => 1400],
@@ -269,7 +273,27 @@ function get_default_site_content(): array
 
 function read_site_content(): array
 {
-    return read_json_file(SITE_CONTENT_FILE, get_default_site_content());
+    $defaults = get_default_site_content();
+    $stored = read_json_file(SITE_CONTENT_FILE, $defaults);
+    if (!is_array($stored)) {
+        return $defaults;
+    }
+
+    $merged = $defaults;
+    foreach (['touring', 'touring_partners', 'updated_at'] as $key) {
+        if (array_key_exists($key, $stored)) {
+            $merged[$key] = $stored[$key];
+        }
+    }
+
+    if (is_array($stored['rates'] ?? null)) {
+        $merged['rates'] = array_merge($merged['rates'], $stored['rates']);
+    }
+    if (is_array($stored['conditions'] ?? null)) {
+        $merged['conditions'] = array_merge($merged['conditions'], $stored['conditions']);
+    }
+
+    return $merged;
 }
 
 function write_site_content(array $data): void
@@ -812,6 +836,94 @@ function log_email_delivery(string $type, string $to, string $subjectLine, bool 
         $line[] = 'detail=' . trim($detail);
     }
     @file_put_contents(EMAIL_LOG_FILE, implode(' | ', $line) . "\n", FILE_APPEND | LOCK_EX);
+}
+
+function log_sms_delivery(string $to, bool $ok, string $detail = ''): void
+{
+    ensure_data_dir();
+    $line = [
+        gmdate('c'),
+        'CUSTOMER_SMS',
+        $ok ? 'OK' : 'FAIL',
+        'to=' . trim($to),
+    ];
+    if ($detail !== '') {
+        $line[] = 'detail=' . trim($detail);
+    }
+    @file_put_contents(SMS_LOG_FILE, implode(' | ', $line) . "\n", FILE_APPEND | LOCK_EX);
+}
+
+function normalize_sms_phone(string $phone): string
+{
+    $value = trim($phone);
+    if ($value === '') {
+        return '';
+    }
+    if (strpos($value, '00') === 0) {
+        $value = '+' . substr($value, 2);
+    }
+    if (strpos($value, '+') === 0) {
+        $digits = preg_replace('/\D+/', '', substr($value, 1));
+        $digits = is_string($digits) ? $digits : '';
+        return $digits === '' ? '' : '+' . $digits;
+    }
+    $digits = preg_replace('/\D+/', '', $value);
+    $digits = is_string($digits) ? $digits : '';
+    if ($digits === '') {
+        return '';
+    }
+    if (strlen($digits) === 10) {
+        return '+1' . $digits;
+    }
+    return '+' . $digits;
+}
+
+function send_customer_sms(string $toPhone, string $message): bool
+{
+    $normalizedPhone = normalize_sms_phone($toPhone);
+    $text = trim($message);
+    if ($normalizedPhone === '' || $text === '') {
+        log_sms_delivery($toPhone, false, 'invalid_phone_or_message');
+        return false;
+    }
+    if (!CUSTOMER_SMS_ENABLED) {
+        log_sms_delivery($normalizedPhone, false, 'CUSTOMER_SMS_ENABLED=false');
+        return false;
+    }
+    $url = trim((string) CUSTOMER_SMS_WEBHOOK_URL);
+    if ($url === '') {
+        log_sms_delivery($normalizedPhone, false, 'CUSTOMER_SMS_WEBHOOK_URL empty');
+        return false;
+    }
+
+    $payload = json_encode([
+        'to' => $normalizedPhone,
+        'message' => $text,
+    ]);
+    if (!is_string($payload) || $payload === '') {
+        log_sms_delivery($normalizedPhone, false, 'json_encode_failed');
+        return false;
+    }
+
+    $headers = [
+        'Content-Type: application/json; charset=utf-8',
+    ];
+    $token = trim((string) CUSTOMER_SMS_WEBHOOK_TOKEN);
+    if ($token !== '') {
+        $headers[] = 'Authorization: Bearer ' . $token;
+    }
+
+    [$status, $body] = fcm_http_post($url, $headers, $payload);
+    $ok = $status >= 200 && $status < 300;
+    $detail = 'HTTP ' . $status;
+    if ($body !== '') {
+        $snippet = trim(substr(preg_replace('/\s+/', ' ', $body), 0, 180));
+        if ($snippet !== '') {
+            $detail .= ' ' . $snippet;
+        }
+    }
+    log_sms_delivery($normalizedPhone, $ok, $detail);
+    return $ok;
 }
 
 function send_mail_with_headers(string $to, string $subjectLine, string $message, array $headers): bool

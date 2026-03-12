@@ -91,6 +91,26 @@ function get_service_addon_label(bool $recordSession, float $filmingHours): stri
     return 'Filming add-on (' . $hoursText . 'h)';
 }
 
+function uses_flat_filming_amount(string $currency): bool
+{
+    return in_array(strtoupper(trim($currency)), ['CAD', 'USD', 'EUR', 'GBP'], true);
+}
+
+function convert_cad_amount_for_billing(int $amountCad, string $currency, float $displayRate): int
+{
+    if ($amountCad <= 0) {
+        return 0;
+    }
+    $normalizedCurrency = strtoupper(trim($currency));
+    if ($normalizedCurrency === '' || $normalizedCurrency === 'CAD' || $normalizedCurrency === 'USD') {
+        return $amountCad;
+    }
+    if (in_array($normalizedCurrency, ['USDC', 'BTC', 'LTC'], true)) {
+        return $amountCad;
+    }
+    return (int) round($amountCad * $displayRate);
+}
+
 function normalize_city_name(string $city): string
 {
     $city = strtolower(trim($city));
@@ -180,6 +200,15 @@ function is_fly_me_city(string $city): bool
     return normalize_city_name($city) === 'fly me to you';
 }
 
+function generate_request_cancel_token(): string
+{
+    try {
+        return bin2hex(random_bytes(16));
+    } catch (Throwable $error) {
+        return sha1('cancel_' . uniqid('', true));
+    }
+}
+
 function is_excluded_booking_city(string $city): bool
 {
     return normalize_city_name($city) === 'vacation';
@@ -250,16 +279,15 @@ function is_confirmed_booking_block_entry(array $entry): bool
     if ($bookingId === '') {
         return false;
     }
-    $kind = strtolower(trim((string) ($entry['kind'] ?? '')));
     $bookingStatus = strtolower(trim((string) ($entry['booking_status'] ?? ($entry['status'] ?? ''))));
     $paymentStatus = strtolower(trim((string) ($entry['payment_status'] ?? '')));
     if ($paymentStatus === 'paid') {
         return true;
     }
-    if (in_array($bookingStatus, ['accepted', 'paid'], true)) {
+    if ($bookingStatus === 'paid') {
         return true;
     }
-    return $kind === 'booking';
+    return false;
 }
 
 function get_base_rate(float $hours, string $experience, string $rateKey): int
@@ -496,11 +524,15 @@ if (!empty($errors)) {
 $baseRate = get_base_rate($hours, $experience, $rateKey);
 $serviceAddonAmount = get_service_addon_amount($recordSession, $filmingHours);
 $totalRate = $baseRate + $serviceAddonAmount;
-$deposit = $totalRate > 0 ? (int) round(($totalRate * ($depositPercent / 100)) * $displayRate) : 0;
 $billingCurrency = $depositCurrency !== '' ? $depositCurrency : ($currency !== '' ? $currency : 'CAD');
-$displayTotalRate = (int) round($totalRate * $displayRate);
-$displayServiceAddonAmount = (int) round($serviceAddonAmount * $displayRate);
-$displayBaseRate = max(0, $displayTotalRate - $displayServiceAddonAmount);
+$displayBaseRate = convert_cad_amount_for_billing($baseRate, $billingCurrency, $displayRate);
+$displayServiceAddonAmount = convert_cad_amount_for_billing($serviceAddonAmount, $billingCurrency, $displayRate);
+if ($serviceAddonAmount > 0 && uses_flat_filming_amount($billingCurrency)) {
+    // Filming add-on is a flat numeric +500 per filmed hour in selected fiat currency.
+    $displayServiceAddonAmount = $serviceAddonAmount;
+}
+$displayTotalRate = $displayBaseRate + $displayServiceAddonAmount;
+$deposit = $displayTotalRate > 0 ? (int) round($displayTotalRate * ($depositPercent / 100)) : 0;
 $serviceAddonLabel = get_service_addon_label($recordSession, $filmingHours);
 
 $availability = read_json_file(DATA_DIR . '/availability.json', [
@@ -680,6 +712,7 @@ if ($requestEmail !== '') {
 
 $request = [
     'id' => 'req_' . gmdate('YmdHis') . '_' . bin2hex(random_bytes(3)),
+    'cancel_token' => generate_request_cancel_token(),
     'status' => 'pending',
     'created_at' => gmdate('c'),
     'deposit_amount' => $deposit,

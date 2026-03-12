@@ -1933,7 +1933,7 @@
           12: 3000,
         },
         pse: {
-          0.5: 800,
+          0.5: 500,
           1: 800,
           1.5: 1100,
           2: 1400,
@@ -2117,6 +2117,37 @@
           return BASE_CURRENCY;
         }
         return BASE_CURRENCY;
+      };
+
+      let autoDetectedCurrency = detectDefaultCurrency();
+
+      const fetchJsonWithTimeout = async (url, timeoutMs = 2200) => {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const response = await fetch(url, {
+            signal: controller.signal,
+            cache: "no-store",
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok) return null;
+          return await response.json();
+        } catch (_error) {
+          return null;
+        } finally {
+          window.clearTimeout(timer);
+        }
+      };
+
+      const detectCurrencyFromIp = async () => {
+        const data = await fetchJsonWithTimeout("https://ipapi.co/json/");
+        const detected = String(data?.currency || "")
+          .trim()
+          .toUpperCase();
+        if (FIAT_CURRENCIES.includes(detected)) {
+          return detected;
+        }
+        return "";
       };
 
       const formatCurrency = (amount, currency) => {
@@ -2337,6 +2368,41 @@
         return formatCurrency(amount * rate, currency);
       };
 
+      const getDisplayAmount = async (amount, currency) => {
+        const numeric = Number(amount || 0);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+          return 0;
+        }
+        const currentCurrency = (currency || BASE_CURRENCY).toUpperCase();
+        if (currentCurrency === BASE_CURRENCY || currentCurrency === "USD" || CRYPTO_CURRENCIES.includes(currentCurrency)) {
+          return Math.round(numeric);
+        }
+        const overrideRate = FX_OVERRIDES[currentCurrency];
+        if (typeof overrideRate === "number") {
+          return Math.round(numeric * overrideRate);
+        }
+        const rates = await getFiatRates();
+        const rate = rates ? rates[currentCurrency] : null;
+        if (!rate) {
+          return Math.round(numeric);
+        }
+        return Math.round(numeric * rate);
+      };
+
+      const formatDisplayAmount = (amount, currency) => {
+        const numeric = Number.isFinite(Number(amount)) ? Number(amount) : 0;
+        const currentCurrency = (currency || BASE_CURRENCY).toUpperCase();
+        if (CRYPTO_CURRENCIES.includes(currentCurrency)) {
+          return `${formatCurrency(numeric, BASE_CURRENCY)} CAD`;
+        }
+        return formatCurrency(numeric, currentCurrency || BASE_CURRENCY);
+      };
+
+      const useFlatFilmingAmount = (currency) => {
+        const currentCurrency = (currency || BASE_CURRENCY).toUpperCase();
+        return FIAT_CURRENCIES.includes(currentCurrency);
+      };
+
       const updatePaymentSummary = async () => {
         if (!baseRateDisplay || !totalRateDisplay || !depositRateDisplay) return;
         const selected = durationSelect.selectedOptions[0];
@@ -2399,17 +2465,22 @@
         }
         const baseRate = getBaseRate(hours, experience, rateKey);
         const serviceAddonBase = getServiceAddonBase();
-        const totalBase = baseRate + serviceAddonBase;
-        const depositBase = Math.round(totalBase * (DEPOSIT_PERCENT / 100));
-        const baseLabel = await formatRateLabel(baseRate, currency);
-        const totalLabel = await formatRateLabel(totalBase, currency);
-        const depositLabel = await formatRateLabel(depositBase, currency);
+        const baseDisplayAmount = await getDisplayAmount(baseRate, currency);
+        const addonDisplayAmount =
+          serviceAddonBase > 0 && useFlatFilmingAmount(currency)
+            ? Math.round(serviceAddonBase)
+            : await getDisplayAmount(serviceAddonBase, currency);
+        const totalDisplayAmount = baseDisplayAmount + addonDisplayAmount;
+        const depositDisplayAmount = Math.round(totalDisplayAmount * (DEPOSIT_PERCENT / 100));
+        const baseLabel = formatDisplayAmount(baseDisplayAmount, currency);
+        const totalLabel = formatDisplayAmount(totalDisplayAmount, currency);
+        const depositLabel = formatDisplayAmount(depositDisplayAmount, currency);
         baseRateDisplay.textContent = baseLabel;
         totalRateDisplay.textContent = totalLabel;
         depositRateDisplay.textContent = depositLabel;
         if (serviceAddonRow && serviceAddonDisplay) {
           if (serviceAddonBase > 0) {
-            const addonLabel = await formatRateLabel(serviceAddonBase, currency);
+            const addonLabel = formatDisplayAmount(addonDisplayAmount, currency);
             serviceAddonDisplay.textContent = addonLabel;
             setDepositRowPrefix("#serviceAddonRow", getServiceAddonLabel());
             serviceAddonRow.classList.remove("hidden");
@@ -3470,7 +3541,7 @@
           form.reset();
           phoneInput?.setCustomValidity("");
           emailInput?.setCustomValidity("");
-          currencySelect.value = detectDefaultCurrency();
+          currencySelect.value = autoDetectedCurrency;
           const recordNoInput = document.querySelector('input[name="record_session"][value="no"]');
           if (recordNoInput) {
             recordNoInput.checked = true;
@@ -3666,7 +3737,7 @@
         });
       });
 
-      currencySelect.value = detectDefaultCurrency();
+      currencySelect.value = autoDetectedCurrency;
       syncCityOptions();
       setBookingDateFloor();
       updateDurationOptions();
@@ -3678,6 +3749,13 @@
       loadTourSchedule();
       loadAvailability();
       checkBlacklistOnLoad();
+      detectCurrencyFromIp().then((ipCurrency) => {
+        if (!ipCurrency || !FIAT_CURRENCIES.includes(ipCurrency)) return;
+        autoDetectedCurrency = ipCurrency;
+        if (!currencySelect || currencySelect.value === ipCurrency) return;
+        currencySelect.value = ipCurrency;
+        updateDurationOptions();
+      });
       const initialLanguage = getStoredLanguage() || detectBrowserLanguage();
       applyLanguage(initialLanguage, true);
     </script>

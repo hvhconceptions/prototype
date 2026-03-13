@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.View
+import android.webkit.CookieManager
 import android.webkit.HttpAuthHandler
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -18,11 +19,13 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.webkit.WebViewDatabase
 import android.webkit.WebViewClient
 import android.widget.TextView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.res.ResourcesCompat
@@ -39,7 +42,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var offlineMessage: TextView
+    private lateinit var menuButton: TextView
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    private var authAttemptsInWindow = 0
+    private var authWindowStartedAt = 0L
+    private var loginRedirectInProgress = false
     private val syncHandler = Handler(Looper.getMainLooper())
     private val reminderSyncInProgress = AtomicBoolean(false)
     private val periodicReminderSync = object : Runnable {
@@ -85,6 +92,13 @@ class MainActivity : AppCompatActivity() {
         swipeRefresh = findViewById(R.id.swipeRefresh)
         webView = findViewById(R.id.adminWebView)
         offlineMessage = findViewById(R.id.offlineMessage)
+        menuButton = findViewById(R.id.menuButton)
+
+        setupHeaderMenu()
+        if (!hasSavedLogin()) {
+            openLoginScreen()
+            return
+        }
 
         setupWebView()
         setupSwipeRefresh()
@@ -155,7 +169,30 @@ class MainActivity : AppCompatActivity() {
                 host: String?,
                 realm: String?
             ) {
-                handler?.proceed(ADMIN_USER, ADMIN_PASS)
+                val credentials = AdminSession.getCredentials(this@MainActivity)
+                if (credentials == null) {
+                    handler?.cancel()
+                    runOnUiThread {
+                        openLoginScreen(getString(R.string.login_required_message))
+                    }
+                    return
+                }
+
+                val now = System.currentTimeMillis()
+                if (now - authWindowStartedAt > AUTH_ATTEMPT_WINDOW_MS) {
+                    authWindowStartedAt = now
+                    authAttemptsInWindow = 0
+                }
+                authAttemptsInWindow += 1
+                if (authAttemptsInWindow > MAX_AUTH_ATTEMPTS_IN_WINDOW) {
+                    handler?.cancel()
+                    runOnUiThread {
+                        clearSessionState()
+                        openLoginScreen(getString(R.string.login_error_too_many_attempts))
+                    }
+                    return
+                }
+                handler?.proceed(credentials.username, credentials.password)
             }
 
             override fun onReceivedError(
@@ -175,6 +212,8 @@ class MainActivity : AppCompatActivity() {
                 offlineMessage.visibility = View.GONE
                 webView.visibility = View.VISIBLE
                 swipeRefresh.isEnabled = !webView.canScrollVertically(-1)
+                authAttemptsInWindow = 0
+                authWindowStartedAt = 0L
                 injectSoftModeStyles()
             }
         }
@@ -202,6 +241,59 @@ class MainActivity : AppCompatActivity() {
             loadAdminUrl(forceFresh = true)
         }
         swipeRefresh.isEnabled = !webView.canScrollVertically(-1)
+    }
+
+    private fun setupHeaderMenu() {
+        menuButton.setOnClickListener { anchor ->
+            PopupMenu(this, anchor).apply {
+                menu.add(0, MENU_CLIENTS, 0, getString(R.string.menu_clients))
+                menu.add(0, MENU_LOGOUT, 1, getString(R.string.menu_logout))
+                setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        MENU_CLIENTS -> {
+                            openNotificationsFeed()
+                            true
+                        }
+                        MENU_LOGOUT -> {
+                            clearSessionState()
+                            openLoginScreen(getString(R.string.logout_message))
+                            true
+                        }
+                        else -> false
+                    }
+                }
+            }.show()
+        }
+    }
+
+    private fun hasSavedLogin(): Boolean {
+        return AdminSession.getCredentials(this) != null
+    }
+
+    private fun clearSessionState() {
+        AdminSession.clearCredentials(this)
+        authAttemptsInWindow = 0
+        authWindowStartedAt = 0L
+        webView.stopLoading()
+        webView.clearHistory()
+        webView.clearCache(true)
+        WebViewDatabase.getInstance(this).clearHttpAuthUsernamePassword()
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().flush()
+    }
+
+    private fun openLoginScreen(message: String? = null) {
+        if (loginRedirectInProgress) return
+        loginRedirectInProgress = true
+        startActivity(
+            Intent(this, LoginActivity::class.java).apply {
+                if (!message.isNullOrBlank()) {
+                    putExtra(LoginActivity.EXTRA_MESSAGE, message)
+                }
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+        )
+        finish()
     }
 
     private fun shouldOpenExternally(url: String): Boolean {
@@ -313,7 +405,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun postToken(token: String) {
         try {
-            val url = URL(TOKEN_ENDPOINT)
+            val url = URL(AdminSession.TOKEN_ENDPOINT)
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
             connection.setRequestProperty("Content-Type", "application/json")
@@ -361,13 +453,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchReminderSyncSnapshot(): ReminderSyncSnapshot {
-        val url = URL(REQUESTS_ENDPOINT)
+        val url = URL(AdminSession.REQUESTS_ENDPOINT)
         val connection = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 10000
             readTimeout = 15000
             setRequestProperty("Accept", "application/json")
-            setRequestProperty("X-Admin-Key", ADMIN_API_KEY)
+            setRequestProperty("X-Admin-Key", AdminSession.ADMIN_API_KEY)
         }
         return try {
             val code = connection.responseCode
@@ -447,6 +539,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        loginRedirectInProgress = false
         if (webView.url.isNullOrBlank()) {
             loadAdminUrl(forceFresh = false)
         }
@@ -475,7 +568,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadAdminUrl(forceFresh: Boolean = false) {
         val currentUrl = webView.url?.takeIf { it.startsWith("http") }
-        val baseUrl = currentUrl ?: ADMIN_URL
+        val baseUrl = currentUrl ?: AdminSession.ADMIN_URL
         val targetUrl = if (forceFresh) appendCacheBust(baseUrl) else baseUrl
         webView.loadUrl(targetUrl)
     }
@@ -518,15 +611,13 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_OPEN_NOTIFICATIONS = "open_notifications"
-        private const val ADMIN_URL = "https://heidivanhorny.com/booking/admin/"
-        private const val TOKEN_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/push-token.php"
-        private const val REQUESTS_ENDPOINT = "https://heidivanhorny.com/booking/api/admin/requests.php"
-        private const val ADMIN_API_KEY = "HVH_2026_8f31c9d4a27b6e50f1c3"
-        private const val ADMIN_USER = "hvhowner2026"
-        private const val ADMIN_PASS = "HVH_2026_8f31c9d4a27b6e50f1c3"
         private const val REMINDER_SYNC_INTERVAL_MS = 60_000L
-        private const val APP_PREFS_NAME = "booking_admin_app"
+        private const val APP_PREFS_NAME = AdminSession.PREFS_NAME
         private const val KEY_EXACT_ALARM_PROMPTED = "exact_alarm_prompted"
+        private const val AUTH_ATTEMPT_WINDOW_MS = 20_000L
+        private const val MAX_AUTH_ATTEMPTS_IN_WINDOW = 2
+        private const val MENU_CLIENTS = 1001
+        private const val MENU_LOGOUT = 1002
     }
 
     private data class ReminderBooking(

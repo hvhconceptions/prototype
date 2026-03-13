@@ -20,4 +20,5 @@
   <color name="action_positive_dark">#2FAF90</color>
   <color name="action_negative">#F58AA6</color>
   <color name="action_negative_dark">#E16C8D</color>
+  <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

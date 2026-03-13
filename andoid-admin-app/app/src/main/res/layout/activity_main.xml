@@ -27,8 +27,9 @@
       android:orientation="horizontal">
 
       <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
@@ -47,6 +48,19 @@
           android:textColor="#FFF0F8"
           android:textSize="12sp" />
       </LinearLayout>
+
+      <TextView
+        android:id="@+id/menuButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_button_primary"
+        android:contentDescription="Open menu"
+        android:gravity="center"
+        android:text="☰"
+        android:textAllCaps="false"
+        android:textColor="@color/text_inverse"
+        android:textSize="20sp"
+        android:textStyle="bold" />
     </LinearLayout>
   </LinearLayout>
 

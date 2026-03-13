@@ -1,3 +1,17 @@
-﻿<resources>
+<resources>
   <string name="app_name">BombaCloud</string>
+  <string name="login_title">BombaCLOUD Login</string>
+  <string name="login_subtitle">Log in once. Use menu to log out anytime.</string>
+  <string name="login_username_hint">Username</string>
+  <string name="login_password_hint">Password</string>
+  <string name="login_button">Log in</string>
+  <string name="login_required_message">Please log in to open the planner.</string>
+  <string name="logout_message">Logged out. Sign in again when you are ready.</string>
+  <string name="login_error_empty">Enter both username and password.</string>
+  <string name="login_error_invalid">Wrong username or password.</string>
+  <string name="login_error_too_many_attempts">Too many attempts. Wait a minute and try again.</string>
+  <string name="login_error_server">Server error (%1$d). Try again in a moment.</string>
+  <string name="login_error_network">Cannot reach server right now. Check your connection.</string>
+  <string name="menu_clients">Client Requests</string>
+  <string name="menu_logout">Log out</string>
 </resources>

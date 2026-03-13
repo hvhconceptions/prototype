@@ -315,113 +315,104 @@ class MainActivity : AppCompatActivity() {
     private fun injectSoftModeStyles() {
         val css = """
             (function () {
-              var styleId = 'hvh-app-kawaii-style-v2';
-              if (document.getElementById(styleId)) return;
-              var style = document.createElement('style');
-              style.id = styleId;
-              style.textContent = `
-                html,
-                body {
-                  background: linear-gradient(160deg, #fffdfd 0%, #fff6fb 52%, #f3f9ff 100%) !important;
-                  color: #3a2c4a !important;
-                  font-family: "Quicksand", "M PLUS Rounded 1c", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Segoe UI", sans-serif !important;
-                  letter-spacing: 0.01em !important;
+              var styleId = 'hvh-app-kawaii-style-v3';
+              var badgeId = 'hvh-kawaii-badge';
+              var intervalId = 'hvh-kawaii-refresh';
+
+              function ensureStyle() {
+                var style = document.getElementById(styleId);
+                if (!style) {
+                  style = document.createElement('style');
+                  style.id = styleId;
+                  style.textContent = `
+                    html, body {
+                      background: linear-gradient(160deg, #fffdfd 0%, #fff6fb 52%, #f3f9ff 100%) !important;
+                      color: #3a2c4a !important;
+                      font-family: "Quicksand", "M PLUS Rounded 1c", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Segoe UI", sans-serif !important;
+                      letter-spacing: 0.01em !important;
+                    }
+                    body::before, body::after,
+                    [class*="matrix"], [id*="matrix"], .matrix-rain, .matrix-layer, .matrix-bg, .rain-layer,
+                    canvas.matrix, canvas#matrixRain, canvas#matrixCanvas {
+                      display: none !important;
+                      opacity: 0 !important;
+                      visibility: hidden !important;
+                      animation: none !important;
+                    }
+                    .calendar-shell, .schedule-shell, .panel, .card, .request-card, .status-panel, .section-panel,
+                    .menu-group, .admin-shell, .clients-shell, .schedule-grid-wrap, .requests-wrap, .calendar-wrap {
+                      background: rgba(255, 255, 255, 0.95) !important;
+                      border: 1px solid #ead8ec !important;
+                      box-shadow: 0 10px 22px rgba(198, 161, 199, 0.18) !important;
+                      backdrop-filter: blur(4px) !important;
+                    }
+                    h1, h2, h3, .title, .section-title {
+                      color: #9c5eb0 !important;
+                      text-transform: none !important;
+                      letter-spacing: 0.02em !important;
+                    }
+                    button, .button, .status-action, .status-filter-tab, .menu-link, .action-btn {
+                      border-radius: 18px !important;
+                      text-transform: none !important;
+                      letter-spacing: 0.02em !important;
+                      border: 1px solid #e7cde7 !important;
+                      background: linear-gradient(135deg, #ffe8f4 0%, #f8ebff 100%) !important;
+                      color: #5a3c6f !important;
+                      box-shadow: 0 6px 14px rgba(212, 173, 213, 0.2) !important;
+                    }
+                    input, select, textarea {
+                      border-radius: 14px !important;
+                      border: 1px solid #e8d5ec !important;
+                      background: #fffbfd !important;
+                      color: #3f2d4f !important;
+                      box-shadow: none !important;
+                    }
+                    .calendar-slot, .calendar-cell {
+                      border-color: #ecdbee !important;
+                      background: #fffafe !important;
+                    }
+                    .calendar-slot.maybe {
+                      box-shadow: inset 0 0 0 1px rgba(214, 133, 184, 0.55) !important;
+                      background: #fff4fa !important;
+                    }
+                    .slot-maybe-label { color: #9c5eb0 !important; font-weight: 700 !important; }
+                    a { color: #a269bf !important; }
+                  `;
+                  document.head.appendChild(style);
                 }
-                body::before,
-                body::after,
-                [class*="matrix"],
-                [id*="matrix"],
-                .matrix-rain,
-                .matrix-layer,
-                .matrix-bg,
-                .rain-layer,
-                canvas.matrix {
-                  display: none !important;
-                  opacity: 0 !important;
-                  visibility: hidden !important;
-                  animation: none !important;
-                }
-                .calendar-shell,
-                .schedule-shell,
-                .panel,
-                .card,
-                .request-card,
-                .status-panel,
-                .section-panel,
-                .menu-group,
-                .admin-shell,
-                .clients-shell,
-                .schedule-grid-wrap {
-                  background: rgba(255, 255, 255, 0.94) !important;
-                  border: 1px solid #ead8ec !important;
-                  box-shadow: 0 10px 22px rgba(198, 161, 199, 0.18) !important;
-                  backdrop-filter: blur(4px) !important;
-                }
-                h1,
-                h2,
-                h3,
-                .title,
-                .section-title {
-                  color: #9c5eb0 !important;
-                  text-transform: none !important;
-                  letter-spacing: 0.02em !important;
-                }
-                button,
-                .button,
-                .status-action,
-                .status-filter-tab,
-                .menu-link,
-                .action-btn {
-                  border-radius: 18px !important;
-                  text-transform: none !important;
-                  letter-spacing: 0.02em !important;
-                  border: 1px solid #e7cde7 !important;
-                  background: linear-gradient(135deg, #ffe8f4 0%, #f8ebff 100%) !important;
-                  color: #5a3c6f !important;
-                  box-shadow: 0 6px 14px rgba(212, 173, 213, 0.2) !important;
-                }
-                button:hover,
-                .button:hover,
-                .status-action:hover,
-                .status-filter-tab:hover,
-                .menu-link:hover,
-                .action-btn:hover {
-                  transform: translateY(-1px) !important;
-                }
-                input,
-                select,
-                textarea {
-                  border-radius: 14px !important;
-                  border: 1px solid #e8d5ec !important;
-                  background: #fffbfd !important;
-                  color: #3f2d4f !important;
-                  box-shadow: none !important;
-                }
-                input:focus,
-                select:focus,
-                textarea:focus {
-                  outline: none !important;
-                  border-color: #d8a6d9 !important;
-                  box-shadow: 0 0 0 2px rgba(216, 166, 217, 0.2) !important;
-                }
-                .calendar-slot,
-                .calendar-cell {
-                  border-color: #ecdbee !important;
-                  background: #fffafe !important;
-                }
-                .calendar-slot.maybe {
-                  box-shadow: inset 0 0 0 1px rgba(214, 133, 184, 0.55) !important;
-                  background: #fff4fa !important;
-                }
-                .slot-maybe-label {
-                  color: #9c5eb0 !important;
-                  font-weight: 700 !important;
-                }
-                a {
-                  color: #a269bf !important;
-                }
-              `;
-              document.head.appendChild(style);
+              }
+
+              function ensureBadge() {
+                if (document.getElementById(badgeId)) return;
+                var badge = document.createElement('div');
+                badge.id = badgeId;
+                badge.textContent = 'Kawaii mode ON';
+                badge.style.cssText = 'position:fixed;right:10px;bottom:10px;z-index:2147483647;padding:6px 10px;border-radius:999px;background:#f8e8ff;color:#744a92;font-size:11px;font-weight:700;border:1px solid #e5c8ef;box-shadow:0 6px 14px rgba(160,120,190,.25);pointer-events:none;';
+                document.body.appendChild(badge);
+              }
+
+              function hideMatrixCanvases() {
+                var nodes = document.querySelectorAll('canvas');
+                nodes.forEach(function (node) {
+                  var id = (node.id || '').toLowerCase();
+                  var cls = (node.className || '').toString().toLowerCase();
+                  if (id.indexOf('matrix') >= 0 || cls.indexOf('matrix') >= 0 || cls.indexOf('rain') >= 0) {
+                    node.style.display = 'none';
+                  }
+                });
+              }
+
+              ensureStyle();
+              ensureBadge();
+              hideMatrixCanvases();
+
+              if (!window[intervalId]) {
+                window[intervalId] = window.setInterval(function () {
+                  ensureStyle();
+                  ensureBadge();
+                  hideMatrixCanvases();
+                }, 1500);
+              }
             })();
         """.trimIndent()
         webView.evaluateJavascript(css, null)

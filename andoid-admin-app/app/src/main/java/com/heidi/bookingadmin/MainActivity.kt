@@ -315,14 +315,31 @@ class MainActivity : AppCompatActivity() {
     private fun injectSoftModeStyles() {
         val css = """
             (function () {
-              var styleId = 'hvh-app-soft-mode-style';
+              var styleId = 'hvh-app-kawaii-style-v2';
               if (document.getElementById(styleId)) return;
               var style = document.createElement('style');
               style.id = styleId;
               style.textContent = `
+                html,
                 body {
-                  background: #fff8fc !important;
-                  color: #3d2740 !important;
+                  background: linear-gradient(160deg, #fffdfd 0%, #fff6fb 52%, #f3f9ff 100%) !important;
+                  color: #3a2c4a !important;
+                  font-family: "Quicksand", "M PLUS Rounded 1c", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Segoe UI", sans-serif !important;
+                  letter-spacing: 0.01em !important;
+                }
+                body::before,
+                body::after,
+                [class*="matrix"],
+                [id*="matrix"],
+                .matrix-rain,
+                .matrix-layer,
+                .matrix-bg,
+                .rain-layer,
+                canvas.matrix {
+                  display: none !important;
+                  opacity: 0 !important;
+                  visibility: hidden !important;
+                  animation: none !important;
                 }
                 .calendar-shell,
                 .schedule-shell,
@@ -335,9 +352,19 @@ class MainActivity : AppCompatActivity() {
                 .admin-shell,
                 .clients-shell,
                 .schedule-grid-wrap {
-                  background: #ffffff !important;
-                  border-color: #f3d5e6 !important;
-                  box-shadow: 0 8px 20px rgba(240, 111, 174, 0.08) !important;
+                  background: rgba(255, 255, 255, 0.94) !important;
+                  border: 1px solid #ead8ec !important;
+                  box-shadow: 0 10px 22px rgba(198, 161, 199, 0.18) !important;
+                  backdrop-filter: blur(4px) !important;
+                }
+                h1,
+                h2,
+                h3,
+                .title,
+                .section-title {
+                  color: #9c5eb0 !important;
+                  text-transform: none !important;
+                  letter-spacing: 0.02em !important;
                 }
                 button,
                 .button,
@@ -345,20 +372,53 @@ class MainActivity : AppCompatActivity() {
                 .status-filter-tab,
                 .menu-link,
                 .action-btn {
-                  border-radius: 12px !important;
+                  border-radius: 18px !important;
                   text-transform: none !important;
                   letter-spacing: 0.02em !important;
+                  border: 1px solid #e7cde7 !important;
+                  background: linear-gradient(135deg, #ffe8f4 0%, #f8ebff 100%) !important;
+                  color: #5a3c6f !important;
+                  box-shadow: 0 6px 14px rgba(212, 173, 213, 0.2) !important;
+                }
+                button:hover,
+                .button:hover,
+                .status-action:hover,
+                .status-filter-tab:hover,
+                .menu-link:hover,
+                .action-btn:hover {
+                  transform: translateY(-1px) !important;
+                }
+                input,
+                select,
+                textarea {
+                  border-radius: 14px !important;
+                  border: 1px solid #e8d5ec !important;
+                  background: #fffbfd !important;
+                  color: #3f2d4f !important;
+                  box-shadow: none !important;
+                }
+                input:focus,
+                select:focus,
+                textarea:focus {
+                  outline: none !important;
+                  border-color: #d8a6d9 !important;
+                  box-shadow: 0 0 0 2px rgba(216, 166, 217, 0.2) !important;
                 }
                 .calendar-slot,
                 .calendar-cell {
-                  border-color: #f1d7e8 !important;
+                  border-color: #ecdbee !important;
+                  background: #fffafe !important;
                 }
                 .calendar-slot.maybe {
-                  box-shadow: inset 0 0 0 1px rgba(240, 111, 174, 0.45) !important;
+                  box-shadow: inset 0 0 0 1px rgba(214, 133, 184, 0.55) !important;
+                  background: #fff4fa !important;
                 }
                 .slot-maybe-label {
-                  color: #9b4b7d !important;
+                  color: #9c5eb0 !important;
                   font-weight: 700 !important;
+                }
+                a {
+                  color: #a269bf !important;
                 }
               `;
               document.head.appendChild(style);

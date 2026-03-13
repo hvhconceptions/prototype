@@ -1,7 +1,7 @@
 <resources>
   <string name="app_name">BombaCloud</string>
   <string name="login_title">BombaCLOUD Login</string>
-  <string name="login_subtitle">Log in once. Use menu to log out anytime.</string>
+  <string name="login_subtitle">Log in once. Cute simple mode is on.</string>
   <string name="login_username_hint">Username</string>
   <string name="login_password_hint">Password</string>
   <string name="login_button">Log in</string>

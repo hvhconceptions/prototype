@@ -762,6 +762,13 @@ if ($requestEmail !== '') {
             $adminNotice .= "Request email: " . $requestEmail . "\n";
             $adminNotice .= "Name: " . trim((string) $payload['name']) . "\n";
             $adminNotice .= "Preferred: " . ($payload['preferred_date'] ?? '') . " " . ($payload['preferred_time'] ?? '') . "\n";
+            if (function_exists('get_last_email_failure')) {
+                $failure = get_last_email_failure($requestEmail);
+                $detail = trim((string) ($failure['detail'] ?? ''));
+                if ($detail !== '') {
+                    $adminNotice .= "Mailer detail: " . $detail . "\n";
+                }
+            }
             send_admin_email($adminNotice, 'Email delivery failure');
         }
     }

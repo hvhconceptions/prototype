@@ -263,18 +263,231 @@ function append_calendar_links_lines(string &$body, array $calendarLinks): void
     $body .= "\n";
 }
 
+function generate_cancel_token(): string
+{
+    try {
+        return bin2hex(random_bytes(16));
+    } catch (Throwable $error) {
+        return sha1('cancel_' . uniqid('', true));
+    }
+}
+
+function ensure_cancel_token(array &$request): string
+{
+    $token = trim((string) ($request['cancel_token'] ?? ''));
+    if ($token !== '') {
+        return $token;
+    }
+    $token = generate_cancel_token();
+    $request['cancel_token'] = $token;
+    return $token;
+}
+
+function build_cancel_url(array &$request): string
+{
+    $requestId = trim((string) ($request['id'] ?? ''));
+    if ($requestId === '') {
+        return '';
+    }
+    $token = ensure_cancel_token($request);
+    if ($token === '') {
+        return '';
+    }
+    $base = rtrim((string) SITE_PRIMARY_URL, '/');
+    if ($base === '') {
+        return '';
+    }
+    return $base . '/booking/api/cancel.php?id=' . rawurlencode($requestId) . '&token=' . rawurlencode($token);
+}
+
+function append_customer_cancel_notice(string &$body, string $cancelUrl): void
+{
+    if ($cancelUrl !== '') {
+        $body .= "Cancel booking: " . $cancelUrl . "\n";
+    }
+    $body .= "Do not reply to this email. Replies are not monitored for cancellations.\n";
+}
+
 function notify_customer_email_failure(array $request, string $statusLabel): void
 {
     if (!function_exists('send_admin_email')) {
         return;
     }
+    $targetEmail = trim((string) ($request['email'] ?? ''));
     $notice = "Customer status email failed\n\n";
     $notice .= "Status: " . $statusLabel . "\n";
     $notice .= "Request id: " . (string) ($request['id'] ?? '') . "\n";
     $notice .= "Name: " . (string) ($request['name'] ?? '') . "\n";
-    $notice .= "Email: " . (string) ($request['email'] ?? '') . "\n";
+    $notice .= "Email: " . $targetEmail . "\n";
     $notice .= "Preferred: " . (string) ($request['preferred_date'] ?? '') . " " . (string) ($request['preferred_time'] ?? '') . "\n";
+    if (function_exists('get_last_email_failure')) {
+        $failure = get_last_email_failure($targetEmail);
+        $detail = trim((string) ($failure['detail'] ?? ''));
+        if ($detail !== '') {
+            $notice .= "Mailer detail: " . $detail . "\n";
+        }
+    }
     send_admin_email($notice, 'Email delivery failure');
+}
+
+function notify_customer_sms_failure(array $request, string $statusLabel): void
+{
+    if (!function_exists('send_admin_email')) {
+        return;
+    }
+    $notice = "Customer SMS failed\n\n";
+    $notice .= "Status: " . $statusLabel . "\n";
+    $notice .= "Request id: " . (string) ($request['id'] ?? '') . "\n";
+    $notice .= "Name: " . (string) ($request['name'] ?? '') . "\n";
+    $notice .= "Phone: " . (string) ($request['phone'] ?? '') . "\n";
+    $notice .= "Preferred: " . (string) ($request['preferred_date'] ?? '') . " " . (string) ($request['preferred_time'] ?? '') . "\n";
+    send_admin_email($notice, 'SMS delivery failure');
+}
+
+function normalize_city_key(string $value): string
+{
+    $value = strtolower(trim($value));
+    $value = preg_replace('/\s+/', ' ', $value);
+    return is_string($value) ? $value : '';
+}
+
+function get_request_time_window(array $request): ?array
+{
+    $preferredDate = trim((string) ($request['preferred_date'] ?? ''));
+    $preferredTime = trim((string) ($request['preferred_time'] ?? ''));
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $preferredDate) || !preg_match('/^\d{1,2}:\d{2}$/', $preferredTime)) {
+        return null;
+    }
+    $durationHours = isset($request['duration_hours']) ? (float) $request['duration_hours'] : 0.0;
+    if ($durationHours <= 0) {
+        return null;
+    }
+    $tourZone = resolve_tour_timezone((string) ($request['tour_timezone'] ?? DEFAULT_TOUR_TZ));
+    $start = DateTimeImmutable::createFromFormat('Y-m-d H:i', $preferredDate . ' ' . $preferredTime, $tourZone);
+    if ($start === false) {
+        return null;
+    }
+    $durationMinutes = (int) round($durationHours * 60);
+    if ($durationMinutes <= 0) {
+        return null;
+    }
+    $end = $start->modify('+' . $durationMinutes . ' minutes');
+    return [
+        'start' => $start,
+        'end' => $end,
+    ];
+}
+
+function requests_overlap_for_displacement(array $paidRequest, array $candidate): bool
+{
+    $paidWindow = get_request_time_window($paidRequest);
+    $candidateWindow = get_request_time_window($candidate);
+    if ($paidWindow === null || $candidateWindow === null) {
+        return false;
+    }
+
+    $paidCity = normalize_city_key((string) ($paidRequest['city'] ?? ''));
+    $candidateCity = normalize_city_key((string) ($candidate['city'] ?? ''));
+    if ($paidCity !== '' && $candidateCity !== '' && $paidCity !== $candidateCity) {
+        return false;
+    }
+
+    return $paidWindow['start'] < $candidateWindow['end'] && $paidWindow['end'] > $candidateWindow['start'];
+}
+
+function build_paid_override_message(): string
+{
+    return "OH NOOO :( Someone really wanted their appointment and managed to send a deposit so you lost yours. Sorry! You have read the rules, you understood the risks, my costs are heavy to travel and ads arent free! I need a commitment next time or you can just hope for the best! XOX";
+}
+
+function notify_displaced_customer(array &$request, string $winnerRequestId): void
+{
+    $name = trim((string) ($request['name'] ?? ''));
+    $email = trim((string) ($request['email'] ?? ''));
+    $phone = trim((string) ($request['phone'] ?? ''));
+    $date = trim((string) ($request['preferred_date'] ?? ''));
+    $time = trim((string) ($request['preferred_time'] ?? ''));
+    $duration = trim((string) ($request['duration_label'] ?? ''));
+    $message = build_paid_override_message();
+
+    if ($email !== '') {
+        $body = "Hi " . ($name !== '' ? $name : 'there') . ",\n\n";
+        $body .= $message . "\n\n";
+        if ($date !== '' || $time !== '') {
+            $body .= "Original slot: " . trim($date . ' ' . $time) . "\n";
+        }
+        if ($duration !== '') {
+            $body .= "Duration: " . $duration . "\n";
+        }
+        if ($winnerRequestId !== '') {
+            $body .= "Replacement ref: " . $winnerRequestId . "\n";
+        }
+        $body .= "\nIf you still want a chance next time, submit again with a deposit.\n";
+        if (send_payment_email($email, $body, 'Booking update')) {
+            $request['paid_override_email_sent_at'] = gmdate('c');
+        } else {
+            notify_customer_email_failure($request, 'paid_override_cancelled');
+        }
+    }
+
+    if ($phone !== '' && function_exists('send_customer_sms')) {
+        $sms = $message;
+        if ($date !== '' || $time !== '') {
+            $sms .= " Slot: " . trim($date . ' ' . $time) . ".";
+        }
+        if (send_customer_sms($phone, $sms)) {
+            $request['paid_override_sms_sent_at'] = gmdate('c');
+        } else {
+            notify_customer_sms_failure($request, 'paid_override_cancelled');
+        }
+    }
+}
+
+function auto_displace_overlapping_unpaid_requests(array &$requests, int $paidIndex, array $paidRequest): array
+{
+    $winnerId = trim((string) ($paidRequest['id'] ?? ''));
+    $displacedIds = [];
+    foreach ($requests as $candidateIndex => &$candidate) {
+        if (!is_array($candidate) || $candidateIndex === $paidIndex) {
+            continue;
+        }
+        $candidateId = trim((string) ($candidate['id'] ?? ''));
+        if ($candidateId === '') {
+            continue;
+        }
+        $candidateStatus = strtolower(trim((string) ($candidate['status'] ?? 'pending')));
+        $candidatePayment = strtolower(trim((string) ($candidate['payment_status'] ?? '')));
+        if ($candidateStatus === 'paid') {
+            $candidateStatus = 'accepted';
+            $candidatePayment = 'paid';
+        }
+        if ($candidatePayment === 'paid') {
+            continue;
+        }
+        if (!in_array($candidateStatus, ['maybe', 'accepted'], true)) {
+            continue;
+        }
+        if (!requests_overlap_for_displacement($paidRequest, $candidate)) {
+            continue;
+        }
+
+        $candidate['status'] = 'cancelled';
+        $candidate['payment_status'] = '';
+        $candidate['cancel_reason'] = 'Auto-cancelled by overlapping paid booking';
+        $candidate['auto_replaced_by_paid_booking_id'] = $winnerId;
+        $candidate['auto_replaced_at'] = gmdate('c');
+        $candidate['updated_at'] = gmdate('c');
+        append_history_entry(
+            $candidate,
+            'status',
+            'Auto-cancelled: overlapping slot replaced by paid booking' . ($winnerId !== '' ? " ({$winnerId})" : '')
+        );
+        notify_displaced_customer($candidate, $winnerId);
+        $displacedIds[] = $candidateId;
+    }
+    unset($candidate);
+
+    return array_values(array_unique($displacedIds));
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -304,6 +517,7 @@ $requests = $store['requests'] ?? [];
 $found = false;
 $noop = false;
 $removeIndex = null;
+$displacedRequestIds = [];
 $declinedPath = DATA_DIR . '/declined.json';
 $declinedStore = read_json_file($declinedPath, ['requests' => []]);
 $declinedRequests = $declinedStore['requests'] ?? [];
@@ -336,6 +550,7 @@ foreach ($requests as $index => &$request) {
     $requestEmail = (string) ($request['email'] ?? '');
     $paymentMethod = (string) ($request['payment_method'] ?? '');
     $depositCurrency = (string) ($request['deposit_currency'] ?? '');
+    $cancelUrl = build_cancel_url($request);
 
     if ($status === 'declined') {
         $request['status'] = 'declined';
@@ -439,6 +654,7 @@ foreach ($requests as $index => &$request) {
                 $body .= "Note: " . $reason . "\n";
             }
             $body .= "\nI will confirm as soon as possible.\n";
+            append_customer_cancel_notice($body, $cancelUrl);
             if (send_payment_email($requestEmail, $body, 'Booking update')) {
                 $request['maybe_email_sent_at'] = gmdate('c');
             } else {
@@ -490,6 +706,7 @@ foreach ($requests as $index => &$request) {
                 $body .= "Payment details: " . $paymentLink . "\n";
             }
             $body .= "\nOnce payment is in, the time is locked.\n";
+            append_customer_cancel_notice($body, $cancelUrl);
             if (send_payment_email($requestEmail, $body)) {
                 $request['accepted_email_sent_at'] = gmdate('c');
             } else {
@@ -533,6 +750,7 @@ foreach ($requests as $index => &$request) {
             $calendarLinks = build_calendar_links($request);
             append_calendar_links_lines($body, $calendarLinks);
             $body .= "See you soon.\n";
+            append_customer_cancel_notice($body, $cancelUrl);
             if (send_payment_email($requestEmail, $body, 'Payment received')) {
                 $request['paid_email_sent_at'] = gmdate('c');
             } else {
@@ -554,6 +772,10 @@ foreach ($requests as $index => &$request) {
             if (send_admin_email($adminBody, 'Payment received')) {
                 $request['paid_admin_notified_at'] = gmdate('c');
             }
+        }
+        $displacedRequestIds = auto_displace_overlapping_unpaid_requests($requests, (int) $index, $request);
+        if (count($displacedRequestIds) > 0) {
+            append_history_entry($request, 'status', 'Auto-replaced overlapping maybe/accepted requests: ' . implode(', ', $displacedRequestIds));
         }
     } elseif ($status !== 'maybe' && $paymentLink !== '') {
         $request['status'] = $status;
@@ -612,11 +834,9 @@ if ($found) {
         $entryBookingId = trim((string) ($entry['booking_id'] ?? ''));
         return $entryBookingId === '' || $entryBookingId !== $id;
     }));
-    $isAccepted = (string) ($request['status'] ?? '') === 'accepted';
     $isPaid = (string) ($request['payment_status'] ?? '') === 'paid';
-    if ($isAccepted || $isPaid) {
-        $bookingStatus = $isPaid ? 'paid' : 'accepted';
-        $bookingBlocks = build_booking_blocks($request, $bookingStatus);
+    if ($isPaid) {
+        $bookingBlocks = build_booking_blocks($request, 'paid');
         $blocked = array_merge($blocked, $bookingBlocks);
     }
     $activeBookingIds = [];
@@ -624,13 +844,8 @@ if ($found) {
         if (!is_array($requestItem)) {
             continue;
         }
-        $requestStatus = strtolower(trim((string) ($requestItem['status'] ?? 'pending')));
         $requestPayment = strtolower(trim((string) ($requestItem['payment_status'] ?? '')));
-        if ($requestStatus === 'paid') {
-            $requestStatus = 'accepted';
-            $requestPayment = 'paid';
-        }
-        if ($requestStatus !== 'accepted' && $requestPayment !== 'paid') {
+        if ($requestPayment !== 'paid') {
             continue;
         }
         $requestId = trim((string) ($requestItem['id'] ?? ''));
@@ -696,4 +911,8 @@ if ($isConfirmedForPush) {
     }
 }
 
-json_response(['ok' => true]);
+json_response([
+    'ok' => true,
+    'displaced_count' => count($displacedRequestIds),
+    'displaced_request_ids' => $displacedRequestIds,
+]);

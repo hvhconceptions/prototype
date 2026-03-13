@@ -838,6 +838,81 @@ function log_email_delivery(string $type, string $to, string $subjectLine, bool 
     @file_put_contents(EMAIL_LOG_FILE, implode(' | ', $line) . "\n", FILE_APPEND | LOCK_EX);
 }
 
+function parse_email_log_line(string $line): array
+{
+    $parts = array_map(static function ($value): string {
+        return trim((string) $value);
+    }, explode('|', $line));
+
+    $entry = [
+        'timestamp' => $parts[0] ?? '',
+        'type' => strtoupper((string) ($parts[1] ?? '')),
+        'status' => strtoupper((string) ($parts[2] ?? '')),
+        'to' => '',
+        'subject' => '',
+        'detail' => '',
+        'raw' => $line,
+    ];
+
+    for ($index = 3; $index < count($parts); $index++) {
+        $part = (string) $parts[$index];
+        if ($part === '' || strpos($part, '=') === false) {
+            continue;
+        }
+        [$key, $value] = explode('=', $part, 2);
+        $key = strtolower(trim($key));
+        $value = trim($value);
+        if ($key === 'to') {
+            $entry['to'] = $value;
+        } elseif ($key === 'subject') {
+            $entry['subject'] = $value;
+        } elseif ($key === 'detail') {
+            $entry['detail'] = $value;
+        }
+    }
+
+    return $entry;
+}
+
+function get_last_email_failure(?string $recipient = null): array
+{
+    $result = [
+        'timestamp' => '',
+        'type' => '',
+        'status' => '',
+        'to' => '',
+        'subject' => '',
+        'detail' => '',
+        'raw' => '',
+    ];
+    if (!is_file(EMAIL_LOG_FILE)) {
+        return $result;
+    }
+
+    $lines = @file(EMAIL_LOG_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!is_array($lines) || count($lines) === 0) {
+        return $result;
+    }
+
+    $needle = strtolower(trim((string) $recipient));
+    for ($index = count($lines) - 1; $index >= 0; $index--) {
+        $line = trim((string) $lines[$index]);
+        if ($line === '' || stripos($line, ' | FAIL | ') === false) {
+            continue;
+        }
+        $entry = parse_email_log_line($line);
+        if ($needle !== '') {
+            $entryTo = strtolower(trim((string) ($entry['to'] ?? '')));
+            if ($entryTo !== $needle) {
+                continue;
+            }
+        }
+        return $entry;
+    }
+
+    return $result;
+}
+
 function log_sms_delivery(string $to, bool $ok, string $detail = ''): void
 {
     ensure_data_dir();
@@ -1026,6 +1101,10 @@ function send_payment_email(string $to, string $body, ?string $subject = null): 
     }
     if ($to === '') {
         log_email_delivery('customer', $to, (string) ($subject ?: EMAIL_SUBJECT), false, 'empty recipient');
+        return false;
+    }
+    if (filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+        log_email_delivery('customer', $to, (string) ($subject ?: EMAIL_SUBJECT), false, 'invalid recipient format');
         return false;
     }
     $subjectLine = $subject ?: EMAIL_SUBJECT;

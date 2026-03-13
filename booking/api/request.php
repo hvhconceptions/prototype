@@ -111,6 +111,17 @@ function convert_cad_amount_for_billing(int $amountCad, string $currency, float 
     return (int) round($amountCad * $displayRate);
 }
 
+function parse_optional_quote_amount($value): ?int
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+    if (!is_numeric($value)) {
+        return null;
+    }
+    return (int) round((float) $value);
+}
+
 function normalize_city_name(string $city): string
 {
     $city = strtolower(trim($city));
@@ -535,6 +546,52 @@ $displayTotalRate = $displayBaseRate + $displayServiceAddonAmount;
 $deposit = $displayTotalRate > 0 ? (int) round($displayTotalRate * ($depositPercent / 100)) : 0;
 $serviceAddonLabel = get_service_addon_label($recordSession, $filmingHours);
 
+$quoteCurrencyRaw = strtoupper(trim((string) ($payload['quote_currency'] ?? '')));
+$quoteCurrency = $quoteCurrencyRaw;
+if (in_array($quoteCurrency, ['USDC', 'BTC', 'LTC'], true)) {
+    $quoteCurrency = 'CAD';
+}
+$quoteBase = parse_optional_quote_amount($payload['quote_base'] ?? null);
+$quoteServiceAddon = parse_optional_quote_amount($payload['quote_service_addon'] ?? null);
+$quoteTotal = parse_optional_quote_amount($payload['quote_total'] ?? null);
+$quoteDeposit = parse_optional_quote_amount($payload['quote_deposit'] ?? null);
+$clientProvidedQuote =
+    $quoteCurrency !== '' ||
+    $quoteBase !== null ||
+    $quoteServiceAddon !== null ||
+    $quoteTotal !== null ||
+    $quoteDeposit !== null;
+
+if ($clientProvidedQuote) {
+    $hasMismatch = false;
+    if ($quoteCurrency !== '' && $quoteCurrency !== $billingCurrency) {
+        $hasMismatch = true;
+    }
+    if ($quoteBase !== null && $quoteBase !== $displayBaseRate) {
+        $hasMismatch = true;
+    }
+    if ($quoteServiceAddon !== null && $quoteServiceAddon !== $displayServiceAddonAmount) {
+        $hasMismatch = true;
+    }
+    if ($quoteTotal !== null && $quoteTotal !== $displayTotalRate) {
+        $hasMismatch = true;
+    }
+    if ($quoteDeposit !== null && $quoteDeposit !== $deposit) {
+        $hasMismatch = true;
+    }
+    if ($hasMismatch) {
+        json_response([
+            'error' => 'Rates were updated. Please review the bill and submit again.',
+            'code' => 'quote_mismatch',
+            'billing_currency' => $billingCurrency,
+            'base_rate' => $displayBaseRate,
+            'service_addon' => $displayServiceAddonAmount,
+            'total_rate' => $displayTotalRate,
+            'deposit_amount' => $deposit,
+        ], 409);
+    }
+}
+
 $availability = read_json_file(DATA_DIR . '/availability.json', [
     'availability_mode' => 'open',
     'buffer_minutes' => DEFAULT_BUFFER_MINUTES,
@@ -747,10 +804,14 @@ $request = [
     'deposit_currency' => $depositCurrency,
     'deposit_percent' => (string) $depositPercent,
     'base_rate' => $baseRate,
+    'display_base_rate' => $displayBaseRate,
     'pse_addon' => 0,
     'service_addon' => $serviceAddonAmount,
+    'display_service_addon' => $displayServiceAddonAmount,
     'service_addon_label' => $serviceAddonLabel,
     'total_rate' => $totalRate,
+    'display_total_rate' => $displayTotalRate,
+    'billing_currency' => $billingCurrency,
     'payment_link' => $paymentLink,
     'payment_email_sent_at' => $paymentEmailSentAt,
     'history' => [

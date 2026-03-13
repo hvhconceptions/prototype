@@ -2120,6 +2120,7 @@
       };
 
       let autoDetectedCurrency = detectDefaultCurrency();
+      let currencySelectionLocked = false;
 
       const fetchJsonWithTimeout = async (url, timeoutMs = 2200) => {
         const controller = new AbortController();
@@ -2148,6 +2149,16 @@
           return detected;
         }
         return "";
+      };
+
+      const resolveBillingCurrency = (currency) => {
+        const currentCurrency = String(currency || BASE_CURRENCY)
+          .trim()
+          .toUpperCase();
+        if (CRYPTO_CURRENCIES.includes(currentCurrency)) {
+          return BASE_CURRENCY;
+        }
+        return currentCurrency || BASE_CURRENCY;
       };
 
       const formatCurrency = (amount, currency) => {
@@ -2403,6 +2414,42 @@
         return FIAT_CURRENCIES.includes(currentCurrency);
       };
 
+      const getPricingQuote = async () => {
+        const selected = durationSelect?.selectedOptions?.[0];
+        if (!selected || selected.dataset.custom === "true") {
+          return null;
+        }
+        const hours = Number(selected.dataset.hours || 0);
+        if (!Number.isFinite(hours) || hours <= 0) {
+          return null;
+        }
+
+        const rateKey = selected.dataset.rateKey || "";
+        const experience = experienceSelect?.value || "gfe";
+        const selectedCurrency = (currencySelect?.value || BASE_CURRENCY).toUpperCase();
+        const billingCurrency = resolveBillingCurrency(selectedCurrency);
+
+        const baseRate = getBaseRate(hours, experience, rateKey);
+        const serviceAddonBase = getServiceAddonBase();
+        const baseDisplayAmount = await getDisplayAmount(baseRate, billingCurrency);
+        const addonDisplayAmount =
+          serviceAddonBase > 0 && useFlatFilmingAmount(billingCurrency)
+            ? Math.round(serviceAddonBase)
+            : await getDisplayAmount(serviceAddonBase, billingCurrency);
+        const totalDisplayAmount = baseDisplayAmount + addonDisplayAmount;
+        const depositDisplayAmount = Math.round(totalDisplayAmount * (DEPOSIT_PERCENT / 100));
+
+        return {
+          selectedCurrency,
+          billingCurrency,
+          serviceAddonBase,
+          baseDisplayAmount,
+          addonDisplayAmount,
+          totalDisplayAmount,
+          depositDisplayAmount,
+        };
+      };
+
       const updatePaymentSummary = async () => {
         if (!baseRateDisplay || !totalRateDisplay || !depositRateDisplay) return;
         const selected = durationSelect.selectedOptions[0];
@@ -2463,15 +2510,25 @@
           if (depositRateNote) depositRateNote.textContent = t("deposit_percent_note", { percent: DEPOSIT_PERCENT });
           return;
         }
-        const baseRate = getBaseRate(hours, experience, rateKey);
-        const serviceAddonBase = getServiceAddonBase();
-        const baseDisplayAmount = await getDisplayAmount(baseRate, currency);
-        const addonDisplayAmount =
-          serviceAddonBase > 0 && useFlatFilmingAmount(currency)
-            ? Math.round(serviceAddonBase)
-            : await getDisplayAmount(serviceAddonBase, currency);
-        const totalDisplayAmount = baseDisplayAmount + addonDisplayAmount;
-        const depositDisplayAmount = Math.round(totalDisplayAmount * (DEPOSIT_PERCENT / 100));
+        const pricingQuote = await getPricingQuote();
+        if (!pricingQuote) {
+          baseRateDisplay.textContent = t("select_duration");
+          totalRateDisplay.textContent = t("select_duration");
+          depositRateDisplay.textContent = "--";
+          if (serviceAddonRow) {
+            setDepositRowPrefix("#serviceAddonRow", t("service_addon"));
+            serviceAddonRow.classList.add("hidden");
+          }
+          if (serviceAddonDisplay) serviceAddonDisplay.textContent = "--";
+          if (totalRateNote) totalRateNote.textContent = "";
+          if (depositRateNote) depositRateNote.textContent = t("deposit_percent_note", { percent: DEPOSIT_PERCENT });
+          return;
+        }
+
+        const baseDisplayAmount = pricingQuote.baseDisplayAmount;
+        const addonDisplayAmount = pricingQuote.addonDisplayAmount;
+        const totalDisplayAmount = pricingQuote.totalDisplayAmount;
+        const depositDisplayAmount = pricingQuote.depositDisplayAmount;
         const baseLabel = formatDisplayAmount(baseDisplayAmount, currency);
         const totalLabel = formatDisplayAmount(totalDisplayAmount, currency);
         const depositLabel = formatDisplayAmount(depositDisplayAmount, currency);
@@ -2479,7 +2536,7 @@
         totalRateDisplay.textContent = totalLabel;
         depositRateDisplay.textContent = depositLabel;
         if (serviceAddonRow && serviceAddonDisplay) {
-          if (serviceAddonBase > 0) {
+          if (pricingQuote.serviceAddonBase > 0) {
             const addonLabel = formatDisplayAmount(addonDisplayAmount, currency);
             serviceAddonDisplay.textContent = addonLabel;
             setDepositRowPrefix("#serviceAddonRow", getServiceAddonLabel());
@@ -3369,6 +3426,9 @@
           renderDayCalendar();
         }
         if (event.target.id === "currency" || event.target.id === "experience") {
+          if (event.target.id === "currency") {
+            currencySelectionLocked = true;
+          }
           updateDurationOptions();
         }
         if (event.target.id === "duration") {
@@ -3498,6 +3558,14 @@
         payload.tour_city = sanitizeCityLabel(getCityForDate(preferredDate.value));
         payload.buffer_minutes = String(Number.isFinite(selectedBufferMinutes) ? selectedBufferMinutes : bufferMinutes);
         payload.preferred_time = preferredTime.value || "";
+        const pricingQuote = await getPricingQuote();
+        if (pricingQuote) {
+          payload.quote_currency = pricingQuote.billingCurrency;
+          payload.quote_base = String(pricingQuote.baseDisplayAmount);
+          payload.quote_service_addon = String(pricingQuote.addonDisplayAmount);
+          payload.quote_total = String(pricingQuote.totalDisplayAmount);
+          payload.quote_deposit = String(pricingQuote.depositDisplayAmount);
+        }
 
         const parseServerJson = (rawText) => {
           if (!rawText) return null;
@@ -3751,8 +3819,11 @@
       checkBlacklistOnLoad();
       detectCurrencyFromIp().then((ipCurrency) => {
         if (!ipCurrency || !FIAT_CURRENCIES.includes(ipCurrency)) return;
+        const previousAutoCurrency = autoDetectedCurrency;
+        if (currencySelectionLocked) return;
+        if (!currencySelect || currencySelect.value !== previousAutoCurrency) return;
         autoDetectedCurrency = ipCurrency;
-        if (!currencySelect || currencySelect.value === ipCurrency) return;
+        if (currencySelect.value === ipCurrency) return;
         currencySelect.value = ipCurrency;
         updateDurationOptions();
       });
